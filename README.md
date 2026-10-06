@@ -47,7 +47,6 @@ One feature = one folder in `server/src`.
 ```
 server/
 ├── index.js                  # starts the server
-├── .env.example              # copy to .env (never commit .env)
 └── src/
     ├── app.js                # app setup + mounts each feature's routes
     ├── common/               # shared code
