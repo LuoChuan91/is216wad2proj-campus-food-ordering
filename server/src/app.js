@@ -10,7 +10,9 @@ app.get('/api/health', (req, res) => {
 });
 
 // One line per feature folder
-app.use('/api/stores', require('./stores/stores.routes'));
+app.use('/api/stores', require('./routes/stores.routes'));
+app.use('/api/menu', require('./routes/menu.routes'));
+app.use('/api/orders', require('./routes/orders.routes'));
 
 app.use(errorHandler);
 
