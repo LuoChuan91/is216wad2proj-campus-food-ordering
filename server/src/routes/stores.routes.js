@@ -1,4 +1,3 @@
-// URL -> controller function. No logic here.
 const router = require('express').Router();
 const controller = require('../controllers/stores.controller');
 

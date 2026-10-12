@@ -1,0 +1,1 @@
+const repository = require('../models/menu.repository');
