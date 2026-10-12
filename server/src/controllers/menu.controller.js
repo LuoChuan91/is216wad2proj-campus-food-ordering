@@ -1,1 +1,7 @@
-const service = require('../services/stores.service');
+
+const service = require('../services/menu.service');
+
+exports.getMenuItem = async (req, res) => {
+  const item = await service.getMenuItem(req.params.id);
+  res.json(item);
+};
