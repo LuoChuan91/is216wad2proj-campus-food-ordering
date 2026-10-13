@@ -1,4 +1,4 @@
-// Business rules: validation, calculations, "not found" checks. No req/res, no DB code.
+
 const repository = require('../models/stores.repository');
 
 exports.listStores = ({ venueId }) => {

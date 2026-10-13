@@ -1,4 +1,4 @@
-// HTTP layer: read from req, call the service, send res.
+
 const service = require('../services/stores.service');
 
 exports.listStores = async (req, res) => {

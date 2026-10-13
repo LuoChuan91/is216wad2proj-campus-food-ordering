@@ -15,5 +15,5 @@ exports.listOrders = async (storeId) => {
 };
 
 exports.placeOrder = async (body) => {
-  throw httpError(501, 'placeOrder is not written yet');
+  
 };
