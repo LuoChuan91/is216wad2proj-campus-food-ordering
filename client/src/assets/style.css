@@ -4,7 +4,6 @@ body {
 }
 
 /* ---------- colours ---------- */
-/* navy top bar, orange for the main buttons (Bootstrap's own colours are blue) */
 .bg-navy {
   background-color: #1e2a5a;
 }
@@ -34,7 +33,6 @@ body {
 }
 
 /* ---------- layout ---------- */
-/* the student pages are a narrow column, like a phone app */
 .page-narrow {
   max-width: 640px;
   margin: 0 auto;
@@ -73,7 +71,6 @@ body {
   font-size: 14px;
 }
 
-/* cards you can click (a store, a dish) */
 .card-click {
   cursor: pointer;
   text-align: left;
@@ -87,7 +84,6 @@ body {
   cursor: not-allowed;
 }
 
-/* something that can't be ordered right now */
 .faded {
   opacity: 0.55;
 }

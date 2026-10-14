@@ -1,30 +1,5 @@
 <script setup>
-/*
-  Student: payment. Payment is simulated, as in the proposal: no money moves, and the server
-  saves a payment row with the order.
 
-  The template below is the finished layout. Steps:
-
-  1. The amount: the same total as checkout. The store's name from cart.store.
-
-  2. Confirm payment
-     - POST /api/orders with headers { 'Content-Type': 'application/json' } and body
-         JSON.stringify({
-           student_id: DEMO.studentId,
-           items: cart.lines.map((line) => ({ menu_item_id: line.item.id, qty: line.qty, option_ids: line.option_ids })),
-         })
-     - While it's being sent: disable the buttons, and show the spinner with
-       "Processing payment" (the commented-out line next to the button).
-     - If the response isn't ok, read its JSON and show `error` in the red alert.
-       Try it: pause the store in Supabase (stores.is_open = false), and the server answers
-       "Sakura Bento House is not opened".
-
-  3. If it's ok (201), keep the returned order and show the "Payment successful" card instead.
-     It has order.id and order.payment ({ amount, reference }). Then empty the cart.
-
-  4. Payment successful: money(order.payment.amount) paid to the store, orderCode(order.id),
-     order.payment.reference. "Back to stores" is already wired.
-*/
 import { ref, computed } from 'vue'
 import { DEMO } from '../demo'
 import { go, paths, closeSheet } from '../router'
@@ -64,7 +39,6 @@ async function postPayment() {
 
 <template>
   <div class="page-narrow">
-    <!-- Steps 3 and 4: after the order is placed, show this instead -->
     <div v-if="!errorMessage && order" class="card text-center">
       <div class="card-body py-4">
         <div class="display-4 text-success">✓</div>
@@ -98,7 +72,6 @@ async function postPayment() {
           <span class="badge text-bg-light border">Simulated</span>
         </div>
 
-        <!-- Step 2: the server's error, when there is one -->
         <div v-if="errorMessage" class="alert alert-danger" role="alert">{{ errorMessage }}</div>
 
         <button type="button" class="btn btn-brand btn-lg w-100" @click="postPayment" :disabled="sending">Confirm payment</button>
