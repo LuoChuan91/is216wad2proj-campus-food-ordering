@@ -30,12 +30,14 @@ async function removeOrder(orderId) {
   await supabase.from('orders').delete().eq('id', orderId);
 }
 
-// A store's orders, newest first, each with its items and payment nested.
-// orders has no total column, so the amount the student paid comes from payments.
+// A store's orders, newest first, with nested:
+//   profiles(name)                     the student who ordered
+//   order_items(*, menu_items(name))   each item with its dish name
+//   payments(...)                      a list; orders has no total, so what was paid is payments[0].amount
 exports.findByStore = async (storeId) => {
   const { data, error } = await supabase
     .from('orders')
-    .select('*, order_items(*), payments(amount, status, reference)')
+    .select('*, profiles(name), order_items(*, menu_items(name)), payments(amount, status, reference)')
     .eq('store_id', storeId)
     .order('created_at', { ascending: false });
 
