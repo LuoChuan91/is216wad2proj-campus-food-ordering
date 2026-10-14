@@ -16,6 +16,7 @@ export default defineConfig({
     },
   },
   server: {
+    // TODO: route to correct server after deployment
     proxy: {
       '/api': 'http://localhost:3000',
     },
