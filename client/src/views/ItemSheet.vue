@@ -42,6 +42,16 @@ function OptionCounter(group) {
   }
 }
 
+function groupValid(group) {
+  const count = OptionCounter(group)
+  const min = group.required ? Math.max(group.min_select, 1) : group.min_select
+  const max = group.max_select
+  if (count>=min && count <= max) {
+    return true
+  }
+  return false
+}
+
 function minusCount() {
   quantity.value -= 1
 }
@@ -84,6 +94,10 @@ const unitPrice = computed(() => {
 
 const totalPrice = computed(() => unitPrice.value * quantity.value)
 
+const allValid = computed(() => {
+  return item.value.option_groups.every(group => groupValid(group))
+})
+
 onMounted(loadDish)
 
 const props = defineProps({ itemId: { type: String, required: true } })
@@ -103,7 +117,7 @@ const props = defineProps({ itemId: { type: String, required: true } })
       <div class="card mb-3" v-for="group in item.option_groups" :key="group">
         <div class="card-header bg-white d-flex justify-content-between align-items-center">
           <span class="fw-bold">{{ group.name }}</span>
-          <span class="badge" :class="OptionCounter(group) < group.min_select || OptionCounter(group) > group.max_select ? 'text-bg-warning' : 'text-bg-success' ">{{ OptionCounter(group) }} selected</span>
+          <span class="badge" :class="groupValid(group) ? 'text-bg-success' : 'text-bg-warning'">{{ OptionCounter(group) }} selected</span>
         </div>
         <div class="list-group list-group-flush" v-for="(option, index) in group.options" :key="index">
           <label class="list-group-item list-group-item-warning d-flex align-items-center gap-2" >
@@ -121,7 +135,7 @@ const props = defineProps({ itemId: { type: String, required: true } })
             <span class="input-group-text bg-white">{{ quantity }}</span>
             <button class="btn btn-outline-secondary" type="button" @click="plusCount()">+</button>
           </div>
-          <button type="button" class="btn btn-brand btn-lg flex-grow-1" @click="addAndGoBack()">Add to cart · {{ money(totalPrice) }}</button>
+          <button type="button" class="btn btn-brand btn-lg flex-grow-1" @click="addAndGoBack()" :disabled="!allValid">Add to cart · {{ money(totalPrice) }}</button>
         </div>
       </div>
     </template>
