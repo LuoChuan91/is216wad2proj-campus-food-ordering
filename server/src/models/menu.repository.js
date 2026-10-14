@@ -23,3 +23,15 @@ exports.findItemWithOptions = async (itemId) => {
   const { menu_category, ...item } = data;
   return { ...item, store_id: menu_category ? menu_category.store_id : null };
 };
+
+// The names of the given options, e.g. to show what a student picked on an order.
+// order_items.selected_options only stores option ids, so the merchant screen needs this.
+// Returns [{ id, name }], one per id that exists.
+exports.findOptionNames = async (optionIds) => {
+  if (optionIds.length === 0) return [];
+
+  const { data, error } = await supabase.from('options').select('id, name').in('id', optionIds);
+
+  if (error) throw error;
+  return data;
+};
