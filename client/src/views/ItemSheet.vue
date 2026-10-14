@@ -116,11 +116,11 @@ const props = defineProps({ itemId: { type: String, required: true } })
 
       <div class="card mb-3" v-for="group in item.option_groups" :key="group">
         <div class="card-header bg-white d-flex justify-content-between align-items-center">
-          <span class="fw-bold">{{ group.name }}</span>
+          <span class="fw-bold">{{ group.name }} <span v-if="group.required" class="badge border border-danger text-danger ms-1">Required</span></span>
           <span class="badge" :class="groupValid(group) ? 'text-bg-success' : 'text-bg-warning'">{{ OptionCounter(group) }} selected</span>
         </div>
         <div class="list-group list-group-flush" v-for="(option, index) in group.options" :key="index">
-          <label class="list-group-item list-group-item-warning d-flex align-items-center gap-2" >
+          <label class="list-group-item d-flex align-items-center gap-2" :class="{ 'list-group-item-warning': group.type === 'multi' ? chosenOptions[group.id].includes(option.id) : chosenOptions[group.id] === option.id }">
             <input class="form-check-input mt-0" :type="group.type === 'multi' ? 'checkbox' : 'radio'" :name="group.name" :value="option.id" v-model="chosenOptions[group.id]"/>
             <span class="flex-grow-1">{{ option.name }}</span>
             <span class="small text-muted" v-if="option.price_delta > 0">+{{ money(option.price_delta) }}</span>
