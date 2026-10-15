@@ -42,3 +42,29 @@ exports.findByStore = async (storeId) => {
   if (error) throw error;
   return data;
 };
+
+// use to retrive orders form a store for time estimation, optional parameter for order id 
+// for order tracking page()
+exports.findOrdersAhead = async (storeId, orderId) => {
+  // select request order, null if orderID not provided
+  console.log(storeId, orderId)
+  const {dataTarget, errorTarget} = await supabase
+    .from('orders')
+    .select()
+    .eq('store_id', storeId)
+    .single();
+    console.log(dataTarget)
+    console.log(errorTarget)
+
+  // retrieve orders from a store that is created earlier then requested order
+  // retrieve all if requested order is null
+  // const { data, error } = await supabase
+  //   .from('orders')
+  //   .select('*, order_items(*)')
+  //   .eq('store_id', storeId)
+  //   .lte('created_at', dataTarget.created_at)
+  //   .order('created_at', { ascending: true });
+
+  // if (error) throw error;
+  return dataTarget;
+};
