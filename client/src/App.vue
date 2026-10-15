@@ -1,41 +1,39 @@
 <script setup>
-// The page shell: the top bar, then the screen for the address (see router.js).
-// One screen shows at a time.
-import { ref, onMounted, onUnmounted } from 'vue'
-import { route } from './router'
-import { DEMO } from './demo'
-import { dateLabel, clockTime, initials } from './utils/format'
-import StoreList from './views/StoreList.vue'
-import StorePage from './views/StorePage.vue'
-import ItemSheet from './views/ItemSheet.vue'
-import CheckoutPage from './views/CheckoutPage.vue'
-import PaySheet from './views/PaySheet.vue'
+// The website shell: sign-in page, or the top bar and the signed-in person's portal.
+// Each portal lives in its own folder: portals/student, portals/merchant, portals/admin.
+import { computed } from 'vue'
+import { S, Q } from './app/state'
+import { startApp } from './app/live'
+import SignIn from './components/SignIn.vue'
+import TopNav from './components/TopNav.vue'
+import Toasts from './components/Toasts.vue'
+import StudentApp from './portals/student/StudentApp.vue'
+import MerchantApp from './portals/merchant/MerchantApp.vue'
+import AdminApp from './portals/admin/AdminApp.vue'
 
-// The clock in the top bar
-const now = ref(Date.now())
-let timer
-onMounted(() => { timer = setInterval(() => { now.value = Date.now() }, 15000) })
-onUnmounted(() => clearInterval(timer))
+const me = computed(() => Q.me())
 </script>
 
 <template>
-  <nav class="navbar navbar-dark bg-navy sticky-top">
-    <div class="container-fluid">
-      <span class="navbar-brand fw-bold">
-        <span class="text-brand">●</span> Campus Delights
-        <span class="badge rounded-pill text-bg-light ms-1 fw-normal">Student</span>
-      </span>
-      <div class="d-flex align-items-center gap-3 text-white">
-        <span class="small text-white-50 d-none d-sm-inline">🕒 {{ dateLabel(now) }}, {{ clockTime(now) }}</span>
-        <span class="avatar">{{ initials(DEMO.studentName) }}</span>
-        <span class="d-none d-md-inline">{{ DEMO.studentName }}</span>
+  <div class="site" :class="'as-' + (me ? me.role : 'guest')">
+    <div v-if="S.loadError" class="boot boot-error">
+      <div>
+        <AppMark :size="48" />
+        <h2>Can't reach the server</h2>
+        <p>{{ S.loadError }}. Start it with <code>pnpm dev</code> in the <code>server</code> folder, then try again.</p>
+        <button class="btn btn-primary" @click="startApp()">Try again</button>
       </div>
     </div>
-  </nav>
-
-  <ItemSheet v-if="route.sheet === 'item'" :key="route.itemId" :item-id="route.itemId" />
-  <PaySheet v-else-if="route.sheet === 'pay'" />
-  <StorePage v-else-if="route.page === 'store'" :key="route.storeId" :store-id="route.storeId" />
-  <CheckoutPage v-else-if="route.page === 'checkout'" />
-  <StoreList v-else />
+    <div v-else-if="!S.loaded" class="boot">Loading…</div>
+    <SignIn v-else-if="!me" />
+    <template v-else>
+      <TopNav />
+      <main class="portal">
+        <div v-if="me.role === 'student'" class="student-shell"><div class="student-frame"><StudentApp /></div></div>
+        <MerchantApp v-else-if="me.role === 'merchant'" />
+        <AdminApp v-else />
+      </main>
+    </template>
+    <Toasts />
+  </div>
 </template>

@@ -1,12 +1,29 @@
 
 const service = require('../services/orders.service');
+const deliveriesService = require('../services/deliveries.service');
 
 exports.postOrder = async (req, res) => {
   const order = await service.placeOrder(req.body);
   res.status(201).json(order);
 };
 
+// GET /api/orders?store_id=<id> (a store's orders) or ?student_id=<id> (a student's orders)
 exports.getOrderList = async (req, res) => {
-  const orders = await service.listOrders(req.query.store_id);
+  await deliveriesService.expireOverdue(); // late deliveries switch to pickup before anyone sees them
+  const orders = req.query.student_id
+    ? await service.listStudentOrders(req.query.student_id)
+    : await service.listOrders(req.query.store_id);
   res.json(orders);
+};
+
+exports.getOrder = async (req, res) => {
+  await deliveriesService.expireOverdue();
+  const order = await service.getOrder(req.params.id);
+  res.json(order);
+};
+
+// PATCH /api/orders/:id  { "status": "preparing" | "ready" | "completed" }
+exports.patchOrder = async (req, res) => {
+  const order = await service.updateStatus(req.params.id, req.body && req.body.status);
+  res.json(order);
 };
