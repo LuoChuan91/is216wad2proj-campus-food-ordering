@@ -23,3 +23,15 @@ exports.findItemWithOptions = async (itemId) => {
   const { menu_category, ...item } = data;
   return { ...item, store_id: menu_category ? menu_category.store_id : null };
 };
+
+exports.itemsCookingDetails = async (item_ids) => {
+  // retrieve orders from a store that is created earlier then requested order
+  // retrieve all if requested order is null
+  const { data, error } = await supabase
+    .from("menu_items")
+    .select('id,cook_time_sec,max_at_once')
+    .in("id", item_ids)
+
+  if (error) throw error;
+  return data;
+};

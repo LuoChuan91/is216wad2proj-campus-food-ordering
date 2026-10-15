@@ -77,5 +77,10 @@ exports.placeOrder = async (body) => {
 exports.getOrderAhead = async (storeId, orderId) => {
   // orderId allow to be null
   if (!storeId) throw httpError(400, 'store_id is required, e.g. /api/orders/orderAhead?store_id=<id>');
-  return repository.findOrdersAhead(storeId, orderId);
+  let order;
+  // if orderId is provided
+  if(orderId){
+    order = await repository.findById(orderId)
+  }
+  return repository.findOrdersAhead(storeId, order);
 }

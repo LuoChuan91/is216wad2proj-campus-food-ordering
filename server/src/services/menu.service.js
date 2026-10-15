@@ -10,3 +10,8 @@ exports.getMenuItem = async (id) => {
   }
   return item;
 };
+
+exports.getCookingDetails = async(ids) => {
+  ids = [...new Set(ids)]
+  return repository.itemsCookingDetails(ids)
+}
