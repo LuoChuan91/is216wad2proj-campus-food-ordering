@@ -73,9 +73,10 @@ exports.findOrdersAhead = async (storeId, order) => {
   let query = supabase
     .from("orders")
     .select(
-      "id,created_at,store_id,order_items(id, qty)",
+      "id,created_at,store_id,status,order_items(id, menu_item_id, qty)",
     )
-    .eq("store_id", storeId);
+    .eq("store_id", storeId)
+    .not('status', 'in', '("ready", "completed","cancelled")'); // orders not done yet
   
   if(order){
     query = query.lte("created_at", order.created_at);

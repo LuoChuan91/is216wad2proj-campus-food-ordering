@@ -19,6 +19,16 @@ const router = createRouter({
     },
     // TODO: ... add ur routes
     {
+      path: '/store/:storeId',
+      name: 'store',
+      component: () => import('../views/StoreView.vue'),
+    },
+    {
+      path: '/orders/:orderId/track',
+      name: 'order-tracking',
+      component: () => import('../views/OrderTrackingView.vue'),
+    },
+    {
     path: '/:pathMatch(.*)*',
     name: 'not-found',
     component: () => import('../views/NotFoundView.vue')
