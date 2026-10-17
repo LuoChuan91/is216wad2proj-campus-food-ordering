@@ -33,12 +33,25 @@ Check it works: http://localhost:3000/api/health returns `{"ok":true}`.
 ### 2. Client (in a second terminal)
 
 ```bash
-cd client/campus-delights
+cd client
 pnpm install
 pnpm dev
 ```
 
 Any request from the Vue app to `/api/...` is forwarded to the server on port 3000, so call the API with relative URLs, e.g. `fetch('/api/stores')`.
+
+### Client Supabase config for live update
+
+The browser uses Supabase **Realtime** to know when a store's queue changes. Create 
+an env file and fill in the **anon / publishable** key (never the secret
+key - the anon key is safe in the browser because RLS still applies):
+
+```bash
+cd client
+touch env
+#   VITE_SUPABASE_URL=https://<project-ref>.supabase.co
+#   VITE_SUPABASE_ANON_KEY=<anon or publishable key>
+```
 
 ## Server structure
 
