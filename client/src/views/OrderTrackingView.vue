@@ -11,6 +11,7 @@ import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import { useWaitTime } from '@/composables/useWaitTime.js'
 import { toOrderReference } from '@/utils/orderReference.js'
+import { estimateWalkingSeconds } from '@/utils/mapApi.js'
 import { computeEta } from '@/utils/eta.js'
 import { formatWaitTime } from '@/utils/waitTime.js'
 import OrderStatusTimeline from '@/components/OrderStatusTimeline.vue'
@@ -29,10 +30,11 @@ const reference = computed(() => toOrderReference(orderId.value, mode.value === 
 // Single source of truth for the wait estimate (one subscription for this page).
 const { seconds, loading, error, stale, liveConnected } = useWaitTime(storeId, orderId)
 
-// Placeholder walking leg for delivery (store -> dropoff). TODO: real coords.
-// const walkingSeconds = computed(() =>
-//   mode.value === 'delivery' ? estimateWalkingSeconds(null, null) : 0
-// )
+// Placeholder walking leg for delivery (store -> dropoff). TODO: pass real
+// coordinates from the delivery/destination once that feature exists.
+const walkingSeconds = computed(() =>
+  mode.value === 'delivery' ? estimateWalkingSeconds(null, null) : 0
+)
 
 // A ticking clock so ETA labels stay current.
 const nowMs = ref(Date.now())
@@ -42,9 +44,9 @@ onMounted(() => {
 })
 onBeforeUnmount(() => clock && clearInterval(clock))
 
-// const eta = computed(() => computeEta(nowMs.value, seconds.value, walkingSeconds.value))
-const eta = computed(() => computeEta(nowMs.value, seconds.value, 10))
+const eta = computed(() => computeEta(nowMs.value, seconds.value, walkingSeconds.value))
 const waitLabel = computed(() => formatWaitTime(seconds.value))
+const walkingLabel = computed(() => formatWaitTime(walkingSeconds.value))
 </script>
 
 <template>
@@ -88,7 +90,7 @@ const waitLabel = computed(() => formatWaitTime(seconds.value))
           <!-- Delivery adds the walking leg -> delivered time. -->
           <p v-if="mode === 'delivery'" class="mb-0 text-muted" data-test="delivered-at">
             Arrives around <strong>{{ eta.deliveredAtLabel }}</strong>
-            <small>(+{{ formatWaitTime(walkingSeconds) }} walking)</small>
+            <small>(+{{ walkingLabel }} walking)</small>
           </p>
         </template>
       </div>
