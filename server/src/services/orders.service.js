@@ -85,3 +85,15 @@ exports.placeOrder = async (body) => {
           payment: { amount: total, method: 'simulated', status: 'success', reference: `SIM-${Date.now()}`},
   });
 };
+
+
+exports.getOrderAhead = async (storeId, orderId) => {
+  // orderId allow to be null
+  if (!storeId) throw httpError(400, 'store_id is required, e.g. /api/orders/orderAhead?store_id=<id>');
+  let order;
+  // if orderId is provided
+  if(orderId){
+    order = await repository.findById(orderId)
+  }
+  return repository.findOrdersAhead(storeId, order);
+}

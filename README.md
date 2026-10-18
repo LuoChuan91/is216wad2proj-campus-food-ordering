@@ -41,6 +41,19 @@ pnpm dev
 
 Any request from the Vue app to `/api/...` is forwarded to the server on port 3000, so call the API with relative URLs, e.g. `fetch('/api/stores')`.
 
+### Client Supabase config for live update
+
+The browser uses Supabase **Realtime** to know when a store's queue changes. Create 
+an env file and fill in the **anon / publishable** key (never the secret
+key - the anon key is safe in the browser because RLS still applies):
+
+```bash
+cd client
+touch env
+#   VITE_SUPABASE_URL=https://<project-ref>.supabase.co
+#   VITE_SUPABASE_ANON_KEY=<anon or publishable key>
+```
+
 Then open http://localhost:5173. The student screens (a simpler, Bootstrap version of the prototype website):
 
 | Address | Screen | Uses |
