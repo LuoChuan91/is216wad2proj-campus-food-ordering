@@ -31,6 +31,14 @@ exports.itemsCookingDetails = async (item_ids) => {
     .from("menu_items")
     .select('id,cook_time_sec,max_at_once')
     .in("id", item_ids)
+};
+// The names of the given options, e.g. to show what a student picked on an order.
+// order_items.selected_options only stores option ids, so the merchant screen needs this.
+// Returns [{ id, name }], one per id that exists.
+exports.findOptionNames = async (optionIds) => {
+  if (optionIds.length === 0) return [];
+
+  const { data, error } = await supabase.from('options').select('id, name').in('id', optionIds);
 
   if (error) throw error;
   return data;

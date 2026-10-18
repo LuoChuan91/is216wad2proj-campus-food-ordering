@@ -1,0 +1,89 @@
+
+body {
+  background-color: #f3f4f8;
+}
+
+/* ---------- colours ---------- */
+.bg-navy {
+  background-color: #1e2a5a;
+}
+
+.text-brand {
+  color: #e5512d;
+}
+
+.btn-brand {
+  background-color: #e5512d;
+  border-color: #e5512d;
+  color: white;
+}
+
+.btn-brand:hover,
+.btn-brand:focus,
+.btn-brand:active {
+  background-color: #c94220;
+  border-color: #c94220;
+  color: white;
+}
+
+.btn-brand:disabled {
+  background-color: #f0b3a3;
+  border-color: #f0b3a3;
+  color: white;
+}
+
+/* ---------- layout ---------- */
+.page-narrow {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 16px 12px 40px;
+}
+
+/* a bar that stays at the bottom of the screen (cart total, add and pay buttons) */
+.bottom-bar {
+  position: sticky;
+  bottom: 12px;
+}
+
+/* ---------- small pieces ---------- */
+/* a store's coloured square with its initials */
+.store-square {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  color: white;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+/* a round avatar with someone's initials */
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #e5512d;
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.card-click {
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+}
+
+.card-click:not(:disabled):hover {
+  border-color: #e5512d;
+}
+.card-click:disabled {
+  cursor: not-allowed;
+}
+
+.faded {
+  opacity: 0.55;
+}

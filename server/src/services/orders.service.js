@@ -11,7 +11,20 @@ function httpError(status, message) {
 
 exports.listOrders = async (storeId) => {
   if (!storeId) throw httpError(400, 'store_id is required, e.g. /api/orders?store_id=<id>');
-  return repository.findByStore(storeId);
+  const orders = await repository.findByStore(storeId);
+
+  // order_items.selected_options only holds option ids, so look up all their names in one
+  // query and add them to each item as option_names, e.g. ['White Rice', 'Add Tamago']
+  const optionIds = [...new Set(orders.flatMap((order) => order.order_items.flatMap((item) => item.selected_options || [])))];
+  const names = new Map((await menuRepository.findOptionNames(optionIds)).map((option) => [option.id, option.name]));
+
+  return orders.map((order) => ({
+    ...order,
+    order_items: order.order_items.map((item) => ({
+      ...item,
+      option_names: (item.selected_options || []).map((id) => names.get(id)).filter(Boolean),
+    })),
+  }));
 };
 
 exports.placeOrder = async (body) => {
@@ -57,7 +70,7 @@ exports.placeOrder = async (body) => {
     lines.push({ menu_item_id: i.menu_item_id, qty: i.qty, unit_price, selected_options: dish_options.map(o => o.id)})
   }
 
-  let delivery_fee = 0
+  let delivery_fee = null
   let subtotal = lines.reduce((sum, item) => { return sum + item.unit_price*item.qty }, 0);
   let discount;
   if (store.discount_type === 'percentage') {

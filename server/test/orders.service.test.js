@@ -1,4 +1,4 @@
-// Unit tests for the order rules in src/services/orders.service.js.
+// Unit tests for src/services/orders.service.js: the order rules, and the merchant order list.
 // Run from the server folder:  pnpm test
 // The repositories are swapped for fake ones, so these tests never touch Supabase.
 // The fake data has the same shape as the live database (see "Database notes" in the README).
@@ -232,4 +232,28 @@ test('400 when two options are picked in a pick-one group (two kinds of rice)', 
   const body = validBody();
   body.items[0].option_ids.push('rice-brown');
   await expectRejected(body, 400);
+});
+
+/* ---------- the merchant's order list ---------- */
+
+test('400 when listing orders without a store_id', async () => {
+  await assert.rejects(service.listOrders(undefined), (err) => err.status === 400);
+});
+
+test('order list adds the names of the chosen options', async () => {
+  ordersRepository.findByStore = async () => [
+    { id: 'order-1', order_items: [{ qty: 2, menu_items: { name: 'Chicken Teriyaki Bento' }, selected_options: ['rice-white', 'side-egg'] }] },
+    { id: 'order-2', order_items: [{ qty: 1, menu_items: { name: 'Plain Bento' }, selected_options: [] }] },
+  ];
+  let asked;
+  menuRepository.findOptionNames = async (ids) => {
+    asked = ids;
+    return [{ id: 'rice-white', name: 'White rice' }, { id: 'side-egg', name: 'Tamagoyaki' }];
+  };
+
+  const orders = await service.listOrders('store-1');
+  assert.deepEqual(asked.slice().sort(), ['rice-white', 'side-egg'], 'looks up every option id once, in one query');
+  assert.deepEqual(orders[0].order_items[0].option_names, ['White rice', 'Tamagoyaki']);
+  assert.deepEqual(orders[1].order_items[0].option_names, []);
+  assert.equal(orders[0].order_items[0].menu_items.name, 'Chicken Teriyaki Bento', 'keeps the rest of the order');
 });
