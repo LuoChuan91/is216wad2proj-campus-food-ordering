@@ -96,15 +96,20 @@ export default defineConfig({
   /* Folder for test artifacts such as screenshots, videos, traces, etc. */
   // outputDir: 'test-results/',
 
-  /* Run your local dev server before starting the tests */
-  webServer: {
-    /**
-     * Use the dev server by default for faster feedback loop.
-     * Use the preview server on CI for more realistic testing.
-     * Playwright will re-use the local server if there is already a dev-server running.
-     */
-    command: process.env.CI ? 'npm run preview' : 'npm run dev',
-    port: process.env.CI ? 4173 : 5173,
-    reuseExistingServer: !process.env.CI,
-  },
+  /* Start the Express API and the Vite dev server before the tests run */
+  webServer: [
+    {
+      command: 'node --env-file=.env index.js',
+      cwd: '../server',
+      port: 3000,
+      reuseExistingServer: !process.env.CI,
+      timeout: 30 * 1000,
+    },
+    {
+      command: process.env.CI ? 'pnpm preview' : 'pnpm dev',
+      port: process.env.CI ? 4173 : 5173,
+      reuseExistingServer: !process.env.CI,
+      timeout: 60 * 1000,
+    },
+  ],
 })

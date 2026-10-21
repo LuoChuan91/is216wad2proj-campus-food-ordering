@@ -13,6 +13,8 @@ const service = require('../src/services/orders.service');
 const ordersRepository = require('../src/models/orders.repository');
 const menuRepository = require('../src/models/menu.repository');
 const storesRepository = require('../src/models/stores.repository');
+const profilesRepository = require('../src/models/profiles.repository');
+const venuesRepository = require('../src/models/venues.repository');
 
 /* ---------- fake data (shaped like the real tables) ---------- */
 
@@ -63,11 +65,15 @@ const validBody = () => ({
 let saved;   // what placeOrder asked the repository to save (null = nothing saved)
 let store;   // the store the fake stores repository returns
 let item;    // the menu item the fake menu repository returns
+let student; // the profile the fake profiles repository returns
 
 test.beforeEach(() => {
   saved = null;
   store = structuredClone(STORE);
   item = structuredClone(BENTO);
+  student = { id: 'student-1', role: 'student', name: 'Aiden Tan', status: 'active' };
+  profilesRepository.findById = async (id) => (id === student.id ? student : null);
+  venuesRepository.findDestinationById = async (id) => (id === 'drop-1' ? { id: 'drop-1', name: 'Library Entrance Desk' } : null);
   menuRepository.findItemWithOptions = async (id) => (id === item.id ? item : null);
   storesRepository.findById = async (id) => (id === store.id ? store : null);
   ordersRepository.create = async (args) => {
@@ -256,4 +262,113 @@ test('order list adds the names of the chosen options', async () => {
   assert.deepEqual(orders[0].order_items[0].option_names, ['White rice', 'Tamagoyaki']);
   assert.deepEqual(orders[1].order_items[0].option_names, []);
   assert.equal(orders[0].order_items[0].menu_items.name, 'Chicken Teriyaki Bento', 'keeps the rest of the order');
+});
+
+/* ---------- accounts ---------- */
+
+test('403 when the student account is not active yet', async () => {
+  student.status = 'inactive';
+  await expectRejected(validBody(), 403);
+});
+
+test('400 when the account is not a student', async () => {
+  student.role = 'merchant';
+  await expectRejected(validBody(), 400);
+});
+
+/* ---------- peer delivery ---------- */
+
+test('delivery: adds the $1.50 fee after the discount and opens a 10-minute job', async () => {
+  const before = Date.now();
+  await service.placeOrder({ ...validBody(), type: 'delivery', destination_id: 'drop-1', note: '  at the front desk ' });
+
+  assert.equal(saved.order.type, 'delivery');
+  near(saved.order.delivery_fee, 1.5, 'delivery_fee');
+  near(saved.payment.amount, 11.7 + 1.5, 'amount paid (the discount is for the food only)');
+
+  assert.ok(saved.delivery, 'a delivery row should be saved');
+  assert.equal(saved.delivery.status, 'open');
+  assert.equal(saved.delivery.destination_id, 'drop-1');
+  assert.equal(saved.delivery.pickup_store_id, 'store-1');
+  assert.equal(saved.delivery.note, 'at the front desk');
+  const window = Date.parse(saved.delivery.expires_at) - before;
+  assert.ok(window >= 10 * 60e3 - 1000 && window <= 10 * 60e3 + 5000, 'expires about 10 minutes after ordering');
+});
+
+test('pickup orders save no fee and no delivery (the database requires a NULL fee)', async () => {
+  await service.placeOrder(validBody());
+  assert.equal(saved.order.delivery_fee, null);
+  assert.equal(saved.delivery, null);
+});
+
+test('400 when a delivery has no drop-off point, or an unknown one', async () => {
+  await expectRejected({ ...validBody(), type: 'delivery' }, 400);
+  await expectRejected({ ...validBody(), type: 'delivery', destination_id: 'nowhere' }, 400);
+});
+
+test('400 for an unknown order type', async () => {
+  await expectRejected({ ...validBody(), type: 'drone' }, 400);
+});
+
+test('400 when the items come from two different stores', async () => {
+  const other = { ...structuredClone(BENTO), id: 'item-other', store_id: 'store-2' };
+  menuRepository.findItemWithOptions = async (id) => (id === item.id ? item : id === other.id ? other : null);
+  const body = validBody();
+  body.items.push({ menu_item_id: 'item-other', qty: 1, option_ids: CHOSEN.slice() });
+  await expectRejected(body, 400);
+});
+
+/* ---------- order totals shown on screen ---------- */
+
+test('order list works out the code, discount and total from the payment', async () => {
+  ordersRepository.findByStore = async () => [{
+    id: 'e28704a0-215d', subtotal: 13, delivery_fee: 1.5, order_items: [],
+    payments: [{ amount: 13.2 }], deliveries: [{ status: 'open', fee: 1.5 }], profiles: { name: 'Aiden Tan' },
+  }];
+  menuRepository.findOptionNames = async () => [];
+  const [order] = await service.listOrders('store-1');
+  assert.equal(order.code, 'E287');
+  assert.equal(order.student_name, 'Aiden Tan');
+  near(order.discount, 1.3, 'discount');
+  near(order.total, 13.2, 'total');
+  assert.equal(order.fallback, false);
+});
+
+test('a delivery nobody took shows as a pickup with the fee waived', async () => {
+  ordersRepository.findByStore = async () => [{
+    id: 'order-9', subtotal: 13, delivery_fee: null, type: 'pickup', order_items: [],
+    payments: [{ amount: 13.2 }], deliveries: [{ status: 'expired', fee: 1.5 }],
+  }];
+  menuRepository.findOptionNames = async () => [];
+  const [order] = await service.listOrders('store-1');
+  assert.equal(order.fallback, true);
+  near(order.fee_waived, 1.5, 'fee waived');
+  near(order.total, 11.7, 'total without the fee');
+  near(order.discount, 1.3, 'discount');
+});
+
+/* ---------- the kitchen moving an order along ---------- */
+
+test('the kitchen moves an order paid -> preparing -> ready -> completed', async () => {
+  let row = { id: 'order-1', status: 'paid', type: 'pickup', subtotal: 5, order_items: [], payments: [] };
+  ordersRepository.findById = async () => row;
+  ordersRepository.updateStatus = async (id, from, changes) => (row.status === from ? (row = { ...row, ...changes }) : null);
+  menuRepository.findOptionNames = async () => [];
+
+  assert.equal((await service.updateStatus('order-1', 'preparing')).status, 'preparing');
+  const ready = await service.updateStatus('order-1', 'ready');
+  assert.equal(ready.status, 'ready');
+  assert.ok(ready.ready_at, 'ready_at is set');
+  const done = await service.updateStatus('order-1', 'completed');
+  assert.ok(done.completed_at, 'completed_at is set');
+});
+
+test('409 when a status is skipped (paid straight to ready)', async () => {
+  ordersRepository.findById = async () => ({ id: 'order-1', status: 'paid', type: 'pickup', order_items: [] });
+  await assert.rejects(service.updateStatus('order-1', 'ready'), (err) => err.status === 409);
+});
+
+test('409 when the kitchen tries to complete a delivery order (the courier does that)', async () => {
+  ordersRepository.findById = async () => ({ id: 'order-1', status: 'ready', type: 'delivery', order_items: [] });
+  await assert.rejects(service.updateStatus('order-1', 'completed'), (err) => err.status === 409);
 });
