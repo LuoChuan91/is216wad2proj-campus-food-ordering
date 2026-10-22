@@ -4,18 +4,26 @@
 //
 // Migrated from components/SignIn.vue. Rendered by the '/' route. Behaviour unchanged.
 import { ref, computed } from 'vue'
-import { S, Q, A } from '@/stores/compat.js'
+import { storeToRefs } from 'pinia'
+import { useUiStore } from '@/stores/ui.js'
+import { useCatalogStore } from '@/stores/catalog.js'
+import { useSessionStore } from '@/stores/session.js'
 import * as E from '@/utils/engine.js'
 import { config as cfg } from '@/config/index.js'
+
+const ui = useUiStore()
+const catalog = useCatalogStore()
+const session = useSessionStore()
+const { now } = storeToRefs(ui)
 
 const showAll = ref(false)
 const ORDER = { active: 0, inactive: 1, blocked: 2, removed: 3 }
 
 function blurb(p) {
   if (p.role === 'merchant') {
-    const st = Q.storesOf(p.id)
+    const st = catalog.storesOf(p.id)
     if (!st.length) return p.email
-    const v = Q.venue(st[0].venue_id)
+    const v = catalog.venue(st[0].venue_id)
     return st.length === 1 ? `${st[0].name} · ${v ? v.name : ''}` : `${st.length} stores: ${st.map((s) => s.name).join(', ')}`
   }
   if (p.role === 'admin') return 'Campus dining office'
@@ -29,10 +37,10 @@ function badge(p) {
 }
 
 const groups = computed(() => {
-  const students = S.db.profiles.filter((p) => p.role === 'student')
+  const students = catalog.db.profiles.filter((p) => p.role === 'student')
     .sort((a, b) => ORDER[a.status] - ORDER[b.status] || a.name.localeCompare(b.name))
   const shown = showAll.value ? students : students.filter((p, i) => p.status === 'active' || i < 4)
-  const pick = (role) => S.db.profiles.filter((p) => p.role === role)
+  const pick = (role) => catalog.db.profiles.filter((p) => p.role === role)
   return [
     { title: 'Students', note: 'Order food, track it live, deliver for others', people: shown, more: students.length - shown.length },
     { title: 'Merchants', note: 'Run the kitchen order board and menu', people: pick('merchant'), more: 0 },
@@ -59,7 +67,7 @@ const groups = computed(() => {
         <p class="si-sub">Pick an account.</p>
         <div v-for="g in groups" :key="g.title" class="si-group">
           <h3>{{ g.title }} <small>{{ g.note }}</small></h3>
-          <button v-for="x in g.people" :key="x.p.id" type="button" class="si-acct" @click="A.signIn(x.p.id)">
+          <button v-for="x in g.people" :key="x.p.id" type="button" class="si-acct" @click="session.signIn(x.p.id)">
             <Avatar :name="x.p.name" :size="38" :tone="x.p.role === 'student' ? 'brand' : 'navy'" />
             <span class="si-who"><strong>{{ x.p.name }}</strong><small>{{ x.blurb }}</small></span>
             <span v-if="x.badge" class="tag" :class="x.badge.tone">{{ x.badge.text }}</span>
@@ -70,7 +78,7 @@ const groups = computed(() => {
       </section>
     </div>
     <footer class="si-foot">
-      <span><Icon name="clock" :size="13" />{{ E.dateLabel(S.now) }}, {{ E.clock(S.now) }} in Singapore</span>
+      <span><Icon name="clock" :size="13" />{{ E.dateLabel(now) }}, {{ E.clock(now) }} in Singapore</span>
     </footer>
   </div>
 </template>

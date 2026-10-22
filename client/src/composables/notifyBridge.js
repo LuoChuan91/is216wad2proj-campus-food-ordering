@@ -15,12 +15,15 @@ let seq = 0
 
 // Copy one app notification into her store, both as history and as a pop-up.
 // `meta` carries the order/delivery status when the notification is one of those
-// events: her realtime channel already delivers those, so we skip them here to
-// avoid showing the same event twice.
+// realtime-owned events. When the Supabase realtime channel is CONNECTED we skip
+// those here (realtime already delivers them, so we avoid a duplicate). When it
+// is DISCONNECTED (or Supabase isn't configured) we mirror them too, so these
+// status events are never lost — this is the polling fallback.
 export function mirrorNotification(n, meta) {
-  if (meta && meta.kind) return
   try {
     const store = useNotificationsStore()
+    // Realtime-owned event + realtime is live -> let the channel show it (no dupe).
+    if (meta && meta.kind && store.realtimeConnected) return
     const item = {
       id: `b${Date.now()}_${seq++}`,
       title: n.title,

@@ -14,6 +14,12 @@ const nextId = () => `n${Date.now()}_${seq++}`
 export const useNotificationsStore = defineStore('notifications', () => {
   const items = ref([]) // full history, newest first
   const toasts = ref([]) // currently visible toasts
+  // Whether the Supabase realtime notification channel is currently connected.
+  // When true, the poll-diff fallback (notifyBridge) suppresses status/delivery
+  // events because realtime delivers them; when false, the bridge mirrors them so
+  // nothing is lost. Set by useRealtimeNotifications.
+  const realtimeConnected = ref(false)
+  function setRealtimeConnected(v) { realtimeConnected.value = !!v }
 
   /**
    * Handle one raw realtime payload { kind, status, order_id, at }.
@@ -56,5 +62,5 @@ export const useNotificationsStore = defineStore('notifications', () => {
     toasts.value = []
   }
 
-  return { items, toasts, receive, dismissToast, markRead, clear }
+  return { items, toasts, realtimeConnected, setRealtimeConnected, receive, dismissToast, markRead, clear }
 })

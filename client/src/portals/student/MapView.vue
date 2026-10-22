@@ -5,11 +5,17 @@
 import { ref, watch, watchEffect, onMounted, onBeforeUnmount } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { S, Q, A, DEFAULT_PLACE } from '@/stores/compat.js'
+import { useUiStore, DEFAULT_PLACE } from '@/stores/ui.js'
+import { useCatalogStore } from '@/stores/catalog.js'
+import { useOrdersStore } from '@/stores/orders.js'
 import * as E from '@/utils/engine.js'
 import { config as cfg } from '@/config/index.js'
 import { ensureRoute } from '@/utils/routing.js'
 import { LANDMARKS, shortName } from '@/utils/landmarks.js'
+
+const ui = useUiStore()
+const catalog = useCatalogStore()
+const orders = useOrdersStore()
 
 const el = ref(null)
 const markers = {}
@@ -24,14 +30,14 @@ const ICON = {
 }
 const svg = (kind) => `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${ICON[kind] || ICON.building}</svg>`
 
-const here = () => Q.place()
+const here = () => ui.place()
 // Only frame the map around you when you're on or near campus
 const onCampus = () => E.distanceM(here(), DEFAULT_PLACE) < 2500
-const foodVenues = () => S.db.venues.filter((v) => Q.storesAt(v.id).length)
+const foodVenues = () => catalog.db.venues.filter((v) => catalog.storesAt(v.id).length)
 
 // Landmarks: database venues without stores, plus the other SMU buildings (landmarks.js)
 function landmarks() {
-  const fromDb = S.db.venues.filter((v) => !Q.storesAt(v.id).length).map((v) => ({
+  const fromDb = catalog.db.venues.filter((v) => !catalog.storesAt(v.id).length).map((v) => ({
     id: v.id, name: v.name, short: shortName(v.name), address: v.address || '', lat: v.lat, lng: v.lng,
     kind: /library/i.test(v.name) ? 'library' : /school/i.test(v.name) ? 'school' : 'building',
   }))
@@ -45,25 +51,25 @@ function nearestFood(p) {
 
 /* ---------- marker HTML ---------- */
 function pinHtml(v, selected) {
-  const w = Q.walk(v)
+  const w = ui.walk(v)
   return `<div class="vpin${selected ? ' on' : ''}">${selected ? `<b>${esc(shortName(v.name))}</b>` : ''}<span>${w.minutes} min</span></div>`
 }
 function venueTip(v) {
-  const stores = Q.storesAt(v.id)
-  const open = stores.filter((s) => Q.open(s).open).length
+  const stores = catalog.storesAt(v.id)
+  const open = stores.filter((s) => ui.open(s).open).length
   const rows = stores.map((s) => {
-    const w = Q.storeWait(s.id)
-    const isOpen = Q.open(s).open
+    const w = orders.storeWait(s.id)
+    const isOpen = ui.open(s).open
     return `<li><i style="background:${s.color}"></i>${esc(s.name)}<em class="${isOpen ? '' : 'off'}">${isOpen ? (w ? `~${w.minutes} min` : 'Open') : 'Closed'}</em></li>`
   }).join('')
-  const walk = Q.walk(v)
+  const walk = ui.walk(v)
   return `<div class="map-tip-card"><strong>${esc(v.name)}</strong><small>${walk.minutes} min walk · ${open} of ${stores.length} open</small><ul>${rows}</ul><span class="tip-hint">Click to see the menus</span></div>`
 }
 function landmarkHtml(l) {
   return `<div class="lmk lmk-${l.kind}"><span class="lmk-ic">${svg(l.kind)}</span><b class="lmk-name">${esc(l.short)}</b></div>`
 }
 function landmarkTip(l) {
-  const walk = Q.walk(l)
+  const walk = ui.walk(l)
   const food = nearestFood(l)
   const foodLine = food ? `<span class="tip-food">Nearest food: <b>${esc(shortName(food.v.name))}</b>, ${Math.max(1, Math.round((food.m * 1.3) / 75))} min away</span>` : ''
   return `<div class="map-tip-card"><strong>${esc(l.name)}</strong><small>${esc(l.address)}</small><span>${walk.minutes} min walk from you · ${walk.meters} m</span>${foodLine}</div>`
@@ -94,7 +100,7 @@ function upsert(id, latlng, html, tip, opts) {
 
 function sync() {
   if (!map) return
-  const u = S.ui.student
+  const u = ui.ui.student
   const sel = u.sheet === 'venue' ? u.venueId : null
   const seen = new Set()
   for (const l of landmarks()) {
@@ -103,13 +109,13 @@ function sync() {
   }
   for (const v of foodVenues()) {
     seen.add(v.id)
-    const m = upsert(v.id, [v.lat, v.lng], pinHtml(v, v.id === sel), venueTip(v), { className: 'vpin-wrap', tipOffset: -34, onClick: () => A.openVenue(v.id) })
+    const m = upsert(v.id, [v.lat, v.lng], pinHtml(v, v.id === sel), venueTip(v), { className: 'vpin-wrap', tipOffset: -34, onClick: () => ui.openVenue(v.id) })
     m.mk.setZIndexOffset(v.id === sel ? 1000 : 0)
   }
   for (const id of Object.keys(markers)) if (!seen.has(id)) { markers[id].mk.remove(); delete markers[id] }
 
-  const v = sel && Q.venue(sel)
-  const w = v && Q.walk(v)
+  const v = sel && catalog.venue(sel)
+  const w = v && ui.walk(v)
   const sig = w ? JSON.stringify(w.coords) : ''
   if (route && route.sig !== sig) { route.line.remove(); route = null }
   if (w && !route) {
@@ -121,8 +127,8 @@ function sync() {
 function frame(animate) {
   if (!map) return
   const me = here(), near = onCampus()
-  const u = S.ui.student
-  const sel = u.sheet === 'venue' && u.venueId ? Q.venue(u.venueId) : null
+  const u = ui.ui.student
+  const sel = u.sheet === 'venue' && u.venueId ? catalog.venue(u.venueId) : null
   if (sel) {
     const pts = [[sel.lat, sel.lng]].concat(near ? [[me.lat, me.lng]] : [])
     map.fitBounds(L.latLngBounds(pts), { paddingTopLeft: [60, 150], paddingBottomRight: [60, 380], maxZoom: 18, animate, duration: 0.6 })
@@ -136,7 +142,7 @@ function frame(animate) {
 // Rounded outline around campus, drawn when map tiles can't load
 function campusOutline() {
   const pts = []
-  for (const v of S.db.venues.concat(LANDMARKS)) {
+  for (const v of catalog.db.venues.concat(LANDMARKS)) {
     for (let i = 0; i < 12; i++) { const a = (i / 12) * 2 * Math.PI; pts.push([v.lat + 0.00042 * Math.sin(a), v.lng + 0.00042 * Math.cos(a)]) }
   }
   pts.sort((a, b) => a[1] - b[1] || a[0] - b[0])
@@ -151,7 +157,7 @@ function campusOutline() {
 function fetchRoutes() {
   // One request first: if the routing API is unreachable, the rest use estimates without retrying
   const me = here()
-  const places = S.db.venues.concat(LANDMARKS)
+  const places = catalog.db.venues.concat(LANDMARKS)
   if (!places.length) return
   ensureRoute(me, places[0]).then(() => places.slice(1).forEach((v) => ensureRoute(me, v)))
 }
@@ -163,9 +169,9 @@ onMounted(() => {
   // No map tiles at all (offline, or a network that blocks them)? Draw a simple campus outline instead.
   let loaded = 0, failed = 0
   tiles.on('tileload', () => { loaded++ })
-  tiles.on('tileerror', () => { if (++failed >= 4 && !loaded && map) { S.mapOffline = true; tiles.remove() } })
-  if (S.mapOffline) tiles.remove()
-  stops.push(watch(() => S.mapOffline, (off) => { if (off && map && !campus) { campus = campusOutline().addTo(map); campus.eachLayer((l) => l.bringToBack && l.bringToBack()) } }, { immediate: true }))
+  tiles.on('tileerror', () => { if (++failed >= 4 && !loaded && map) { ui.mapOffline = true; tiles.remove() } })
+  if (ui.mapOffline) tiles.remove()
+  stops.push(watch(() => ui.mapOffline, (off) => { if (off && map && !campus) { campus = campusOutline().addTo(map); campus.eachLayer((l) => l.bringToBack && l.bringToBack()) } }, { immediate: true }))
   // Building names appear once you zoom in far enough for them to fit
   const labels = () => el.value && el.value.classList.toggle('show-labels', map.getZoom() >= 17)
   map.on('zoomend', labels)
@@ -174,8 +180,8 @@ onMounted(() => {
   labels()
   fetchRoutes()
   stops.push(watchEffect(sync))
-  stops.push(watch(() => [S.ui.student.venueId, S.ui.student.sheet === 'venue'], () => frame(true)))
-  stops.push(watch(() => S.db.venues.length, (n, o) => { fetchRoutes(); if (n > o) frame(true) }))
+  stops.push(watch(() => [ui.ui.student.venueId, ui.ui.student.sheet === 'venue'], () => frame(true)))
+  stops.push(watch(() => catalog.db.venues.length, (n, o) => { fetchRoutes(); if (n > o) frame(true) }))
   stops.push(watch(() => { const p = here(); return p.lat + ',' + p.lng }, () => {
     meMarker.setLatLng([here().lat, here().lng])
     fetchRoutes()
@@ -194,5 +200,5 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="map" ref="el" role="region" aria-label="Campus map"></div>
-  <span v-if="S.mapOffline" class="map-note">Map tiles unavailable here</span>
+  <span v-if="ui.mapOffline" class="map-note">Map tiles unavailable here</span>
 </template>

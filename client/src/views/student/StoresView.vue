@@ -5,16 +5,24 @@
 // Migrated from portals/student/StoresTab.vue. Renders in StudentLayout's persistent
 // KeepAlive tab layer. Behaviour unchanged.
 import { computed } from 'vue'
-import { S, Q, A } from '@/stores/compat.js'
+import { storeToRefs } from 'pinia'
+import { useUiStore } from '@/stores/ui.js'
+import { useCatalogStore } from '@/stores/catalog.js'
+import { useOrdersStore } from '@/stores/orders.js'
 import * as E from '@/utils/engine.js'
 import { shortName } from '@/utils/landmarks.js'
 import WaitTimeEstimate from '@/components/WaitTimeEstimate.vue'
 
-const u = computed(() => S.ui.student)
+const ui = useUiStore()
+const catalog = useCatalogStore()
+const orders = useOrdersStore()
+const { ui: uiState } = storeToRefs(ui)
+
+const u = computed(() => uiState.value.student)
 const list = computed(() => u.value.list)
 
 // Filter chips: All, Open now, Offers, then every menu category (Noodles, Drinks, Bento Sets…)
-const categories = computed(() => [...new Set(S.db.menu.map((m) => m.category))].sort())
+const categories = computed(() => [...new Set(catalog.db.menu.map((m) => m.category))].sort())
 const chips = computed(() => [
   { id: 'all', label: 'All' },
   { id: 'open', label: 'Open now' },
@@ -28,9 +36,9 @@ const SORTS = [
   { id: 'name', label: 'A to Z' },
 ]
 
-const rows = computed(() => S.db.stores.map((s) => {
-  const v = Q.venue(s.venue_id)
-  return { s, v, open: Q.open(s), wait: Q.storeWait(s.id), walk: v ? Q.walk(v) : null, cats: Q.menu(s.id).map((m) => m.category) }
+const rows = computed(() => catalog.db.stores.map((s) => {
+  const v = catalog.venue(s.venue_id)
+  return { s, v, open: ui.open(s), wait: orders.storeWait(s.id), walk: v ? ui.walk(v) : null, cats: catalog.menuOf(s.id).map((m) => m.category) }
 }))
 
 const shown = computed(() => {
@@ -38,7 +46,7 @@ const shown = computed(() => {
   const hit = (t) => String(t || '').toLowerCase().includes(q)
   const f = list.value.filter
   let out = rows.value.filter((r) => {
-    if (q && !(hit(r.s.name) || hit(r.s.cuisine) || hit(r.s.description) || (r.v && hit(r.v.name)) || Q.menu(r.s.id).some((m) => hit(m.name)))) return false
+    if (q && !(hit(r.s.name) || hit(r.s.cuisine) || hit(r.s.description) || (r.v && hit(r.v.name)) || catalog.menuOf(r.s.id).some((m) => hit(m.name)))) return false
     if (f === 'open') return r.open.open
     if (f === 'offers') return !!r.s.discount_type
     if (f.startsWith('cat:')) return r.cats.includes(f.slice(4))
@@ -60,22 +68,22 @@ const openCount = computed(() => rows.value.filter((r) => r.open.open).length)
 <template>
   <div class="stores-tab scroll">
     <h2 class="tab-title">All stores</h2>
-    <p class="tab-sub">{{ S.db.stores.length }} stores on campus · {{ openCount }} taking orders</p>
-    <label class="search"><Icon name="search" :size="16" /><input type="search" placeholder="Search stores, dishes or buildings" aria-label="Search stores" :value="list.search" @input="A.setListSearch($event.target.value)">
-      <button v-if="list.search" type="button" class="icon-btn sm" aria-label="Clear search" @click="A.setListSearch('')"><Icon name="close" :size="12" /></button></label>
+    <p class="tab-sub">{{ catalog.db.stores.length }} stores on campus · {{ openCount }} taking orders</p>
+    <label class="search"><Icon name="search" :size="16" /><input type="search" placeholder="Search stores, dishes or buildings" aria-label="Search stores" :value="list.search" @input="ui.setListSearch($event.target.value)">
+      <button v-if="list.search" type="button" class="icon-btn sm" aria-label="Clear search" @click="ui.setListSearch('')"><Icon name="close" :size="12" /></button></label>
     <div class="filter-row scroll" role="group" aria-label="Filter stores">
-      <button v-for="c in chips" :key="c.id" type="button" class="chip filter" :class="{ on: list.filter === c.id }" :aria-pressed="list.filter === c.id" @click="A.setListFilter(c.id)">{{ c.label }}</button>
+      <button v-for="c in chips" :key="c.id" type="button" class="chip filter" :class="{ on: list.filter === c.id }" :aria-pressed="list.filter === c.id" @click="ui.setListFilter(c.id)">{{ c.label }}</button>
     </div>
     <div class="sort-row">
       <span>{{ shown.length }} {{ shown.length === 1 ? 'store' : 'stores' }}</span>
       <label>Sort by
-        <select class="form-select form-select-sm" :value="list.sort" @change="A.setListSort($event.target.value)">
+        <select class="form-select form-select-sm" :value="list.sort" @change="ui.setListSort($event.target.value)">
           <option v-for="o in SORTS" :key="o.id" :value="o.id">{{ o.label }}</option>
         </select>
       </label>
     </div>
     <div class="store-list">
-      <button v-for="r in shown" :key="r.s.id" class="store-card" :class="{ closed: !r.open.open }" @click="A.openStore(r.s.id)">
+      <button v-for="r in shown" :key="r.s.id" class="store-card" :class="{ closed: !r.open.open }" @click="ui.openStore(r.s.id)">
         <Mono :store="r.s" :size="46" />
         <span class="store-main">
           <strong>{{ r.s.name }}</strong>

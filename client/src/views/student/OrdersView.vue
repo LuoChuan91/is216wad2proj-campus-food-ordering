@@ -5,14 +5,25 @@
 // KeepAlive tab layer. Behaviour unchanged. Each row is an <OrderRow> (which owns the
 // status-label logic); this view just splits the orders into active vs earlier.
 import { computed } from 'vue'
-import { S, Q, A } from '@/stores/compat.js'
+import { storeToRefs } from 'pinia'
+import { useUiStore } from '@/stores/ui.js'
+import { useCatalogStore } from '@/stores/catalog.js'
+import { useOrdersStore } from '@/stores/orders.js'
+import { useSessionStore } from '@/stores/session.js'
 import OrderRow from '@/components/OrderRow.vue'
 
-const rows = computed(() => Q.ordersOf(S.session.userId)
-  .map((o) => ({ o, s: Q.store(o.store_id), n: o.items.reduce((a, l) => a + l.qty, 0) }))
+const ui = useUiStore()
+const catalog = useCatalogStore()
+const orders = useOrdersStore()
+const sessionStore = useSessionStore()
+const { now } = storeToRefs(ui)
+const { session } = storeToRefs(sessionStore)
+
+const rows = computed(() => orders.ordersOf(session.value.userId)
+  .map((o) => ({ o, s: catalog.store(o.store_id), n: o.items.reduce((a, l) => a + l.qty, 0) }))
   .filter((r) => r.s))
-const active = computed(() => rows.value.filter((r) => Q.isActive(r.o)))
-const past = computed(() => rows.value.filter((r) => !Q.isActive(r.o)))
+const active = computed(() => rows.value.filter((r) => orders.isActive(r.o)))
+const past = computed(() => rows.value.filter((r) => !orders.isActive(r.o)))
 </script>
 
 <template>
@@ -20,8 +31,8 @@ const past = computed(() => rows.value.filter((r) => !Q.isActive(r.o)))
     <h2 class="tab-title">Your orders</h2>
     <p v-if="!active.length && !past.length" class="empty-note">No orders yet. Find a store on the map to start.</p>
     <h4 v-if="active.length" class="sec">Active</h4>
-    <OrderRow v-for="r in active" :key="r.o.id" :order="r.o" :store="r.s" :count="r.n" variant="active" @open="A.openTracking" />
+    <OrderRow v-for="r in active" :key="r.o.id" :order="r.o" :store="r.s" :count="r.n" variant="active" @open="ui.openTracking" />
     <h4 v-if="past.length" class="sec">Earlier</h4>
-    <OrderRow v-for="r in past" :key="r.o.id" :order="r.o" :store="r.s" variant="past" :now="S.now" @open="A.openTracking" />
+    <OrderRow v-for="r in past" :key="r.o.id" :order="r.o" :store="r.s" variant="past" :now="now" @open="ui.openTracking" />
   </div>
 </template>

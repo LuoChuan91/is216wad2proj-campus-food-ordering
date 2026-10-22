@@ -12,6 +12,7 @@ describe('toNotificationView', () => {
     expect(toNotificationView({ kind: 'delivery', status: 'accepted' })).toMatchObject({ title: 'Delivery ready', toast: true })
     expect(toNotificationView({ kind: 'delivery', status: 'picked_up' })).toMatchObject({ toast: true })
     expect(toNotificationView({ kind: 'delivery', status: 'delivered' })).toMatchObject({ toast: false })
+    expect(toNotificationView({ kind: 'delivery', status: 'expired' })).toMatchObject({ title: 'Switched to pickup', variant: 'warning', toast: true })
   })
 
   it('carries the original payload fields through', () => {
@@ -34,6 +35,7 @@ describe('shouldToast', () => {
     expect(shouldToast({ kind: 'order', status: 'completed' })).toBe(true)
     expect(shouldToast({ kind: 'delivery', status: 'accepted' })).toBe(true)
     expect(shouldToast({ kind: 'delivery', status: 'picked_up' })).toBe(true)
+    expect(shouldToast({ kind: 'delivery', status: 'expired' })).toBe(true)
     expect(shouldToast({ kind: 'order', status: 'paid' })).toBe(false)
     expect(shouldToast({ kind: 'delivery', status: 'delivered' })).toBe(false)
     expect(shouldToast({ kind: 'order', status: 'preparing' })).toBe(false)

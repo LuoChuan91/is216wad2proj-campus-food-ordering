@@ -6,9 +6,12 @@
 import { defineStore } from 'pinia'
 import { reactive } from 'vue'
 import { api } from '@/services/api.js'
+import * as E from '@/utils/engine.js'
 import { useSessionStore } from './session.js'
 import { useCatalogStore } from './catalog.js'
 import { useUiStore } from './ui.js'
+
+const ACTIVE = ['paid', 'preparing', 'ready']
 
 const ms = (t) => (t ? Date.parse(t) : null)
 
@@ -46,6 +49,48 @@ export const useOrdersStore = defineStore('orders', () => {
   const waits = reactive({ stores: {}, orders: {}, slots: 2 })
 
   function order(id) { return db.orders.find((o) => o.id === id) }
+
+  /* ---------- query helpers (moved from the compat shim's Q) ---------- */
+  // The signed-in user's profile row (via the catalog store)
+  function me() { return useCatalogStore().user(useSessionStore().session.userId) }
+  // A user's own orders, newest first
+  function ordersOf(userId) {
+    return db.orders.filter((o) => o.student_id === userId).sort((a, b) => b.created_at - a.created_at)
+  }
+  // An order is "active" while it is still paid/preparing/ready and not yet delivered
+  function isActive(o) {
+    return ACTIVE.includes(o.status) && !(o.delivery && o.delivery.status === 'delivered')
+  }
+  // The live per-order ready times from the wait-time engine
+  function queue() { return waits.orders }
+  // A store's current wait (only when it has a minutes figure), else null
+  function storeWait(storeId) {
+    const w = waits.stores[storeId]
+    return w && w.minutes != null ? w : null
+  }
+  // The courier's current job (accepted or picked up), if any
+  function activeJob() { return db.myJobs.find((d) => d.status === 'accepted' || d.status === 'picked_up') }
+  // Open delivery jobs the courier may take (not their own orders)
+  function openJobs() { return db.jobs.filter((d) => d.order.student_id !== useSessionStore().session.userId) }
+  // Today's and this week's delivery earnings from the courier's delivered jobs
+  function earnings() {
+    const now = useUiStore().now
+    const done = db.myJobs.filter((d) => d.status === 'delivered')
+    const today = done.filter((d) => E.sameDay(d.delivered_at, now))
+    const week = done.filter((d) => now - d.delivered_at < 7 * 864e5)
+    return { today: E.sum(today, (d) => d.fee), todayCount: today.length, week: E.sum(week, (d) => d.fee), weekCount: week.length }
+  }
+
+  // Refetch ONE store's orders and merge them into db.orders (replacing that
+  // store's rows, keeping other stores untouched). Used by the merchant live
+  // layer so a realtime order_change updates the board without a whole-app poll.
+  // Returns the normalised rows for the store.
+  async function loadStoreOrders(storeId) {
+    if (!storeId) return []
+    const list = (await api.storeOrders(storeId)).map(normaliseOrder)
+    db.orders = [...db.orders.filter((o) => o.store_id !== storeId), ...list]
+    return list
+  }
 
   // Everything that changes from minute to minute, for whoever is signed in
   async function loadLive() {
@@ -161,7 +206,8 @@ export const useOrdersStore = defineStore('orders', () => {
 
   return {
     db, waits,
-    order, loadLive, refreshEstimate,
+    order, me, ordersOf, isActive, queue, storeWait, activeJob, openJobs, earnings,
+    loadLive, loadStoreOrders, refreshEstimate,
     setOrderStatus, startPreparing, markReady, markCollected,
     setItemAvailable, setStoreOpen,
     setAvailable, courierAction, acceptJob, pickUp, deliver,

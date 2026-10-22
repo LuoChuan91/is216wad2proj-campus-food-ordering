@@ -4,35 +4,43 @@
 // Migrated from portals/student/DeliverTab.vue. Renders in StudentLayout's persistent
 // KeepAlive tab layer. Behaviour unchanged.
 import { computed } from 'vue'
-import { S, Q, A } from '@/stores/compat.js'
+import { storeToRefs } from 'pinia'
+import { useUiStore } from '@/stores/ui.js'
+import { useCatalogStore } from '@/stores/catalog.js'
+import { useOrdersStore } from '@/stores/orders.js'
 import * as E from '@/utils/engine.js'
 import { config as cfg } from '@/config/index.js'
 import { shortName } from '@/utils/landmarks.js'
 import StatusTag from '@/components/StatusTag.vue'
 
+const ui = useUiStore()
+const catalog = useCatalogStore()
+const orders = useOrdersStore()
+const { courierOn, now, busy } = storeToRefs(ui)
+
 const money = E.money
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`
 
 function jobView(d) {
-  const s = Q.store(d.pickup_store_id) || { name: 'Store', mono: '?', color: '#767d90', venue_id: null }
-  const v = Q.venue(s.venue_id)
-  const drop = Q.dropoff(d.destination_id) || { name: 'Drop-off point', lat: v ? v.lat : 0, lng: v ? v.lng : 0 }
-  const est = (S.waits.orders[d.order_id] || {}).readyAt
-  return { d, o: d.order, s, v, vName: v ? shortName(v.name) : '', drop, walk: v ? E.walkEstimate(v, drop) : { meters: 0 }, items: d.order.items, est, left: d.expires_at - S.now }
+  const s = catalog.store(d.pickup_store_id) || { name: 'Store', mono: '?', color: '#767d90', venue_id: null }
+  const v = catalog.venue(s.venue_id)
+  const drop = catalog.dropoff(d.destination_id) || { name: 'Drop-off point', lat: v ? v.lat : 0, lng: v ? v.lng : 0 }
+  const est = (orders.waits.orders[d.order_id] || {}).readyAt
+  return { d, o: d.order, s, v, vName: v ? shortName(v.name) : '', drop, walk: v ? E.walkEstimate(v, drop) : { meters: 0 }, items: d.order.items, est, left: d.expires_at - now.value }
 }
 
-const on = computed(() => S.courierOn)
-const active = computed(() => { const d = Q.activeJob(); return d ? jobView(d) : null })
-const jobs = computed(() => (on.value ? Q.openJobs().map(jobView) : []))
-const expired = computed(() => (on.value ? S.db.expiredJobs.map(jobView) : []))
-const earn = computed(() => Q.earnings())
+const on = computed(() => courierOn.value)
+const active = computed(() => { const d = orders.activeJob(); return d ? jobView(d) : null })
+const jobs = computed(() => (on.value ? orders.openJobs().map(jobView) : []))
+const expired = computed(() => (on.value ? orders.db.expiredJobs.map(jobView) : []))
+const earn = computed(() => orders.earnings())
 </script>
 
 <template>
   <div class="deliver scroll">
     <header class="dl-head">
       <div><h2 class="tab-title">Deliver &amp; earn</h2><p>Pick up food on your way and keep the delivery fee.</p></div>
-      <label class="avail form-switch"><input class="form-check-input" type="checkbox" role="switch" :checked="on" @change="A.setAvailable($event.target.checked)"><span>{{ on ? 'Available' : 'Offline' }}</span></label>
+      <label class="avail form-switch"><input class="form-check-input" type="checkbox" role="switch" :checked="on" @change="orders.setAvailable($event.target.checked)"><span>{{ on ? 'Available' : 'Offline' }}</span></label>
     </header>
     <div class="panel earn">
       <div><small>Today</small><b>{{ money(earn.today) }}</b><span>{{ plural(earn.todayCount, 'delivery', 'deliveries') }}</span></div>
@@ -51,8 +59,8 @@ const earn = computed(() => Q.earnings())
         <p class="aj-line ok" v-else-if="active.d.status === 'accepted'"><Icon name="check" :size="14" />Food is ready at {{ active.s.name }}.</p>
         <p class="aj-line" v-else><Icon name="walk" :size="14" />Walk {{ active.walk.meters }} m to {{ active.drop.name }}.</p>
         <p v-if="active.d.note" class="aj-line"><Icon name="mail" :size="14" />“{{ active.d.note }}”</p>
-        <button v-if="active.d.status === 'accepted'" class="btn btn-primary w-100" :disabled="active.o.status !== 'ready' || S.busy[active.d.id]" @click="A.pickUp(active.d.id)">{{ active.o.status === 'ready' ? 'Picked up the food' : 'Waiting for the kitchen' }}</button>
-        <button v-else class="btn btn-success w-100" :disabled="S.busy[active.d.id]" @click="A.deliver(active.d.id)">Mark as delivered</button>
+        <button v-if="active.d.status === 'accepted'" class="btn btn-primary w-100" :disabled="active.o.status !== 'ready' || busy[active.d.id]" @click="orders.pickUp(active.d.id)">{{ active.o.status === 'ready' ? 'Picked up the food' : 'Waiting for the kitchen' }}</button>
+        <button v-else class="btn btn-success w-100" :disabled="busy[active.d.id]" @click="orders.deliver(active.d.id)">Mark as delivered</button>
       </div>
     </template>
     <h4 class="sec">Jobs near you <span v-if="on" class="count">{{ jobs.length }}</span></h4>
@@ -62,7 +70,7 @@ const earn = computed(() => Q.earnings())
       <div class="job-top"><Mono :store="j.s" :size="36" /><div class="job-route"><strong>{{ j.s.name }}</strong><small>{{ j.vName }} → {{ j.drop.name }}</small></div><b class="fee">{{ money(j.d.fee) }}</b></div>
       <div class="job-meta"><span>{{ plural(j.items, 'item', 'items') }}</span><span><Icon name="walk" :size="12" />{{ j.walk.meters }} m</span><span :class="{ ok: j.o.status === 'ready' }">{{ j.o.status === 'ready' ? 'Food is ready' : (j.est ? 'Ready ~' + E.clock(j.est) : 'In the kitchen') }}</span></div>
       <div class="job-timer"><div class="meter" :class="j.left < 120e3 ? 'late' : j.left < 300e3 ? 'warn' : 'ok'"><i :style="{ width: Math.max(0, j.left / (cfg.deliveryWindowMin * 600)) + '%' }"></i></div><small>Expires in {{ E.countdown(j.left) }}</small></div>
-      <button class="btn btn-primary w-100" :disabled="!!active || S.busy[j.d.id]" @click="A.acceptJob(j.d.id)">{{ active ? 'Finish your current delivery first' : 'Accept job' }}</button>
+      <button class="btn btn-primary w-100" :disabled="!!active || busy[j.d.id]" @click="orders.acceptJob(j.d.id)">{{ active ? 'Finish your current delivery first' : 'Accept job' }}</button>
     </div>
     <div v-for="j in expired" :key="j.d.id" class="panel job expired">
       <div class="job-top"><Mono :store="j.s" :size="36" /><div class="job-route"><strong>{{ j.s.name }}</strong><small>{{ j.vName }} → {{ j.drop.name }}</small></div><StatusTag tone="warn">Expired</StatusTag></div>

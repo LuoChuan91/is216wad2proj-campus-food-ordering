@@ -57,15 +57,14 @@ src/
 │   ├── index.js            # routes + guard (createWebHashHistory, #/... scheme)
 │   ├── nav.js              # HOME map + setRouter() used by ui-store nav actions
 │   └── sync.js             # keeps the ui-store tab/page in step with the URL
-├── stores/                 # Pinia stores (ported from the old app/state.js)
+├── stores/                 # Pinia stores (ported from the old app/state.js; used directly by components)
 │   ├── pinia.js            # the Pinia instance
 │   ├── session.js          # who is signed in (guard's source of truth)
 │   ├── catalog.js          # profiles / venues / stores / menu
 │   ├── orders.js           # cart + orders + deliveries
 │   ├── ui.js               # tabs, page + sheet overlays (item/pay/venue)
 │   ├── auth.js             # Supabase auth session (for realtime notifications)
-│   ├── notifications.js    # notification history + unread count
-│   └── compat.js           # TEMPORARY S/Q/A shim so portal components keep working
+│   └── notifications.js    # notification history + unread count
 ├── composables/
 │   ├── useAppBootstrap.js  # loading, polling, clock, title (non-routing half of old live.js)
 │   ├── useWaitTime.js      # realtime wait-time estimate (poll fallback)

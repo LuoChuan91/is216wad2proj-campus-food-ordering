@@ -246,26 +246,112 @@ describe('orders store: estimate and loadLive', () => {
   })
 })
 
-describe('shim: S/Q/A are backed by the stores', () => {
-  it('S/Q/A reflect store state and actions', async () => {
-    // The shim binds its stores to the shared pinia instance (stores/pinia.js),
-    // which it activates on import. Use that same instance here so the stores the
-    // shim uses are the stores we seed.
-    const { default: pinia } = await import('@/stores/pinia.js')
-    setActivePinia(pinia)
-    const catalog = useCatalogStore()
-    catalog.db.stores = [{ id: 's1', venue_id: 'v1', merchant_id: 'mer', name: 'Bento Bar', is_open: true }]
-    catalog.db.profiles = [{ id: 'stu', role: 'student', name: 'Aiden Tan', status: 'active' }]
-    catalog.decorateStores()
+describe('orders store: moved query helpers (me/ordersOf/isActive/queue/storeWait/activeJob/openJobs/earnings)', () => {
+  beforeEach(() => { setActivePinia(createPinia()) })
 
-    const mod = await import('@/stores/compat.js')
-    const { S, Q, A } = mod
-    expect(Q.store('s1').name).toBe('Bento Bar')
-    A.signIn('stu')
-    expect(S.session.userId).toBe('stu')
-    expect(Q.me().name).toBe('Aiden Tan')
-    expect(S.db.stores).toHaveLength(1)
-    A.setTab('me')
-    expect(S.ui.student.tab).toBe('me')
+  it('me returns the signed-in user profile', () => {
+    seedCatalog()
+    const session = useSessionStore()
+    const orders = useOrdersStore()
+    session.signIn('stu')
+    expect(orders.me().name).toBe('Aiden Tan')
+  })
+
+  it('ordersOf filters by student and sorts newest first', () => {
+    seedCatalog()
+    const orders = useOrdersStore()
+    orders.db.orders = [
+      { id: 'a', student_id: 'stu', created_at: 100, status: 'paid' },
+      { id: 'b', student_id: 'stu', created_at: 300, status: 'paid' },
+      { id: 'c', student_id: 'other', created_at: 200, status: 'paid' },
+    ]
+    const mine = orders.ordersOf('stu')
+    expect(mine.map((o) => o.id)).toEqual(['b', 'a'])
+  })
+
+  it('isActive is true for paid/preparing/ready and not yet delivered', () => {
+    seedCatalog()
+    const orders = useOrdersStore()
+    expect(orders.isActive({ status: 'paid' })).toBe(true)
+    expect(orders.isActive({ status: 'preparing' })).toBe(true)
+    expect(orders.isActive({ status: 'ready' })).toBe(true)
+    expect(orders.isActive({ status: 'completed' })).toBe(false)
+    expect(orders.isActive({ status: 'ready', delivery: { status: 'delivered' } })).toBe(false)
+  })
+
+  it('queue returns the live per-order ready times', () => {
+    seedCatalog()
+    const orders = useOrdersStore()
+    orders.waits.orders = { o1: { minutes: 5 } }
+    expect(orders.queue()).toEqual({ o1: { minutes: 5 } })
+  })
+
+  it('storeWait returns the wait only when minutes is set, else null', () => {
+    seedCatalog()
+    const orders = useOrdersStore()
+    orders.waits.stores = { s1: { minutes: 8 }, s2: { minutes: null } }
+    expect(orders.storeWait('s1')).toEqual({ minutes: 8 })
+    expect(orders.storeWait('s2')).toBe(null)
+    expect(orders.storeWait('nope')).toBe(null)
+  })
+
+  it('activeJob finds an accepted or picked_up job', () => {
+    seedCatalog()
+    const orders = useOrdersStore()
+    orders.db.myJobs = [{ id: 'j1', status: 'delivered' }, { id: 'j2', status: 'picked_up' }]
+    expect(orders.activeJob().id).toBe('j2')
+  })
+
+  it('openJobs excludes the courier\'s own orders', () => {
+    seedCatalog()
+    const session = useSessionStore()
+    const orders = useOrdersStore()
+    session.signIn('stu')
+    orders.db.jobs = [
+      { id: 'j1', order: { student_id: 'stu' } },
+      { id: 'j2', order: { student_id: 'other' } },
+    ]
+    expect(orders.openJobs().map((d) => d.id)).toEqual(['j2'])
+  })
+
+  it('earnings sums today and this week from delivered jobs', () => {
+    seedCatalog()
+    const ui = useUiStore()
+    const orders = useOrdersStore()
+    const now = Date.now()
+    ui.now = now
+    orders.db.myJobs = [
+      { id: 'j1', status: 'delivered', delivered_at: now, fee: 1.5 },
+      { id: 'j2', status: 'delivered', delivered_at: now - 3 * 864e5, fee: 1.5 }, // this week, not today
+      { id: 'j3', status: 'delivered', delivered_at: now - 10 * 864e5, fee: 1.5 }, // older than a week
+      { id: 'j4', status: 'picked_up', delivered_at: now, fee: 1.5 }, // not delivered
+    ]
+    const e = orders.earnings()
+    expect(e.todayCount).toBe(1)
+    expect(e.today).toBe(1.5)
+    expect(e.weekCount).toBe(2)
+    expect(e.week).toBe(3)
+  })
+})
+
+describe('ui store: moved query helpers (open/unread)', () => {
+  beforeEach(() => { setActivePinia(createPinia()) })
+
+  it('open reports a paused store as closed', () => {
+    seedCatalog()
+    const ui = useUiStore()
+    const status = ui.open({ is_open: false })
+    expect(status.open).toBe(false)
+    expect(status.label).toBe('Paused by the store')
+  })
+
+  it('unread counts notifications newer than the last seen id', () => {
+    seedCatalog()
+    const ui = useUiStore()
+    ui.notifications.push({ id: 3, title: 'c' }, { id: 2, title: 'b' }, { id: 1, title: 'a' })
+    ui.readId = 1
+    expect(ui.unread()).toBe(2)
+    ui.readId = 3
+    expect(ui.unread()).toBe(0)
   })
 })

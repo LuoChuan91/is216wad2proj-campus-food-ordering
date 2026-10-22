@@ -14,11 +14,12 @@
 // level, so the realtime order layer (and the "Updates: Live/Polling" chip) stays
 // connected while switching between the Orders and Menu tabs — identical to before.
 import { computed } from 'vue'
-import { Q } from '@/stores/compat.js'
+import { useOrdersStore } from '@/stores/orders.js'
 import MerchantView from '../views/merchant/MerchantView.vue'
 import AdminView from '../views/admin/AdminView.vue'
 
-const me = computed(() => Q.me())
+const orders = useOrdersStore()
+const me = computed(() => orders.me())
 </script>
 
 <template>

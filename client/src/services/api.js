@@ -32,6 +32,11 @@ export const api = {
   expiredJobs: () => http.get('/deliveries', { params: { status: 'expired' } }),
   myJobs: (courierId) => http.get('/deliveries', { params: { courier_id: courierId } }),
 
+  // wait-time estimate engine (used by useWaitTime / waitTimeApi)
+  ordersAhead: (storeId, orderId) =>
+    http.get('/orders/orderAhead', { params: orderId ? { store_id: storeId, order_id: orderId } : { store_id: storeId } }),
+  itemCookingDetails: (ids) => http.post('/menu/itemCookingDetails', { ids }),
+
   // changes
   placeOrder: (body) => http.post('/orders', body),
   setOrderStatus: (orderId, status) => http.patch(`/orders/${orderId}`, { status }),
@@ -41,3 +46,6 @@ export const api = {
   setProfileStatus: (id, status) => http.patch(`/profiles/${id}`, { status }),
   addVenue: (venue) => http.post('/venues', venue),
 }
+
+// The shared axios instance, exported for the rare caller that needs raw access.
+export { http }

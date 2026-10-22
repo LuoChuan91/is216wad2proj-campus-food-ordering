@@ -16,16 +16,13 @@
 // fallback when Realtime is down, keep-last-data + `stale` flag on a failed
 // refresh, and full teardown on unmount / storeId change.
 import { ref, watch, onMounted, onBeforeUnmount, toValue } from 'vue'
-import axios from 'axios'
 import defaultSupabase from '@/common/supabase.js'
+import { api } from '@/services/api.js'
 
-// TODO: might still need chang up
-// Default fetch: the existing orders list endpoint (GET /api/orders?store_id=).
-// Injectable so the dashboard can swap to other fetch without touching
-// the live-update logic.
+// Default fetch: the shared api layer (GET /orders?store_id=). Injectable so the
+// dashboard can swap in its own fetch without touching the live-update logic.
 async function defaultFetchOrders(storeId) {
-  const { data } = await axios.get('/api/orders', { params: { store_id: storeId } })
-  return data
+  return api.storeOrders(storeId)
 }
 
 /**

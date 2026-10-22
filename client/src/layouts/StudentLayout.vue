@@ -16,7 +16,10 @@
 // Students whose account isn't active see the pending screen (the guard sends them
 // here and this component renders it).
 import { computed } from 'vue'
-import { S, Q, A } from '@/stores/compat.js'
+import { storeToRefs } from 'pinia'
+import { useUiStore } from '@/stores/ui.js'
+import { useCatalogStore } from '@/stores/catalog.js'
+import { useOrdersStore } from '@/stores/orders.js'
 import PendingView from '../views/student/PendingView.vue'
 import TabBar from '../portals/student/TabBar.vue'
 import ItemSheet from '../portals/student/ItemSheet.vue'
@@ -29,8 +32,13 @@ import MeView from '../views/student/MeView.vue'
 
 const TABS = { explore: ExploreView, stores: StoresView, orders: OrdersView, deliver: DeliverView, me: MeView }
 
-const u = computed(() => S.ui.student)
-const me = computed(() => Q.me())
+const ui = useUiStore()
+const catalog = useCatalogStore()
+const orders = useOrdersStore()
+const { ui: uiState } = storeToRefs(ui)
+
+const u = computed(() => uiState.value.student)
+const me = computed(() => orders.me())
 // A full page (store / checkout / track) covers the tab layer and hides the tab bar.
 const onPage = computed(() => u.value.page === 'store' || u.value.page === 'checkout' || u.value.page === 'track')
 const tabComponent = computed(() => TABS[u.value.tab] || ExploreView)
@@ -50,8 +58,8 @@ const tabComponent = computed(() => TABS[u.value.tab] || ExploreView)
         <Transition name="page"><component :is="Component" /></Transition>
       </RouterView>
       <TabBar v-if="!onPage" />
-      <Transition name="fade"><div v-if="u.sheet === 'item' || u.sheet === 'pay'" class="backdrop" @click="A.closeSheet()"></div></Transition>
-      <Transition name="sheet"><ItemSheet v-if="u.sheet === 'item' && Q.item(u.itemId)" /></Transition>
+      <Transition name="fade"><div v-if="u.sheet === 'item' || u.sheet === 'pay'" class="backdrop" @click="ui.closeSheet()"></div></Transition>
+      <Transition name="sheet"><ItemSheet v-if="u.sheet === 'item' && catalog.item(u.itemId)" /></Transition>
       <Transition name="sheet"><PaySheet v-if="u.sheet === 'pay'" /></Transition>
     </template>
     </div>

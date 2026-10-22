@@ -6,14 +6,17 @@
 // routed body for #/merchant. The active store and the gone() helper come from the
 // shell via inject. The store's live wait estimates still feed each card.
 import { computed, inject } from 'vue'
-import { S } from '@/stores/compat.js'
+import { storeToRefs } from 'pinia'
+import { useOrdersStore } from '@/stores/orders.js'
 import OrderCard from '@/portals/merchant/OrderCard.vue'
 
+const orders = useOrdersStore()
+const { waits } = storeToRefs(orders)
 const store = inject('merchantStore')
 const gone = inject('merchantGone')
 const waiting = (o) => o.status === 'paid' || o.status === 'preparing'
-const est = computed(() => S.waits.orders)
-const onBoard = computed(() => S.db.orders
+const est = computed(() => waits.value.orders)
+const onBoard = computed(() => orders.db.orders
   .filter((o) => o.store_id === store.value.id)
   .filter((o) => waiting(o) || (o.status === 'ready' && !gone(o)))
   .sort((a, b) => a.created_at - b.created_at))

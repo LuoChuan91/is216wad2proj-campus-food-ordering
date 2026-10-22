@@ -41,6 +41,9 @@ const MESSAGES = {
     accepted: { title: 'Delivery ready', body: 'A courier accepted your delivery.', variant: 'info', toast: true },
     picked_up: { title: 'Order picked up', body: 'Your order has been picked up by the courier.', variant: 'info', toast: true },
     delivered: { title: 'Delivery complete', body: 'Your order has been delivered.', variant: 'success', toast: false },
+    // No courier took the job in time: the order switched to self-pickup and the
+    // delivery fee was waived. Surfaced as a toast so the student notices the change.
+    expired: { title: 'Switched to pickup', body: 'No courier took your order in time, so it switched to self-pickup and the delivery fee was waived.', variant: 'warning', toast: true },
   },
 };
 

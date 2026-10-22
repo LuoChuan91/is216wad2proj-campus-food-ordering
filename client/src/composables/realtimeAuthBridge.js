@@ -6,13 +6,14 @@
 // so there is no Supabase session. This bridge publishes the app's own session id
 // into her store, so her subscription works without changing any of her files.
 import { watch } from 'vue'
-import { S } from '@/stores/compat.js'
+import { useSessionStore } from '@/stores/session.js'
 import { useAuthStore } from '@/stores/auth.js'
 
 export function startRealtimeAuthBridge() {
+  const session = useSessionStore()
   const auth = useAuthStore()
   watch(
-    () => S.session.userId,
+    () => session.session.userId,
     (id) => { auth.userId = id ?? null },
     { immediate: true }
   )

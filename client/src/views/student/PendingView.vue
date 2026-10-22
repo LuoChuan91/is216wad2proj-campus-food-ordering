@@ -4,9 +4,10 @@
 // Migrated from portals/student/PendingScreen.vue. Rendered by StudentLayout when
 // the signed-in student's status isn't 'active'. Behaviour unchanged.
 import { computed } from 'vue'
-import { Q } from '@/stores/compat.js'
+import { useOrdersStore } from '@/stores/orders.js'
 
-const me = computed(() => Q.me())
+const orders = useOrdersStore()
+const me = computed(() => orders.me())
 const waiting = computed(() => me.value.status === 'inactive')
 const first = (name) => name.split(' ')[0]
 </script>

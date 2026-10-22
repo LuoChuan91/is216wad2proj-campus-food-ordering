@@ -5,20 +5,28 @@
 // live in the AdminView shell; this is the routed body for #/admin/venues. AdminMap
 // is kept as a component.
 import { computed } from 'vue'
-import { S, Q, A } from '@/stores/compat.js'
+import { storeToRefs } from 'pinia'
+import { useUiStore } from '@/stores/ui.js'
+import { useCatalogStore } from '@/stores/catalog.js'
+import { useOrdersStore } from '@/stores/orders.js'
 import AdminMap from '@/portals/admin/AdminMap.vue'
 
-const t = computed(() => S.ui.staff)
-const venues = computed(() => S.db.venues.map((v) => ({ v, stores: Q.storesAt(v.id).length })))
+const ui = useUiStore()
+const catalog = useCatalogStore()
+const orders = useOrdersStore()
+const { ui: uiState } = storeToRefs(ui)
+
+const t = computed(() => uiState.value.staff)
+const venues = computed(() => catalog.db.venues.map((v) => ({ v, stores: catalog.storesAt(v.id).length })))
 </script>
 
 <template>
   <div class="adm-venues">
     <div class="av-side scroll">
-      <form class="av-form" @submit.prevent="A.addVenue()">
+      <form class="av-form" @submit.prevent="orders.addVenue()">
         <strong>Add a venue</strong>
         <label for="venue-name">Name</label>
-        <input id="venue-name" class="form-control form-control-sm" placeholder="e.g. SMU Labs" :value="t.venueDraft.name" @input="A.setVenueDraft('name', $event.target.value)">
+        <input id="venue-name" class="form-control form-control-sm" placeholder="e.g. SMU Labs" :value="t.venueDraft.name" @input="ui.setVenueDraft('name', $event.target.value)">
         <div class="av-ll"><span>{{ t.venueDraft.lat ? t.venueDraft.lat + ', ' + t.venueDraft.lng : 'Click the map to drop the pin' }}</span></div>
         <p v-if="t.formError" class="av-err">{{ t.formError }}</p>
         <button class="btn btn-primary btn-sm w-100" type="submit" :disabled="t.saving">{{ t.saving ? 'Adding…' : 'Add venue' }}</button>

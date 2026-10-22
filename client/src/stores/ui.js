@@ -10,6 +10,7 @@ import { reactive, ref } from 'vue'
 import * as E from '@/utils/engine.js'
 import { getRoute, ensureRoute } from '@/utils/routing.js'
 import { api } from '@/services/api.js'
+import { config as cfg } from '@/config/index.js'
 import { mirrorNotification } from '@/composables/notifyBridge.js'
 import { go } from '@/router/nav.js'
 import { useSessionStore } from './session.js'
@@ -99,6 +100,11 @@ export const useUiStore = defineStore('ui', () => {
   /* ---------- place / walk helpers ---------- */
   function place() { const u = ui.student; return u.place || DEFAULT_PLACE }
   const walk = (venue) => getRoute(place(), venue)
+
+  // Whether a store is open now (respecting the opening-hours config flag)
+  function open(store) { return E.openStatus(store, now.value, cfg.enforceOpeningHours) }
+  // How many notifications are newer than the last one seen in the bell
+  function unread() { return notifications.filter((n) => n.id > readId.value).length }
 
   /* student navigation */
   function setTab(tab) { const u = ui.student; u.tab = tab; u.page = null; u.sheet = null; if (tab === 'explore') u.exploreSeen = true; go('/student/' + tab) }
@@ -248,7 +254,7 @@ export const useUiStore = defineStore('ui', () => {
 
   return {
     loaded, loadError, online, now, ui, courierOn, notifications, toasts, menu, readId, mapOffline, busy,
-    notify, run, tick, pushToast, dismissToast, toggleMenu, place, walk,
+    notify, run, tick, pushToast, dismissToast, toggleMenu, place, walk, open, unread,
     setTab, setSearch, setListSearch, setListFilter, setListSort, openStoreItem, openVenue, locate,
     closeSheet, openStore, back, openItem, toggleOption, setDraftQty, addToCart, setLineQty,
     openCheckout, setFulfilment, setDropoff, setNote, openPay, confirmPay, openTracking,

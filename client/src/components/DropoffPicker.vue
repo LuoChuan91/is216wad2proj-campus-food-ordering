@@ -2,9 +2,8 @@
 // The delivery drop-off picker on checkout: a radio list of the nearest drop-off
 // points plus a courier note field and the fallback hint.
 //
-// Extracted from views/student/CheckoutView.vue. `drops` is the pre-sorted list of
 // { d, m } (destination + metres away). Emits 'pick' with a destination id and
-// 'note' with the typed note. Behaviour and markup unchanged.
+// 'note' with the typed note.
 defineProps({
   drops: { type: Array, default: () => [] },
   // Currently-selected destination id.

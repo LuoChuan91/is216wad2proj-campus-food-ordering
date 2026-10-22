@@ -1,8 +1,8 @@
 // Mount test for views/student/StoreView.vue.
 //
 // StoreView reads the store id from the route param (:storeId) — this test proves it
-// renders the right store's hero + menu from that param, not from S.ui.student. The
-// S/Q/A shim is backed by the shared Pinia instance (stores/pinia.js), so we seed that
+// renders the right store's hero + menu from that param, not from the ui store. The
+// stores are backed by the shared Pinia instance (stores/pinia.js), so we seed that
 // instance. vue-router's useRoute is mocked to control the param. The embedded
 // WaitTimeEstimate's network/realtime deps are mocked so nothing hits Supabase.
 import { describe, it, expect, beforeEach, vi } from 'vitest'
