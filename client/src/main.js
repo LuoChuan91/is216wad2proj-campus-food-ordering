@@ -1,5 +1,5 @@
 import { createApp } from 'vue'
-import { createPinia } from 'pinia'
+import pinia from './stores/pinia.js'
 
 // Bootstrap from npm (added by the team). The prototype uses its CSS for buttons, switches and forms.
 import 'bootstrap/dist/css/bootstrap.min.css'
@@ -8,7 +8,9 @@ import 'bootstrap-icons/font/bootstrap-icons.css'
 
 import './assets/app.css' // the website's styles, after Bootstrap so they win
 import App from './App.vue'
-import { startApp } from './app/live'
+import router from './router/index.js'
+import { setRouter } from './router/nav.js'
+import { startApp } from './composables/useAppBootstrap.js'
 
 // Small pieces used on almost every screen, registered once so templates can use them anywhere
 import Icon from './components/Icon.vue'
@@ -17,18 +19,26 @@ import Mono from './components/Mono.vue'
 import Avatar from './components/Avatar.vue'
 import WaitChip from './components/WaitChip.vue'
 
-// TODO: switch to vue-router together (router/index.js needs its views first).
-// For now app/live.js keeps the address bar in step with the screen.
-// import router from './router/index.js'
-
+// vue-router owns navigation (createWebHashHistory keeps the #/... scheme). The
+// ui-store nav actions push through router/nav.js, which we point at this router
+// instance here. useAppBootstrap.js owns loading, polling, clock, title and
+// notifications; router/sync.js keeps the ui-store tab/page in step with the URL.
+//
+// We bootstrap (load the catalog + restore this tab's sign-in) BEFORE installing
+// the router and mounting, so that when the router runs its first navigation the
+// session is already restored — a hard refresh on a deep link (e.g. #/student/
+// checkout) passes the guard instead of being bounced to the sign-in page.
 const app = createApp(App)
-app.use(createPinia())
-// app.use(router)
+app.use(pinia)
+setRouter(router)
 app.component('Icon', Icon)
 app.component('AppMark', AppMark)
 app.component('Mono', Mono)
 app.component('Avatar', Avatar)
 app.component('WaitChip', WaitChip)
 app.config.errorHandler = (err, instance, info) => console.error('[app]', info, err)
-app.mount('#app')
-startApp()
+
+startApp().finally(() => {
+  app.use(router)
+  app.mount('#app')
+})

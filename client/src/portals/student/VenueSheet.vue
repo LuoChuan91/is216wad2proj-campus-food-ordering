@@ -1,8 +1,8 @@
 <script setup>
 // The stores in one venue, opened from the map or the "Near you" list
 import { computed } from 'vue'
-import { S, Q, A } from '../../app/state'
-import * as E from '../../app/engine'
+import { S, Q, A } from '@/stores/compat.js'
+import * as E from '@/utils/engine.js'
 import WaitTimeEstimate from '@/components/WaitTimeEstimate.vue'
 
 const u = computed(() => S.ui.student)

@@ -1,8 +1,8 @@
 <script setup>
 // One order on the kitchen board
 import { computed } from 'vue'
-import { S, A } from '../../app/state'
-import * as E from '../../app/engine'
+import { S, A } from '@/stores/compat.js'
+import * as E from '@/utils/engine.js'
 
 const props = defineProps({ o: Object, est: Object })
 const shortName = (n) => { const [a, b] = (n || 'Student').split(' '); return b ? `${a} ${b[0]}.` : a }

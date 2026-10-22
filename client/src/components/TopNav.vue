@@ -2,10 +2,10 @@
 // The top bar: app name, clock, notifications and the account menu
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
-import { S, Q, A } from '../app/state'
-import * as E from '../app/engine'
-import { config as cfg } from '../app/config'
-import { ROLE } from '../app/live'
+import { S, Q, A } from '@/stores/compat.js'
+import * as E from '@/utils/engine.js'
+import { config as cfg } from '@/config/index.js'
+import { ROLE } from '@/composables/useAppBootstrap.js'
 import { useNotificationsStore } from '@/stores/notifications.js'
 import NotificationPanel from '@/components/NotificationPanel.vue'
 

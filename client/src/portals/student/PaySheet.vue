@@ -1,9 +1,9 @@
 <script setup>
 // Simulated payment. The server checks the order again, works out the price and saves it.
 import { computed } from 'vue'
-import { S, Q, A } from '../../app/state'
-import * as E from '../../app/engine'
-import { config as cfg } from '../../app/config'
+import { S, Q, A } from '@/stores/compat.js'
+import * as E from '@/utils/engine.js'
+import { config as cfg } from '@/config/index.js'
 
 const u = computed(() => S.ui.student)
 const money = E.money

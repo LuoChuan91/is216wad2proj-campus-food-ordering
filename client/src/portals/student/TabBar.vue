@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { S, Q, A } from '../../app/state'
+import { S, Q, A } from '@/stores/compat.js'
 
 const u = computed(() => S.ui.student)
 const tabs = [

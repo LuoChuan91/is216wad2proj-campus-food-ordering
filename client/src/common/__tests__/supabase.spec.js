@@ -15,10 +15,13 @@ describe('browser supabase client', () => {
     vi.unstubAllEnvs()
   })
 
-  it('throws a clear error when env vars are missing', async () => {
+  it('exports null (no throw) when env vars are missing', async () => {
     vi.stubEnv('VITE_SUPABASE_URL', '')
     vi.stubEnv('VITE_SUPABASE_ANON_KEY', '')
-    await expect(import('../supabase.js')).rejects.toThrow(/Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY/)
+    const mod = await import('../supabase.js')
+    expect(mod.default).toBeNull()
+    expect(mod.supabase).toBeNull()
+    expect(createClient).not.toHaveBeenCalled()
   })
 
   it('constructs a client from env vars', async () => {

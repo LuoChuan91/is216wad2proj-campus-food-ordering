@@ -1,19 +1,23 @@
 <script setup>
-// The website shell: sign-in page, or the top bar and the signed-in person's portal.
-// Each portal lives in its own folder: portals/student, portals/merchant, portals/admin.
+// The website shell. vue-router renders the page (sign-in at '/', or a portal
+// layout for /student, /merchant, /admin). This component keeps the chrome that
+// sits around every screen: the boot (loading / can't-reach-server) states, the
+// role class on the outer <div>, the top bar (only when signed in), the toaster,
+// and the realtime bridges (unchanged — they must still mount here so "Try again"
+// can re-run startApp() without re-subscribing).
 import { computed } from 'vue'
-import { S, Q } from './app/state'
-import { startApp } from './app/live'
-import { startRealtimeAuthBridge } from './app/realtimeAuthBridge'
+import { useRoute } from 'vue-router'
+import { S, Q } from '@/stores/compat.js'
+import { startApp } from './composables/useAppBootstrap.js'
+import { startRealtimeAuthBridge } from '@/composables/realtimeAuthBridge.js'
 import { useRealtimeNotifications } from '@/composables/useRealtimeNotifications.js'
-import SignIn from './components/SignIn.vue'
 import TopNav from './components/TopNav.vue'
 import NotificationToaster from './components/NotificationToaster.vue'
-import StudentApp from './portals/student/StudentApp.vue'
-import MerchantApp from './portals/merchant/MerchantApp.vue'
-import AdminApp from './portals/admin/AdminApp.vue'
 
 const me = computed(() => Q.me())
+const route = useRoute()
+// The top bar shows on portal screens, not on the sign-in page or before load.
+const showChrome = computed(() => !!me.value && route.name !== 'signin')
 
 // Angel's realtime: feed her auth store the signed-in id, then subscribe to user:<id>.
 startRealtimeAuthBridge()
@@ -31,14 +35,10 @@ useRealtimeNotifications()
       </div>
     </div>
     <div v-else-if="!S.loaded" class="boot">Loading…</div>
-    <SignIn v-else-if="!me" />
     <template v-else>
-      <TopNav />
-      <main class="portal">
-        <div v-if="me.role === 'student'" class="student-shell"><div class="student-frame"><StudentApp /></div></div>
-        <MerchantApp v-else-if="me.role === 'merchant'" />
-        <AdminApp v-else />
-      </main>
+      <TopNav v-if="showChrome" />
+      <main v-if="showChrome" class="portal"><RouterView /></main>
+      <RouterView v-else />
     </template>
     <NotificationToaster />
   </div>

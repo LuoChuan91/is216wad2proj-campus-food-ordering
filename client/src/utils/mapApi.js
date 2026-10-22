@@ -2,9 +2,9 @@
 //
 // This is the map hook the OrderTracking page needs: tracking has to show a
 // walking leg immediately, so it asks for a number synchronously. The estimate
-// uses the same model as the map's own fallback (app/engine.js walkEstimate):
+// uses the same model as the map's own fallback (utils/engine.js walkEstimate):
 // straight line x 1.3 for paths, walking at 75 m/min. When the map has the real
-// OSRM route (app/routing.js), that route is used instead by the map itself.
+// OSRM route (utils/routing.js), that route is used instead by the map itself.
 
 // Used when we don't know both points (e.g. the delivery feature hasn't given us
 // real coordinates yet).

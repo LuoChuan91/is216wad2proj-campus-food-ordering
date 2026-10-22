@@ -3,8 +3,8 @@
 import { ref, watchEffect, onMounted, onBeforeUnmount } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { S, A } from '../../app/state'
-import { config as cfg } from '../../app/config'
+import { S, A } from '@/stores/compat.js'
+import { config as cfg } from '@/config/index.js'
 
 const el = ref(null)
 const stops = []

@@ -5,11 +5,11 @@
 import { ref, watch, watchEffect, onMounted, onBeforeUnmount } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { S, Q, A, DEFAULT_PLACE } from '../../app/state'
-import * as E from '../../app/engine'
-import { config as cfg } from '../../app/config'
-import { ensureRoute } from '../../app/routing'
-import { LANDMARKS, shortName } from '../../app/landmarks'
+import { S, Q, A, DEFAULT_PLACE } from '@/stores/compat.js'
+import * as E from '@/utils/engine.js'
+import { config as cfg } from '@/config/index.js'
+import { ensureRoute } from '@/utils/routing.js'
+import { LANDMARKS, shortName } from '@/utils/landmarks.js'
 
 const el = ref(null)
 const markers = {}

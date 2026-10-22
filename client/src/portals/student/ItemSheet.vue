@@ -1,8 +1,8 @@
 <script setup>
 // Customise a dish: option groups with their rules, quantity, and add to cart
 import { computed } from 'vue'
-import { S, Q, A } from '../../app/state'
-import * as E from '../../app/engine'
+import { S, Q, A } from '@/stores/compat.js'
+import * as E from '@/utils/engine.js'
 
 const u = computed(() => S.ui.student)
 const money = E.money

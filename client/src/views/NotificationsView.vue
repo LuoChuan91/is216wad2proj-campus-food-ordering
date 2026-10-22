@@ -1,5 +1,7 @@
 <script setup>
-// Full-page notifications list.
+// Full-page notifications list (the realtime notifications feature's full-screen
+// surface). NotificationBell links here on < md; on >= md the bell opens its own
+// offcanvas. Registered as the `/notifications` route so the link stays wired.
 //   < md : fills the viewport height (minus any nav/header/footer) so it feels
 //          like a dedicated screen on mobile.
 //   >= md: sizes to its content (the bell's offcanvas is the primary desktop

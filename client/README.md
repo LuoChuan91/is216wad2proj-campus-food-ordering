@@ -36,3 +36,53 @@ pnpm dev
 ```sh
 pnpm build
 ```
+
+### Run unit tests
+
+```sh
+pnpm vitest run
+```
+
+## Project structure
+
+The app was migrated from the single-screen prototype (its old `src/app/`
+`state.js` + `live.js`) to a standard Vue layout. vue-router owns navigation with
+`createWebHashHistory`, so the `#/...` URLs are unchanged.
+
+```
+src/
+├── main.js                 # createApp + pinia + router; startApp() bootstraps before mount
+├── App.vue                 # top bar / portal shell + app-wide notification toaster
+├── router/
+│   ├── index.js            # routes + guard (createWebHashHistory, #/... scheme)
+│   ├── nav.js              # HOME map + setRouter() used by ui-store nav actions
+│   └── sync.js             # keeps the ui-store tab/page in step with the URL
+├── stores/                 # Pinia stores (ported from the old app/state.js)
+│   ├── pinia.js            # the Pinia instance
+│   ├── session.js          # who is signed in (guard's source of truth)
+│   ├── catalog.js          # profiles / venues / stores / menu
+│   ├── orders.js           # cart + orders + deliveries
+│   ├── ui.js               # tabs, page + sheet overlays (item/pay/venue)
+│   ├── auth.js             # Supabase auth session (for realtime notifications)
+│   ├── notifications.js    # notification history + unread count
+│   └── compat.js           # TEMPORARY S/Q/A shim so portal components keep working
+├── composables/
+│   ├── useAppBootstrap.js  # loading, polling, clock, title (non-routing half of old live.js)
+│   ├── useWaitTime.js      # realtime wait-time estimate (poll fallback)
+│   ├── useStoreOrdersLive.js # realtime merchant order board (poll fallback)
+│   ├── useRealtimeNotifications.js # realtime per-user toasts + history (poll fallback)
+│   ├── notifyBridge.js     # relocated from app/
+│   └── realtimeAuthBridge.js # relocated from app/
+├── layouts/                # StudentLayout, StaffLayout, StudentTabView
+├── views/                  # route components (student/, merchant/, admin/, SignIn, Notifications, NotFound)
+├── portals/                # sheet/overlay + map components (item/pay/venue sheets, maps, cards)
+├── components/             # shared UI (Icon, Mono, Avatar, WaitChip, OrderRow, ReceiptPanel, Notification*…)
+├── common/supabase.js      # Supabase client; exports null (console.warn, no throw) when env is missing
+├── services/api.js         # Express API calls (axios)
+├── utils/                  # pure helpers (engine, waitTime, mapApi, eta, format…)
+└── config/                 # app name, poll interval, map tiles, opening-hours rule
+```
+
+Pages/tabs are routes; the item/pay/venue sheets stay as ui-store overlays, not
+routes. The polling and realtime notification paths are both kept (not
+de-duplicated). See `../LiveTrackingFeatures.md` for the realtime behaviour.
