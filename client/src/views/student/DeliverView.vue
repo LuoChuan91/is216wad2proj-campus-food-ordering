@@ -79,3 +79,152 @@ const earn = computed(() => orders.earnings())
     </div>
   </div>
 </template>
+
+<style scoped>
+/* Deliver tab (moved from the global prototype stylesheet).
+   Shared bits kept global: .deliver padding, .avail/.form-switch, .meter*,
+   .panel, .sec, .count, .empty/.empty-note. */
+.dl-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.dl-head p {
+  color: var(--ink-2);
+  margin: 4px 0 0;
+  font-size: 13px;
+}
+.earn {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  background: var(--navy);
+  border: 0;
+  color: #fff;
+}
+.earn div {
+  display: flex;
+  flex-direction: column;
+}
+.earn small {
+  opacity: 0.75;
+  font-weight: 600;
+}
+.earn b {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.earn span {
+  font-size: 12px;
+  opacity: 0.8;
+}
+.job {
+  margin-bottom: 10px;
+  display: grid;
+  gap: 10px;
+}
+.job-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.job-route {
+  flex: 1;
+  min-width: 0;
+}
+.job-route strong {
+  display: block;
+  font-size: 14px;
+}
+.job-route small {
+  color: var(--muted);
+  font-size: 12px;
+}
+.fee {
+  font-size: 17px;
+  color: var(--ok);
+}
+.job-meta {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.job-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--canvas);
+  color: var(--ink-2);
+}
+.job-meta span.ok {
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+.job-timer {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+.job-timer small {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.job.expired {
+  opacity: 0.7;
+}
+.active-job {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-soft);
+}
+.mini-steps {
+  list-style: none;
+  display: flex;
+  margin: 0;
+  padding: 0;
+  gap: 6px;
+}
+.mini-steps li {
+  flex: 1;
+  text-align: center;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--muted);
+  padding: 5px 0;
+  border-radius: 10px;
+  background: var(--canvas);
+}
+.mini-steps li.done {
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+.mini-steps li.now {
+  background: var(--brand-soft);
+  color: var(--brand-600);
+}
+.aj-line {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.aj-line.ok {
+  color: var(--ok);
+}
+.aj-line.warn {
+  color: var(--warn);
+}
+</style>

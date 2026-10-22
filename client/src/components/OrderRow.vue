@@ -45,3 +45,27 @@ const label = computed(() => {
     <StatusTag :tone="variant === 'active' ? 'info' : 'muted'">{{ label }}</StatusTag>
   </button>
 </template>
+
+<style scoped>
+/* Orders-list row (moved from the global prototype stylesheet).
+   .panel stays global (shared card helper). */
+.order-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+.or-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.or-main small {
+  color: var(--muted);
+  font-size: 12px;
+}
+</style>

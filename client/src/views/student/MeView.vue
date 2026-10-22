@@ -30,3 +30,71 @@ const stats = computed(() => ({ orders: orders.ordersOf(me.value.id).length, ear
     </div>
   </div>
 </template>
+
+<style scoped>
+/* Me tab: profile card, stats and the switch list (moved from the global
+   stylesheet). The .me-tab padding + .panel stay global (shared). */
+.me-card {
+  text-align: center;
+  padding: 20px 10px;
+}
+.me-card h2 {
+  font-size: 21px;
+  font-weight: 800;
+  margin: 12px 0 2px;
+}
+.me-card p {
+  color: var(--muted);
+  margin: 0 0 10px;
+}
+.me-card :deep(.avatar) {
+  margin: 0 auto;
+}
+.me-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  text-align: center;
+  gap: 8px;
+}
+.me-stats b {
+  display: block;
+  font-size: 18px;
+}
+.me-stats small {
+  color: var(--muted);
+  font-size: 11.5px;
+}
+.me-tab .panel + .panel {
+  margin-top: 10px;
+}
+.me-list {
+  padding: 4px 14px;
+}
+.me-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 14px;
+}
+.me-row + .me-row {
+  border-top: 1px solid var(--line);
+}
+.me-row strong {
+  display: block;
+}
+.me-row small {
+  display: block;
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 12px;
+  white-space: normal;
+}
+</style>
