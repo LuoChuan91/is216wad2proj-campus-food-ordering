@@ -100,3 +100,73 @@ const openCount = computed(() => rows.value.filter((r) => r.open.open).length)
     </div>
   </div>
 </template>
+
+<style scoped>
+/* Stores list: filter chips + sort row (moved from the global stylesheet).
+   Kept global (shared): .stores-tab padding, .tab-title, .search, and the
+   .store-card/.store-main cards (also used by the venue sheet). */
+.tab-sub {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 2px 0 12px;
+}
+.stores-tab .search {
+  margin-bottom: 10px;
+  box-shadow: 0 1px 0 var(--line);
+  border: 1px solid var(--line);
+}
+.filter-row {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 2px 0 8px;
+  scrollbar-width: none;
+}
+.filter-row::-webkit-scrollbar {
+  display: none;
+}
+.chip.filter {
+  border: 1.5px solid var(--line);
+  background: var(--paper);
+  color: var(--ink-2);
+  cursor: pointer;
+  padding: 5px 12px;
+  font-size: 12.5px;
+}
+.chip.filter:hover {
+  border-color: #cfd4e0;
+}
+.chip.filter.on {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+  color: var(--brand-600);
+}
+.sort-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 2px 2px 10px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.sort-row label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+.sort-row .form-select {
+  width: auto;
+  font-size: 12.5px;
+  font-weight: 700;
+  border-radius: 10px;
+  padding-top: 3px;
+  padding-bottom: 3px;
+}
+.store-list {
+  display: grid;
+  gap: 8px;
+}
+</style>

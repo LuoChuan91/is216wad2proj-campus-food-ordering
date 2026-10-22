@@ -89,3 +89,50 @@ const results = computed(() => {
     </Transition>
   </div>
 </template>
+
+<style scoped>
+/* Explore header (moved from the global stylesheet). The map, map-note,
+   leaflet-*, search, peek/vsheet and venue-row stay global — they are shared
+   with the venue sheet / stores list / admin map, or are Leaflet-owned DOM. */
+.explore-top {
+  position: absolute;
+  z-index: 5;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 12px 14px 22px;
+  background: linear-gradient(
+    180deg,
+    rgba(243, 244, 248, 1) 50%,
+    rgba(243, 244, 248, 0)
+  );
+}
+.hello {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.hello small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.1;
+}
+.hello strong {
+  font-size: 18px;
+  line-height: 1.15;
+}
+.brand-pill {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 800;
+  color: var(--brand);
+  background: var(--paper);
+  border-radius: 999px;
+  padding: 4px 10px 4px 5px;
+  box-shadow: 0 1px 0 var(--line);
+}
+</style>
