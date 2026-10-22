@@ -65,3 +65,80 @@ const drops = computed(() => {
     <div class="pay-bar"><button class="btn btn-primary btn-lg w-100" @click="ui.openPay()">Pay {{ money(t.total) }}</button></div>
   </section>
 </template>
+
+<style scoped>
+/* Checkout page (moved from the global stylesheet). Shared bits kept global:
+   .page/.bar, .co-line/.co-qty/.co-what (also used by the receipt), the .seg and
+   drop-off styles (now in SegToggle/DropoffPicker). */
+.checkout-body {
+  flex: 1;
+  padding: 12px 14px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.co-store {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+}
+.co-store small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+.co-lines {
+  padding: 6px 12px;
+}
+.co-est {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+}
+.co-est-ic {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: var(--info-soft);
+  color: var(--info);
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.co-est strong {
+  display: block;
+}
+.co-est small {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+.co-sum {
+  padding: 10px 14px;
+  font-size: 13.5px;
+  font-variant-numeric: tabular-nums;
+}
+.co-sum > div {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+.co-sum .disc {
+  color: var(--ok);
+  font-weight: 700;
+}
+.co-sum .total {
+  border-top: 1px dashed var(--line);
+  margin-top: 4px;
+  padding-top: 8px;
+  font-size: 16px;
+  font-weight: 800;
+}
+.pay-bar {
+  flex: none;
+  padding: 10px 14px 14px;
+  background: var(--paper);
+  border-top: 1px solid var(--line);
+}
+</style>

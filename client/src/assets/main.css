@@ -1733,27 +1733,6 @@ h4 .count {
 }
 
 /* checkout */
-.checkout-body {
-  flex: 1;
-  padding: 12px 14px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.co-store {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-}
-.co-store small {
-  display: block;
-  color: var(--muted);
-  font-size: 12px;
-}
-.co-lines {
-  padding: 6px 12px;
-}
 .co-line {
   display: flex;
   align-items: center;
@@ -1779,124 +1758,6 @@ h4 .count {
 .co-what small {
   color: var(--muted);
   font-size: 12px;
-}
-.seg {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-.seg button {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px;
-  border-radius: 16px;
-  border: 1.5px solid var(--line);
-  background: var(--paper);
-  text-align: left;
-  font-weight: 700;
-  color: var(--ink);
-  cursor: pointer;
-}
-.seg button span {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.2;
-}
-.seg button small {
-  color: var(--muted);
-  font-weight: 600;
-  font-size: 12px;
-}
-.seg button.on {
-  border-color: var(--brand);
-  background: var(--brand-soft);
-  color: var(--brand-600);
-}
-.co-label {
-  display: block;
-  margin-bottom: 6px;
-}
-.drop {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 4px;
-  font-size: 13.5px;
-  font-weight: 600;
-  cursor: pointer;
-}
-.drop + .drop {
-  border-top: 1px solid var(--line);
-}
-.drop span {
-  flex: 1;
-}
-.drop small {
-  color: var(--muted);
-  font-weight: 600;
-}
-.drop .form-check-input {
-  margin: 0;
-  flex: none;
-}
-.hint {
-  margin: 8px 0 0;
-  color: var(--ink-2);
-  font-size: 12px;
-  background: var(--canvas);
-  border-radius: 12px;
-  padding: 8px 10px;
-}
-.co-est {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-}
-.co-est-ic {
-  width: 36px;
-  height: 36px;
-  border-radius: 12px;
-  background: var(--info-soft);
-  color: var(--info);
-  display: grid;
-  place-items: center;
-  flex: none;
-}
-.co-est strong {
-  display: block;
-}
-.co-est small {
-  color: var(--muted);
-  font-size: 12.5px;
-}
-.co-sum {
-  padding: 10px 14px;
-  font-size: 13.5px;
-  font-variant-numeric: tabular-nums;
-}
-.co-sum > div {
-  display: flex;
-  justify-content: space-between;
-  padding: 4px 0;
-}
-.co-sum .disc {
-  color: var(--ok);
-  font-weight: 700;
-}
-.co-sum .total {
-  border-top: 1px dashed var(--line);
-  margin-top: 4px;
-  padding-top: 8px;
-  font-size: 16px;
-  font-weight: 800;
-}
-.pay-bar {
-  flex: none;
-  padding: 10px 14px 14px;
-  background: var(--paper);
-  border-top: 1px solid var(--line);
 }
 
 /* payment */
@@ -2426,11 +2287,6 @@ h4 .count {
 }
 
 /* checkout and payment */
-.co-note {
-  margin-top: 8px;
-  border-radius: 10px;
-  font-size: 13px;
-}
 .pay-error {
   margin: 0 18px 12px;
   padding: 9px 12px;

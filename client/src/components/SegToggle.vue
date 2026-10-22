@@ -36,3 +36,40 @@ defineEmits(['change'])
     </button>
   </div>
 </template>
+
+<style scoped>
+/* Pickup / delivery segmented control (moved from the global stylesheet). */
+.seg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.seg button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1.5px solid var(--line);
+  background: var(--paper);
+  text-align: left;
+  font-weight: 700;
+  color: var(--ink);
+  cursor: pointer;
+}
+.seg button span {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+.seg button small {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 12px;
+}
+.seg button.on {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+  color: var(--brand-600);
+}
+</style>

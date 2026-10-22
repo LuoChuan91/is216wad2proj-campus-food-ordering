@@ -39,3 +39,47 @@ defineEmits(['pick', 'note'])
     <p class="hint">A student courier brings it to you. If nobody accepts within {{ windowMin }} min, it switches to pickup and the fee is waived.</p>
   </div>
 </template>
+
+<style scoped>
+/* Delivery drop-off picker (moved from the global stylesheet). */
+.co-label {
+  display: block;
+  margin-bottom: 6px;
+}
+.drop {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 4px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.drop + .drop {
+  border-top: 1px solid var(--line);
+}
+.drop span {
+  flex: 1;
+}
+.drop small {
+  color: var(--muted);
+  font-weight: 600;
+}
+.drop .form-check-input {
+  margin: 0;
+  flex: none;
+}
+.co-note {
+  margin-top: 8px;
+  border-radius: 10px;
+  font-size: 13px;
+}
+.hint {
+  margin: 8px 0 0;
+  color: var(--ink-2);
+  font-size: 12px;
+  background: var(--canvas);
+  border-radius: 12px;
+  padding: 8px 10px;
+}
+</style>
