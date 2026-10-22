@@ -1,4 +1,4 @@
-<script setup>
+Why is that firewall? What the hell is there? You remove your thing and then you left these two where I don't have lemon gonna put a carrot there and you why not damn bro he's not making me laugh<script setup>
 // The admin's venue map: every venue as a dot; click anywhere to place a new one
 import { ref, watchEffect, onMounted, onBeforeUnmount } from 'vue'
 import L from 'leaflet'
@@ -50,3 +50,24 @@ onBeforeUnmount(() => { stops.forEach((s) => s()); if (map) map.remove(); map = 
     <span v-if="mapOffline" class="map-note">Map tiles unavailable here</span>
   </div>
 </template>
+
+<style scoped>
+/* Admin venue map (moved from the global prototype stylesheet).
+   .map-note base styling is global/shared with the student map; here we only
+   reposition it to the top-right corner of the admin map. */
+.admin-map-wrap {
+  position: relative;
+  min-height: 0;
+}
+.admin-map {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  isolation: isolate;
+}
+.admin-map-wrap :deep(.map-note) {
+  top: 12px;
+  left: auto;
+  right: 12px;
+}
+</style>

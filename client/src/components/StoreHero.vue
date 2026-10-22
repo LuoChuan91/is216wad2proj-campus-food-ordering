@@ -25,3 +25,39 @@ defineEmits(['back'])
     </div>
   </div>
 </template>
+
+<style scoped>
+/* Tinted store hero (moved from the global prototype stylesheet). Uses the
+   --tint custom property set inline from the store's colour. */
+.store-hero {
+  position: relative;
+  flex: none;
+  height: 150px;
+  padding: 0 16px 16px;
+  display: flex;
+  align-items: flex-end;
+  color: #fff;
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--tint) 88%, #fff) 0%,
+    var(--tint) 55%,
+    color-mix(in srgb, var(--tint) 70%, #000) 100%
+  );
+}
+.hero-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.store-hero h2 {
+  color: #fff;
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0;
+}
+.store-hero p {
+  margin: 2px 0 0;
+  opacity: 0.88;
+  font-size: 13px;
+}
+</style>

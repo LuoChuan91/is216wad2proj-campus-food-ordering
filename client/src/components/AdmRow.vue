@@ -40,3 +40,36 @@ defineProps({
     <slot v-else />
   </div>
 </template>
+
+<style scoped>
+/* Admin student row (moved from the global prototype stylesheet). */
+.adm-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+}
+.adm-row.done {
+  opacity: 0.85;
+}
+.adm-who {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.adm-who strong {
+  font-size: 14.5px;
+}
+.adm-who small {
+  color: var(--muted);
+}
+.adm-actions {
+  display: flex;
+  gap: 6px;
+}
+</style>

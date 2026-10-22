@@ -36,3 +36,63 @@ const venues = computed(() => catalog.db.venues.map((v) => ({ v, stores: catalog
     <AdminMap />
   </div>
 </template>
+
+<style scoped>
+/* Admin venues: form + list beside the map (moved from the global stylesheet). */
+.adm-venues {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 290px 1fr;
+}
+.av-side {
+  padding: 12px;
+  border-right: 1px solid var(--line);
+  background: var(--paper);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.av-form {
+  display: grid;
+  gap: 6px;
+  background: var(--canvas);
+  border-radius: 14px;
+  padding: 12px;
+  margin-bottom: 6px;
+}
+.av-form label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.av-ll {
+  font-size: 12px;
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  background: var(--paper);
+  border: 1px dashed #cfd4e0;
+  border-radius: 8px;
+  padding: 6px 8px;
+}
+.av-err {
+  color: var(--late);
+  font-size: 12px;
+  margin: 0;
+}
+.av-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 4px;
+}
+.av-row strong {
+  display: block;
+  font-size: 13px;
+}
+.av-row small {
+  color: var(--muted);
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+</style>

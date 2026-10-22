@@ -41,3 +41,131 @@ const fresh = props.o.status === 'paid' && now.value - props.o.created_at < 20e3
     </footer>
   </article>
 </template>
+
+<style scoped>
+/* Kitchen-board order card (moved from the global prototype stylesheet). */
+.ocard {
+  background: var(--paper);
+  border-radius: 14px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  display: grid;
+  gap: 6px;
+  flex: none;
+}
+.ocard.st-preparing {
+  border-left: 4px solid var(--brand);
+}
+.ocard.st-ready {
+  border-left: 4px solid var(--ok);
+}
+.ocard.fresh {
+  animation: fresh 2.8s ease;
+}
+@keyframes fresh {
+  0%,
+  40% {
+    box-shadow:
+      0 0 0 3px var(--brand),
+      0 8px 24px rgba(229, 81, 45, 0.35);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(229, 81, 45, 0);
+  }
+}
+.ocard header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ocode {
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+.waited {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 800;
+}
+.waited i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.waited.ok {
+  color: var(--ok);
+}
+.waited.warn {
+  color: #c47d08;
+}
+.waited.late {
+  color: var(--late);
+}
+.who {
+  font-weight: 700;
+}
+.olines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+  font-size: 12.5px;
+}
+.olines small {
+  display: block;
+  color: var(--muted);
+  font-size: 11.5px;
+}
+.fb {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--warn-soft);
+  color: #7a4c06;
+  font-weight: 700;
+  font-size: 11.5px;
+  border-radius: 8px;
+  padding: 4px 8px;
+}
+.ocard footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.est {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--ink-2);
+  font-size: 11.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.ocard footer .btn {
+  margin-left: auto;
+}
+.courier.warn,
+.courier.ok {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.courier.warn {
+  color: #9c6206;
+}
+.courier.ok {
+  color: var(--ok);
+}
+</style>

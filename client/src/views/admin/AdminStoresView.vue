@@ -30,3 +30,43 @@ const stores = computed(() => catalog.db.stores.map((s) => {
     </div>
   </div>
 </template>
+
+<style scoped>
+/* Admin stores table (moved from the global prototype stylesheet).
+   The .adm wrapper + .scroll stay global (shared with the approvals view). */
+.table-wrap {
+  overflow-x: auto;
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+}
+.adm-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.adm-table th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  background: #f8f9fc;
+}
+.adm-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+.adm-table td :deep(.mono) {
+  vertical-align: middle;
+  margin-right: 6px;
+}
+.adm-table tr:last-child td {
+  border-bottom: 0;
+}
+</style>

@@ -6,7 +6,7 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap/dist/js/bootstrap.bundle.min.js'
 import 'bootstrap-icons/font/bootstrap-icons.css'
 
-import './assets/app.css' // the website's styles, after Bootstrap so they win
+import './assets/main.css' // global styles: tokens, resets, shared theming (after Bootstrap so they win)
 import App from './App.vue'
 import router from './router/index.js'
 import { setRouter } from './router/nav.js'

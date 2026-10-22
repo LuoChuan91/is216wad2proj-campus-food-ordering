@@ -29,3 +29,37 @@ const menu = computed(() => catalog.menuOf(store.value.id).map((m) => ({ m, grou
     </div>
   </div>
 </template>
+
+<style scoped>
+/* Merchant menu list (moved from the global prototype stylesheet). */
+.m-menu {
+  flex: 1;
+  padding: 14px 18px;
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  max-width: 900px;
+  width: 100%;
+}
+.m-hint {
+  color: var(--muted);
+  margin: 0 0 4px;
+}
+.mrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+.mrow strong {
+  display: block;
+  font-size: 14px;
+}
+.mrow small {
+  color: var(--muted);
+}
+</style>

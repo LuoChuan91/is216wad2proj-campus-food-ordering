@@ -85,3 +85,26 @@ src/
 Pages/tabs are routes; the item/pay/venue sheets stay as ui-store overlays, not
 routes. The polling and realtime notification paths are both kept (not
 de-duplicated). See `../LiveTrackingFeatures.md` for the realtime behaviour.
+
+## Styling conventions
+
+- **One global stylesheet:** `src/assets/main.css` holds only genuinely global
+  styling — the `:root` design tokens, the `.site`/`.app` Bootstrap-variable
+  (`--bs-*`) theming, base `html/body/#app` resets, fonts, and the small
+  cross-area shared helpers (`.scroll`, `.mono`, `.avatar`, `.panel`, `.chip`,
+  `.tag`, …). It is imported once in `main.js`, after Bootstrap, so our theme wins.
+- **Prefer Bootstrap** utilities/components (spacing, flex, grid, buttons, cards,
+  badges, tables) in templates instead of hand-rolled CSS wherever they match.
+- **Component-specific CSS** belongs in that component's `<style scoped>` block.
+  Use `:deep()` when a parent must style a child component's internals (a plain
+  scoped rule won't reach across the `data-v-` boundary). Keep Vue `<Transition>`
+  animation classes and shared tokens global.
+- Reserve custom CSS for the genuinely bespoke bits Bootstrap can't express (the
+  brand palette, the phone-frame shell, the kitchen board, sheet/page
+  transitions, the map, the status timeline).
+
+> Migration note: the heavy prototype stylesheet `app.css` was consolidated into
+> `main.css` (and the dead `style.css` / `style/main.css` removed). Relocating the
+> remaining per-screen rules out of `main.css` into scoped component blocks is an
+> ongoing, area-by-area effort — new/edited components should already follow the
+> conventions above.
