@@ -43,3 +43,120 @@ const code = computed(() => (result.value ? String(result.value.id).slice(0, 4).
     </div>
   </div>
 </template>
+
+<style scoped>
+/* Payment sheet (moved from the global stylesheet). The .sheet shell + .grab stay
+   global (shared with the item sheet). */
+.pay-amount {
+  margin: 4px 18px 12px;
+  background: var(--canvas);
+  border-radius: 18px;
+  padding: 16px;
+  text-align: center;
+}
+.pay-amount small {
+  color: var(--muted);
+  font-weight: 600;
+}
+.pay-amount b {
+  display: block;
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.pay-method {
+  margin: 0 18px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1.5px solid var(--brand);
+  border-radius: 16px;
+  padding: 12px;
+}
+.pay-method strong {
+  display: block;
+}
+.pay-method small {
+  color: var(--muted);
+}
+.pay-method .tag {
+  margin-left: auto;
+}
+.pm-ic {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: var(--brand-soft);
+  color: var(--brand);
+  display: grid;
+  place-items: center;
+}
+.pay-error {
+  margin: 0 18px 12px;
+  padding: 9px 12px;
+  border-radius: 12px;
+  background: var(--late-soft);
+  color: var(--late);
+  font-size: 13px;
+  font-weight: 600;
+}
+.pay-done {
+  padding: 10px 22px 20px;
+  text-align: center;
+}
+.done-check {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: var(--ok);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  margin: 6px auto 12px;
+  animation: pop 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.4);
+  box-shadow: 0 0 0 10px var(--ok-soft);
+}
+@keyframes pop {
+  from {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.pay-done h3 {
+  font-size: 21px;
+  font-weight: 800;
+  margin: 0 0 4px;
+}
+.pay-done p {
+  color: var(--ink-2);
+  margin: 0 0 14px;
+}
+.ref {
+  margin: 0 0 16px;
+  background: var(--canvas);
+  border-radius: 14px;
+  padding: 10px 14px;
+  text-align: left;
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+}
+.ref div {
+  display: flex;
+  justify-content: space-between;
+}
+.ref dt {
+  color: var(--muted);
+  font-weight: 600;
+}
+.ref dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+</style>

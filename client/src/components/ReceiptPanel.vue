@@ -38,3 +38,32 @@ const money = E.money
     </small>
   </div>
 </template>
+
+<style scoped>
+/* Order receipt (moved from the global stylesheet). .co-line/.co-qty/.co-what
+   are shared with checkout and stay global; .panel stays global. */
+.receipt {
+  padding: 8px 12px;
+}
+.rc-row {
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px dashed var(--line);
+  padding-top: 8px;
+  margin-top: 4px;
+}
+.rc-row.disc {
+  border-top: 0;
+  margin-top: 0;
+  padding-top: 4px;
+  color: var(--ok);
+  font-weight: 700;
+}
+.rc-ref {
+  display: block;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  margin-top: 4px;
+}
+</style>

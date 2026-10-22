@@ -135,4 +135,24 @@ const results = computed(() => {
   padding: 4px 10px 4px 5px;
   box-shadow: 0 1px 0 var(--line);
 }
+/* "See all stores" at the bottom of the Near you list */
+.see-all {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  margin-top: 2px;
+  border: 0;
+  background: none;
+  padding: 8px;
+  border-radius: 12px;
+  color: var(--brand-600);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+.see-all:hover {
+  background: var(--canvas);
+}
 </style>

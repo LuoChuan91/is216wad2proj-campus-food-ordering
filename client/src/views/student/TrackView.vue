@@ -143,3 +143,211 @@ const courierLine = computed(() => {
     </div>
   </section>
 </template>
+
+<style scoped>
+/* Order tracking page (moved from the global stylesheet). Kept global: .page/.bar
+   chrome, @keyframes live (shared with the top-bar offline dot), the .meter base
+   (shared with the deliver tab) and .panel. */
+.bar-title {
+  flex: 1;
+  min-width: 0;
+}
+.bar-title small {
+  color: var(--muted);
+  font-size: 12px;
+}
+.live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--ok);
+  background: var(--ok-soft);
+  padding: 3px 9px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.live i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ok);
+  animation: live 1.4s infinite;
+}
+.track-body {
+  flex: 1;
+  padding: 12px 14px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.fallback-note {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  background: var(--warn-soft);
+  color: #6b4105;
+  border-radius: 14px;
+  padding: 10px 12px;
+  font-size: 12.5px;
+}
+.status-card {
+  border-radius: 20px;
+  padding: 16px;
+  color: #fff;
+  background: var(--info);
+}
+.status-card.tone-brand {
+  background: linear-gradient(140deg, #f06a43, var(--brand-600));
+}
+.status-card.tone-ok {
+  background: linear-gradient(140deg, #1aa46f, #0c7049);
+}
+.status-card.tone-warn {
+  background: linear-gradient(140deg, #e6a523, #b46d06);
+}
+.status-card.tone-info {
+  background: linear-gradient(140deg, #3c74e8, #2148a8);
+}
+.status-card .eyebrow {
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+  font-size: 11.5px;
+  opacity: 0.85;
+}
+.status-big {
+  font-size: 27px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 2px 0 2px;
+  font-variant-numeric: tabular-nums;
+}
+.status-card p {
+  margin: 0;
+  font-size: 13.5px;
+  opacity: 0.95;
+}
+.why {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.why span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  padding: 3px 9px;
+}
+.courier {
+  padding: 12px;
+}
+.c-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.c-head strong {
+  display: block;
+  font-size: 14px;
+}
+.c-head small {
+  color: var(--muted);
+  font-size: 12px;
+}
+.c-ic {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--warn-soft);
+  color: var(--warn);
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.c-done {
+  margin-left: auto;
+  color: var(--ok);
+}
+.courier .meter {
+  margin-top: 10px;
+}
+.c-drop {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 4px 6px;
+}
+.steps li {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0 6px 2px;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.steps li i {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #cdd2dd;
+  background: var(--canvas);
+  flex: none;
+  position: relative;
+  z-index: 1;
+}
+.steps li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 22px;
+  bottom: -8px;
+  width: 2px;
+  background: #dde1ea;
+}
+.steps li.done {
+  color: var(--ink);
+  font-weight: 600;
+}
+.steps li.done i {
+  background: var(--ok);
+  border-color: var(--ok);
+}
+.steps li.done:not(:last-child)::after {
+  background: var(--ok);
+}
+.steps li.now {
+  color: var(--ink);
+  font-weight: 700;
+}
+.steps li.now i {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 4px rgba(229, 81, 45, 0.18);
+}
+.steps time {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+</style>

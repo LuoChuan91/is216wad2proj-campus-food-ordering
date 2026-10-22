@@ -57,3 +57,32 @@ useLiveSync(() => session.session.userId, refresh)
     <NotificationToaster />
   </div>
 </template>
+
+<style scoped>
+/* Can't-reach-server boot screen (moved from the global stylesheet). */
+.boot-error {
+  text-align: center;
+  padding: 24px;
+}
+.boot-error h2 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  margin: 14px 0 6px;
+  color: var(--ink);
+}
+.boot-error p {
+  max-width: 420px;
+  margin: 0 auto 14px;
+}
+.boot-error :deep(.appmark) {
+  margin: 0 auto;
+}
+.boot-error :deep(.btn-primary) {
+  --bs-btn-bg: var(--brand);
+  --bs-btn-border-color: var(--brand);
+  --bs-btn-hover-bg: var(--brand-600);
+  --bs-btn-hover-border-color: var(--brand-600);
+  font-weight: 700;
+  border-radius: 12px;
+}
+</style>
