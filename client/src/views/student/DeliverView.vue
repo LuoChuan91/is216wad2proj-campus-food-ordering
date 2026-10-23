@@ -73,43 +73,98 @@ onBeforeUnmount(() => {
 <template>
   <div class="deliver scroll">
     <header class="dl-head">
-      <div><h2 class="tab-title">Deliver &amp; earn</h2><p>Pick up food on your way and keep the delivery fee.</p></div>
-      <label class="avail form-switch"><input class="form-check-input" type="checkbox" role="switch" :checked="on" @change="orders.setAvailable($event.target.checked)"><span>{{ on ? 'Available' : 'Offline' }}</span></label>
+      <div>
+        <h2 class="tab-title">Deliver &amp; earn</h2>
+        <p>Pick up food on your way and keep the delivery fee.</p>
+      </div>
+      <label class="avail form-switch"><input class="form-check-input" type="checkbox" role="switch" :checked="on"
+          @change="orders.setAvailable($event.target.checked)"><span>{{ on ? 'Available' : 'Offline' }}</span></label>
     </header>
     <div class="panel earn">
-      <div><small>Today</small><b>{{ money(earn.today) }}</b><span>{{ plural(earn.todayCount, 'delivery', 'deliveries') }}</span></div>
-      <div><small>Last 7 days</small><b>{{ money(earn.week) }}</b><span>{{ plural(earn.weekCount, 'delivery', 'deliveries') }}</span></div>
+      <div><small>Today</small><b>{{ money(earn.today) }}</b><span>{{ plural(earn.todayCount, 'delivery', 'deliveries')
+          }}</span></div>
+      <div><small>Last 7 days</small><b>{{ money(earn.week) }}</b><span>{{ plural(earn.weekCount, 'delivery',
+          'deliveries') }}</span></div>
     </div>
+
     <template v-if="activeList.length">
-      <h4 class="sec">Current {{ activeList.length === 1 ? 'delivery' : 'deliveries' }} <span class="count">{{ activeList.length }}/{{ MAX_JOBS }}</span></h4>
+      <h4 class="sec">Current {{ activeList.length === 1 ? 'delivery' : 'deliveries' }} <span class="count">{{
+        activeList.length }}/{{ MAX_JOBS }}</span></h4>
       <div v-for="active in activeList" :key="active.d.id" class="panel job active-job">
-        <div class="job-top"><Mono :store="active.s" :size="36" /><div class="job-route"><strong>{{ active.s.name }}</strong><small>{{ active.vName }} → {{ active.drop.name }}</small></div><b class="fee">{{ money(active.d.fee) }}</b></div>
+        <div class="job-top">
+          <Mono :store="active.s" :size="36" />
+          <div class="job-route"><strong>{{ active.s.name }}</strong><small>{{ active.vName }} → {{ active.drop.name
+              }}</small></div><b class="fee">{{ money(active.d.fee) }}</b>
+        </div>
+        <strong>Order reference:  #{{ active.o.code }}</strong>
         <ol class="mini-steps">
           <li class="done">Accepted</li>
           <li :class="active.d.status === 'picked_up' ? 'done' : 'now'">Picked up</li>
           <li :class="active.d.status === 'picked_up' ? 'now' : ''">Delivered</li>
         </ol>
-        <p class="aj-line" v-if="active.d.status === 'accepted' && active.o.status !== 'ready'"><Icon name="flame" :size="14" />Kitchen is cooking<template v-if="active.est">, ready ~{{ E.clock(active.est) }}</template>. Head to {{ active.vName }}.</p>
-        <p class="aj-line ok" v-else-if="active.d.status === 'accepted'"><Icon name="check" :size="14" />Food is ready at {{ active.s.name }}.</p>
-        <p class="aj-line" v-else><Icon name="walk" :size="14" />Walk {{ active.walk.meters }} m to {{ active.drop.name }}.</p>
-        <p v-if="active.d.note" class="aj-line"><Icon name="mail" :size="14" />“{{ active.d.note }}”</p>
-        <button v-if="active.d.status === 'accepted'" class="btn btn-primary w-100" :disabled="active.o.status !== 'ready' || busy[active.d.id]" @click="orders.pickUp(active.d.id)">{{ active.o.status === 'ready' ? 'Picked up the food' : 'Waiting for the kitchen' }}</button>
-        <button v-else class="btn btn-success w-100" :disabled="busy[active.d.id]" @click="orders.deliver(active.d.id)">Mark as delivered</button>
+        <p class="aj-line" v-if="active.d.status === 'accepted' && active.o.status !== 'ready'">
+          <Icon name="flame" :size="14" />Kitchen is cooking<template v-if="active.est">, ready ~{{ E.clock(active.est)
+            }}</template>.
+          Head to {{ active.vName }}.
+        </p>
+        <p class="aj-line ok" v-else-if="active.d.status === 'accepted'">
+          <Icon name="check" :size="14" />Food is ready at {{ active.s.name }}.
+        </p>
+        <p class="aj-line" v-else>
+          <Icon name="walk" :size="14" />Walk {{ active.walk.meters }} m to {{ active.drop.name }}.
+        </p>
+        <p v-if="active.d.note" class="aj-line">
+          <Icon name="mail" :size="14" />“{{ active.d.note }}”
+        </p>
+        <button v-if="active.d.status === 'accepted'" class="btn btn-primary w-100"
+          :disabled="active.o.status !== 'ready' || busy[active.d.id]" @click="orders.pickUp(active.d.id)">{{
+            active.o.status
+              === 'ready' ? 'Picked up the food' : 'Waiting for the kitchen' }}</button>
+        <button v-else class="btn btn-success w-100" :disabled="busy[active.d.id]"
+          @click="orders.deliver(active.d.id)">Mark as
+          delivered</button>
       </div>
     </template>
+
     <h4 class="sec">Jobs near you <span v-if="on" class="count">{{ jobs.length }}</span></h4>
-    <div v-if="!on" class="empty"><Icon name="bike" :size="26" /><p>You're offline. Switch on Available to see jobs.</p></div>
-    <div v-else-if="!jobs.length && !expired.length" class="empty"><Icon name="check" :size="26" /><p>No open jobs right now. You'll get a notification when one comes in.</p></div>
+    <div v-if="!on" class="empty">
+      <Icon name="bike" :size="26" />
+      <p>You're offline. Switch on Available to see jobs.</p>
+    </div>
+    <div v-else-if="!jobs.length && !expired.length" class="empty">
+      <Icon name="check" :size="26" />
+      <p>No open jobs right now. You'll get a notification when one comes in.</p>
+    </div>
     <div v-for="j in jobs" :key="j.d.id" class="panel job">
-      <div class="job-top"><Mono :store="j.s" :size="36" /><div class="job-route"><strong>{{ j.s.name }}</strong><small>{{ j.vName }} → {{ j.drop.name }}</small></div><b class="fee">{{ money(j.d.fee) }}</b></div>
-      <div class="job-meta"><span>{{ plural(j.items, 'item', 'items') }}</span><span><Icon name="walk" :size="12" />{{ j.walk.meters }} m</span><span :class="{ ok: j.o.status === 'ready' }">{{ j.o.status === 'ready' ? 'Food is ready' : (j.est ? 'Ready ~' + E.clock(j.est) : 'In the kitchen') }}</span></div>
-      <div class="job-timer"><div class="meter" :class="j.left < 120e3 ? 'late' : j.left < 300e3 ? 'warn' : 'ok'"><i :style="{ width: Math.max(0, j.left / (cfg.deliveryWindowMin * 600)) + '%' }"></i></div><small>Expires in {{ E.countdown(j.left) }}</small></div>
-      <button class="btn btn-primary w-100" :disabled="atLimit || busy[j.d.id]" @click="orders.acceptJob(j.d.id)">{{ atLimit ? 'Max ' + MAX_JOBS + ' jobs at once' : 'Accept job' }}</button>
+      <div class="job-top">
+        <Mono :store="j.s" :size="36" />
+        <div class="job-route"><strong>{{ j.s.name }}</strong><small>{{ j.vName }} → {{ j.drop.name }}</small></div><b
+          class="fee">{{ money(j.d.fee) }}</b>
+      </div>
+      <div class="job-meta"><span>{{ plural(j.items, 'item', 'items') }}</span><span>
+          <Icon name="walk" :size="12" />{{ j.walk.meters }} m
+        </span><span :class="{ ok: j.o.status === 'ready' }">{{ j.o.status === 'ready' ? 'Food is ready' : (j.est ? 'Ready~' + E.clock(j.est) : 'In the kitchen') }}</span></div>
+      <div class="job-timer">
+        <div class="meter" :class="j.left < 120e3 ? 'late' : j.left < 300e3 ? 'warn' : 'ok'"><i
+            :style="{ width: Math.max(0, j.left / (cfg.deliveryWindowMin * 600)) + '%' }"></i></div><small>Expires in {{
+              E.countdown(j.left) }}</small>
+      </div>
+      <button class="btn btn-primary w-100" :disabled="atLimit || busy[j.d.id]" @click="orders.acceptJob(j.d.id)">{{
+        atLimit
+          ? 'Max ' + MAX_JOBS + ' jobs at once' : 'Accept job' }}</button>
     </div>
     <div v-for="j in expired" :key="j.d.id" class="panel job expired">
-      <div class="job-top"><Mono :store="j.s" :size="36" /><div class="job-route"><strong>{{ j.s.name }}</strong><small>{{ j.vName }} → {{ j.drop.name }}</small></div><StatusTag tone="warn">Expired</StatusTag></div>
-      <div class="job-timer"><div class="meter late"><i style="width:0"></i></div><small>Expired at {{ E.clock(j.d.expires_at) }}</small></div>
-      <p class="aj-line warn"><Icon name="bag" :size="14" />Nobody accepted in {{ cfg.deliveryWindowMin }} min. Switched to pickup.</p>
+      <div class="job-top">
+        <Mono :store="j.s" :size="36" />
+        <div class="job-route"><strong>{{ j.s.name }}</strong><small>{{ j.vName }} → {{ j.drop.name }}</small></div>
+        <StatusTag tone="warn">Expired</StatusTag>
+      </div>
+      <div class="job-timer">
+        <div class="meter late"><i style="width:0"></i></div><small>Expired at {{ E.clock(j.d.expires_at) }}</small>
+      </div>
+      <p class="aj-line warn">
+        <Icon name="bag" :size="14" />Nobody accepted in {{ cfg.deliveryWindowMin }} min. Switched to pickup.
+      </p>
     </div>
   </div>
 </template>
@@ -125,11 +180,13 @@ onBeforeUnmount(() => {
   gap: 10px;
   margin-bottom: 12px;
 }
+
 .dl-head p {
   color: var(--ink-2);
   margin: 4px 0 0;
   font-size: 13px;
 }
+
 .earn {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -138,55 +195,67 @@ onBeforeUnmount(() => {
   border: 0;
   color: #fff;
 }
+
 .earn div {
   display: flex;
   flex-direction: column;
 }
+
 .earn small {
   opacity: 0.75;
   font-weight: 600;
 }
+
 .earn b {
   font-size: 26px;
   font-weight: 800;
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
 }
+
 .earn span {
   font-size: 12px;
   opacity: 0.8;
 }
+
 .job {
   margin-bottom: 10px;
   display: grid;
   gap: 10px;
 }
+
 .job-top {
   display: flex;
   align-items: center;
   gap: 10px;
 }
+
 .job-route {
   flex: 1;
   min-width: 0;
 }
+
 .job-route strong {
   display: block;
   font-size: 14px;
 }
+
 .job-route small {
   color: var(--muted);
   font-size: 12px;
 }
+
 .fee {
   font-size: 17px;
   color: var(--ok);
 }
+
 .job-meta {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
 }
+
 .job-meta span {
   display: inline-flex;
   align-items: center;
@@ -198,29 +267,35 @@ onBeforeUnmount(() => {
   background: var(--canvas);
   color: var(--ink-2);
 }
+
 .job-meta span.ok {
   background: var(--ok-soft);
   color: var(--ok);
 }
+
 .job-timer {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 10px;
   align-items: center;
 }
+
 .job-timer small {
   font-size: 12px;
   font-weight: 700;
   color: var(--ink-2);
   font-variant-numeric: tabular-nums;
 }
+
 .job.expired {
   opacity: 0.7;
 }
+
 .active-job {
   border-color: var(--brand);
   box-shadow: 0 0 0 3px var(--brand-soft);
 }
+
 .mini-steps {
   list-style: none;
   display: flex;
@@ -228,6 +303,7 @@ onBeforeUnmount(() => {
   padding: 0;
   gap: 6px;
 }
+
 .mini-steps li {
   flex: 1;
   text-align: center;
@@ -238,14 +314,17 @@ onBeforeUnmount(() => {
   border-radius: 10px;
   background: var(--canvas);
 }
+
 .mini-steps li.done {
   background: var(--ok-soft);
   color: var(--ok);
 }
+
 .mini-steps li.now {
   background: var(--brand-soft);
   color: var(--brand-600);
 }
+
 .aj-line {
   margin: 0;
   display: flex;
@@ -255,9 +334,11 @@ onBeforeUnmount(() => {
   font-weight: 600;
   color: var(--ink-2);
 }
+
 .aj-line.ok {
   color: var(--ok);
 }
+
 .aj-line.warn {
   color: var(--warn);
 }
