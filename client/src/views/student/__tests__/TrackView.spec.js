@@ -9,6 +9,16 @@ import { mount, flushPromises } from '@vue/test-utils'
 
 vi.mock('@/common/supabase.js', () => ({ default: null }))
 
+// The frontend wait engine fetches the queue; stub it so the test is offline and
+// deterministic (TrackView derives readyAt/ahead from this).
+vi.mock('@/utils/waitTimeApi.js', () => ({
+  fetchQueue: vi.fn().mockResolvedValue({
+    orderItems: [{ menu_item_id: 'm1', qty: 1 }],
+    cookingDetails: [{ id: 'm1', cook_time_sec: 60, max_at_once: 2 }],
+    ahead: 2,
+  }),
+}))
+
 // Controllable route param.
 const route = { params: { orderId: 'o1' } }
 vi.mock('vue-router', () => ({ useRoute: () => route }))
@@ -17,6 +27,7 @@ import { setActivePinia } from 'pinia'
 import pinia from '@/stores/pinia.js'
 import { useCatalogStore } from '@/stores/catalog.js'
 import { useOrdersStore } from '@/stores/orders.js'
+import { _resetStoreWaitCache } from '@/composables/storeWaitCache.js'
 import Icon from '@/components/icons/Icon.vue'
 import Mono from '@/components/icons/Mono.vue'
 import Avatar from '@/components/icons/Avatar.vue'
@@ -46,7 +57,7 @@ function seed() {
 }
 
 describe('TrackView', () => {
-  beforeEach(() => { seed() })
+  beforeEach(() => { _resetStoreWaitCache(); seed() })
 
   it('renders the order named by the route param', async () => {
     const wrapper = mount(TrackView, globalCfg)
@@ -54,6 +65,13 @@ describe('TrackView', () => {
     expect(wrapper.text()).toContain('Order #E287')
     expect(wrapper.text()).toContain('Bento Bar')
     expect(wrapper.text()).toContain('Chicken Teriyaki')
+  })
+
+  it('shows the frontend wait estimate (Ready ~ + N orders ahead) for a paid order', async () => {
+    const wrapper = mount(TrackView, globalCfg)
+    await flushPromises()
+    expect(wrapper.text()).toContain('Ready ~')
+    expect(wrapper.text()).toContain('2 orders ahead')
   })
 
   it('shows the Live chip and the paid receipt line', async () => {

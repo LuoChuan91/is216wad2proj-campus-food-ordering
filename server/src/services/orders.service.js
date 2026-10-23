@@ -192,11 +192,15 @@ exports.updateStatus = async (orderId, status) => {
   return exports.getOrder(orderId);
 };
 
-// Angel: orders from a store that were created before the given order (or all active ones)
+// orders from a store that were created before the given order (or all active ones).
+// Returns { orders, ahead } where `ahead` is the count the frontend wait-time engine
+// surfaces as "N orders ahead". `orders` is kept so the client can also compute the
+// cook-time estimate from the queue's items.
 exports.getOrderAhead = async (storeId, orderId) => {
   // orderId is allowed to be null
   if (!storeId) throw httpError(400, 'store_id is required, e.g. /api/orders/orderAhead?store_id=<id>');
   let order;
   if (orderId) order = await repository.findById(orderId);
-  return repository.findOrdersAhead(storeId, order);
+  const orders = await repository.findOrdersAhead(storeId, order);
+  return { orders, ahead: orders.length };
 };

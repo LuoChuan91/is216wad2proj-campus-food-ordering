@@ -18,10 +18,13 @@ const props = defineProps({
   stations: { type: Number, default: 2 },
   pollMs: { type: Number, default: 60000 },
   supabaseClient: { type: Object, default: () => defaultSupabase },
+  // When true, append "· N ahead" to the label. Default off so existing usages
+  // (store badges) look exactly as before.
+  showAhead: { type: Boolean, default: false },
 })
 
 // Pass props as refs/getters so the composable reacts to changes.
-const { seconds, loading, error, stale, liveConnected } = useWaitTime(
+const { seconds, ahead, loading, error, stale, liveConnected } = useWaitTime(
   toRef(props, 'storeId'),
   toRef(props, 'orderId'),
   {
@@ -32,7 +35,12 @@ const { seconds, loading, error, stale, liveConnected } = useWaitTime(
   }
 )
 
-const label = computed(() => formatWaitTime(seconds.value))
+const label = computed(() => {
+  const base = formatWaitTime(seconds.value)
+  if (!props.showAhead) return base
+  const n = ahead.value
+  return `${base} · ${n} ${n === 1 ? 'order' : 'orders'} ahead`
+})
 </script>
 
 <template>

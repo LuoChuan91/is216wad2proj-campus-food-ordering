@@ -2,10 +2,11 @@ import { describe, it, expect, vi } from 'vitest'
 import { fetchQueue, ApiError } from '../waitTimeApi.js'
 
 // A fake api layer: methods resolve to DATA directly (the shared api interceptor
-// already unwraps res.data), matching services/api.js.
-function makeApi({ orders = [], details = [] } = {}) {
+// already unwraps res.data), matching services/api.js. `ordersAhead` returns the
+// { orders, ahead } envelope the server now sends.
+function makeApi({ orders = [], ahead, details = [] } = {}) {
   return {
-    ordersAhead: vi.fn().mockResolvedValue(orders),
+    ordersAhead: vi.fn().mockResolvedValue({ orders, ahead: ahead ?? orders.length }),
     itemCookingDetails: vi.fn().mockResolvedValue(details),
   }
 }
@@ -40,6 +41,28 @@ describe('fetchQueue (shared api)', () => {
 
     expect(result.orderItems).toHaveLength(3)
     expect(result.cookingDetails).toEqual(details)
+    expect(result.ahead).toBe(2) // two orders in the queue
+  })
+
+  it('surfaces the server-provided ahead count (envelope shape)', async () => {
+    const api = {
+      ordersAhead: vi.fn().mockResolvedValue({ orders: [{ id: 'o1', order_items: [] }], ahead: 7 }),
+      itemCookingDetails: vi.fn(),
+    }
+    const result = await fetchQueue('store-1', undefined, { api })
+    expect(result.ahead).toBe(7) // trusts the server count, not the array length
+  })
+
+  it('tolerates a bare array (older server) and falls back to array length for ahead', async () => {
+    const api = {
+      ordersAhead: vi.fn().mockResolvedValue([
+        { id: 'o1', order_items: [{ menu_item_id: 'burger', qty: 1 }] },
+      ]),
+      itemCookingDetails: vi.fn().mockResolvedValue([{ id: 'burger', cook_time_sec: 60, max_at_once: 2 }]),
+    }
+    const result = await fetchQueue('store-1', undefined, { api })
+    expect(result.orderItems).toHaveLength(1)
+    expect(result.ahead).toBe(1)
   })
 
   it('passes order_id when provided', async () => {

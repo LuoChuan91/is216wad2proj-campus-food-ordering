@@ -1,6 +1,7 @@
 // Campus buildings shown on the map so students can tell where they are.
 // The database's venues of type "building" are shown too; these are the other SMU buildings.
 // Coordinates: OneMap (Singapore Land Authority) geocodes of each building's address.
+// TODO add to database?
 export const LANDMARKS = [
   { id: 'lm-connexion', name: 'SMU Connexion', short: 'Connexion', address: '40 Stamford Road', lat: 1.295584, lng: 103.849331, kind: 'building' },
   { id: 'lm-soa', name: 'School of Accountancy', short: 'SOA', address: '60 Stamford Road', lat: 1.295671, lng: 103.849924, kind: 'school' },

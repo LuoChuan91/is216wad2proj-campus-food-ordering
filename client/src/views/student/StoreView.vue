@@ -10,7 +10,6 @@ import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui.js'
 import { useCatalogStore } from '@/stores/catalog.js'
-import { useOrdersStore } from '@/stores/orders.js'
 import * as E from '@/utils/engine.js'
 import { shortName } from '@/utils/landmarks.js'
 import WaitTimeEstimate from '@/components/WaitTimeEstimate.vue'
@@ -21,7 +20,6 @@ import CartBar from '@/components/CartBar.vue'
 const route = useRoute()
 const ui = useUiStore()
 const catalog = useCatalogStore()
-const orders = useOrdersStore()
 const { ui: uiState } = storeToRefs(ui)
 
 const u = computed(() => uiState.value.student)
@@ -30,7 +28,6 @@ const money = E.money
 const store = computed(() => catalog.store(storeId.value))
 const venue = computed(() => (store.value ? catalog.venue(store.value.venue_id) : null))
 const open = computed(() => ui.open(store.value))
-const wait = computed(() => orders.storeWait(store.value.id))
 const cats = computed(() => {
   const m = new Map()
   for (const it of catalog.menuOf(store.value.id)) { if (!m.has(it.category)) m.set(it.category, []); m.get(it.category).push(it) }

@@ -17,7 +17,6 @@ app.use('/api/deliveries', require('./routes/deliveries.routes'));
 app.use('/api/profiles', require('./routes/profiles.routes'));
 app.use('/api/venues', require('./routes/venues.routes'));
 app.use('/api/destinations', require('./routes/destinations.routes'));
-app.use('/api/wait-times', require('./routes/waits.routes'));
 
 app.use(errorHandler);
 

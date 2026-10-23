@@ -71,14 +71,14 @@ function announceChanges() {
       const d = o.delivery
       // Shared context so these messages read exactly like the realtime ones.
       const ctx = () => {
-        const q = orders.waits.orders[o.id]
         const drop = d ? catalog.dropoff(d.destination_id) : null
         return {
           order: o,
           storeName: s.name,
           dropoffName: drop ? drop.name : undefined,
           courierName: d ? d.courier_name : undefined,
-          readyAtClock: q && q.readyAt ? E.clock(q.readyAt) : undefined,
+          // readyAtClock is omitted: the server wait snapshot is gone and the
+          // frontend engine is per-component; the message reads fine without it.
           deliveryWindowMin: cfg.deliveryWindowMin,
         }
       }

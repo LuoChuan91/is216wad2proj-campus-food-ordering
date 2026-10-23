@@ -11,6 +11,7 @@ import { useCatalogStore } from '@/stores/catalog.js'
 import * as E from '@/utils/engine.js'
 import { config as cfg } from '@/config/index.js'
 import { shortName } from '@/utils/landmarks.js'
+import { useCartEstimate } from '@/composables/useCartEstimate.js'
 import SegToggle from '@/components/SegToggle.vue'
 import DropoffPicker from '@/components/DropoffPicker.vue'
 
@@ -25,7 +26,14 @@ const store = computed(() => catalog.store(u.value.cart.storeId))
 const venue = computed(() => catalog.venue(store.value.venue_id))
 const lines = computed(() => u.value.cart.lines.map((l) => ({ ...l, item: catalog.item(l.menu_item_id), snap: E.snapshot(catalog.groups(l.menu_item_id), catalog.options(l.menu_item_id), l.selected) })))
 const t = computed(() => E.totals(u.value.cart.lines, store.value, u.value.checkout.type, cfg.deliveryFee))
-const est = computed(() => u.value.estimate)
+
+// Ready-time estimate computed entirely on the frontend (D1): the fresh-order
+// probe schedules this cart behind the store's live queue (store:<id> realtime).
+// readyAt is derived here as now + seconds.
+const { estimate: est } = useCartEstimate(
+  computed(() => u.value.cart.storeId),
+  computed(() => u.value.cart.lines),
+)
 const drops = computed(() => {
   const me = ui.place()
   return catalog.db.destinations.map((d) => ({ d, m: Math.round(E.distanceM(me, d)) })).sort((a, b) => a.m - b.m).slice(0, 3)

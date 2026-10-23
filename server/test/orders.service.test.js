@@ -372,3 +372,30 @@ test('409 when the kitchen tries to complete a delivery order (the courier does 
   ordersRepository.findById = async () => ({ id: 'order-1', status: 'ready', type: 'delivery', order_items: [] });
   await assert.rejects(service.updateStatus('order-1', 'completed'), (err) => err.status === 409);
 });
+
+
+/* ---------- orders ahead (wait-time engine data source) ---------- */
+
+test('getOrderAhead returns { orders, ahead } with ahead = orders.length', async () => {
+  const queue = [
+    { id: 'o1', created_at: '2026-01-01T00:00:00Z', store_id: 'store-1', status: 'preparing', order_items: [] },
+    { id: 'o2', created_at: '2026-01-01T00:01:00Z', store_id: 'store-1', status: 'paid', order_items: [] },
+  ];
+  ordersRepository.findOrdersAhead = async (storeId) => (storeId === 'store-1' ? queue : []);
+
+  const result = await service.getOrderAhead('store-1');
+  assert.deepEqual(result.orders, queue, 'orders array is passed through for the client cook-time calc');
+  assert.equal(result.ahead, 2, 'ahead is the queue length');
+});
+
+test('getOrderAhead with an empty queue reports ahead = 0', async () => {
+  ordersRepository.findById = async () => ({ id: 'order-9', created_at: '2026-01-01T00:00:00Z' });
+  ordersRepository.findOrdersAhead = async () => [];
+  const result = await service.getOrderAhead('store-1', 'order-9');
+  assert.deepEqual(result.orders, []);
+  assert.equal(result.ahead, 0);
+});
+
+test('getOrderAhead requires a store_id (400)', async () => {
+  await assert.rejects(service.getOrderAhead(null), (err) => err.status === 400);
+});

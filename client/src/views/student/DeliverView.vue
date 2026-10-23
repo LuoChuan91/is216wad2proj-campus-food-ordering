@@ -3,7 +3,7 @@
 //
 // Migrated from portals/student/DeliverTab.vue. Renders in StudentLayout's persistent
 // KeepAlive tab layer. Behaviour unchanged.
-import { computed } from 'vue'
+import { computed, watch, onBeforeUnmount } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui.js'
 import { useCatalogStore } from '@/stores/catalog.js'
@@ -11,6 +11,7 @@ import { useOrdersStore } from '@/stores/orders.js'
 import * as E from '@/utils/engine.js'
 import { config as cfg } from '@/config/index.js'
 import { shortName } from '@/utils/landmarks.js'
+import { acquireStoreWait, releaseStoreWait, peekStoreWait } from '@/composables/storeWaitCache.js'
 import StatusTag from '@/components/StatusTag.vue'
 
 const ui = useUiStore()
@@ -21,11 +22,23 @@ const { courierOn, now, busy } = storeToRefs(ui)
 const money = E.money
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`
 
+// Live per-order ready time from the single frontend engine (store:<id>). We
+// ref-count the jobs currently on screen so each order's queue estimate stays
+// live, and derive readyAt on the frontend as now + seconds.
+const waitKeys = new Set()
+const keyStr = (storeId, orderId) => `${storeId}|${orderId}`
+function jobReadyAt(storeId, orderId) {
+  if (!storeId || !orderId) return null
+  const entry = peekStoreWait(storeId, orderId)
+  if (!entry || entry.loading || !entry.seconds) return null
+  return now.value + entry.seconds * 1000
+}
+
 function jobView(d) {
   const s = catalog.store(d.pickup_store_id) || { name: 'Store', mono: '?', color: '#767d90', venue_id: null }
   const v = catalog.venue(s.venue_id)
   const drop = catalog.dropoff(d.destination_id) || { name: 'Drop-off point', lat: v ? v.lat : 0, lng: v ? v.lng : 0 }
-  const est = (orders.waits.orders[d.order_id] || {}).readyAt
+  const est = jobReadyAt(d.pickup_store_id, d.order_id)
   return { d, o: d.order, s, v, vName: v ? shortName(v.name) : '', drop, walk: v ? E.walkEstimate(v, drop) : { meters: 0 }, items: d.order.items, est, left: d.expires_at - now.value }
 }
 
@@ -34,6 +47,25 @@ const active = computed(() => { const d = orders.activeJob(); return d ? jobView
 const jobs = computed(() => (on.value ? orders.openJobs().map(jobView) : []))
 const expired = computed(() => (on.value ? orders.db.expiredJobs.map(jobView) : []))
 const earn = computed(() => orders.earnings())
+
+// Keep one live engine per visible job's (store, order); release the rest.
+function syncJobWaits() {
+  const wanted = new Map() // key -> { storeId, orderId }
+  const add = (d) => { if (d && d.pickup_store_id && d.order_id) wanted.set(keyStr(d.pickup_store_id, d.order_id), { storeId: d.pickup_store_id, orderId: d.order_id }) }
+  const aj = orders.activeJob(); if (aj) add(aj)
+  if (on.value) { for (const d of orders.openJobs()) add(d) }
+  for (const [k, { storeId, orderId }] of wanted) if (!waitKeys.has(k)) { acquireStoreWait(storeId, orderId); waitKeys.add(k) }
+  for (const k of [...waitKeys]) if (!wanted.has(k)) { const [storeId, orderId] = k.split('|'); releaseStoreWait(storeId, orderId); waitKeys.delete(k) }
+}
+watch(
+  () => [on.value, orders.db.jobs.map((j) => j.id).join(','), orders.db.myJobs.map((j) => j.id).join(',')],
+  syncJobWaits,
+  { immediate: true },
+)
+onBeforeUnmount(() => {
+  for (const k of waitKeys) { const [storeId, orderId] = k.split('|'); releaseStoreWait(storeId, orderId) }
+  waitKeys.clear()
+})
 </script>
 
 <template>

@@ -10,7 +10,6 @@ import { ref } from 'vue'
 import { buildNotification } from '@/utils/notificationMessages.js'
 import { useOrdersStore } from '@/stores/orders.js'
 import { useCatalogStore } from '@/stores/catalog.js'
-import * as E from '@/utils/engine.js'
 import { config as cfg } from '@/config/index.js'
 
 let seq = 0
@@ -31,8 +30,6 @@ function resolveContext(payload) {
       ctx.order = order
       const store = catalog.store(order.store_id)
       if (store) ctx.storeName = store.name
-      const q = orders.waits?.orders?.[order.id]
-      if (q && q.readyAt) ctx.readyAtClock = E.clock(q.readyAt)
       const d = order.delivery
       if (d) {
         if (d.courier_name) ctx.courierName = d.courier_name

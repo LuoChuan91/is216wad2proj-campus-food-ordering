@@ -14,6 +14,7 @@ import * as E from '@/utils/engine.js'
 import { config as cfg } from '@/config/index.js'
 import { shortName } from '@/utils/landmarks.js'
 import { estimateWalkingSeconds } from '@/utils/mapApi.js'
+import { useStoreWait } from '@/composables/storeWaitCache.js'
 import ReceiptPanel from '@/components/ReceiptPanel.vue'
 
 const route = useRoute()
@@ -21,7 +22,6 @@ const ui = useUiStore()
 const catalog = useCatalogStore()
 const orders = useOrdersStore()
 const { now } = storeToRefs(ui)
-const { waits: ordersWaits } = storeToRefs(orders)
 
 const first = (name) => (name || '').split(' ')[0]
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`
@@ -33,7 +33,17 @@ const venueName = computed(() => (venue.value ? shortName(venue.value.name) : ''
 const lines = computed(() => order.value.items)
 const d = computed(() => order.value.delivery)
 const drop = computed(() => d.value && catalog.dropoff(d.value.destination_id))
-const q = computed(() => ordersWaits.value.orders[order.value.id])
+
+// Live wait for THIS order from the single frontend engine (store:<id> realtime).
+// readyAt is derived on the frontend as now + seconds; `ahead` is the queue count.
+const wait = useStoreWait(
+  computed(() => (order.value ? order.value.store_id : null)),
+  orderId,
+)
+const q = computed(() => {
+  if (wait.entry.loading || !order.value) return null
+  return { readyAt: now.value + wait.entry.seconds * 1000, ahead: wait.entry.ahead }
+})
 const pay = computed(() => order.value.payment)
 const firstItem = computed(() => lines.value[0] && catalog.item(lines.value[0].menu_item_id))
 const delivering = computed(() => !!d.value && !order.value.fallback)

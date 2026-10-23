@@ -139,3 +139,106 @@ export function formatWaitTime(seconds) {
 }
 
 export const WAIT_TIME_STRATEGIES = Object.keys(STRATEGIES);
+
+// ---------------------------------------------------------------------------
+// Fresh-order probe (ported from the server's common/engine.js scheduleKitchen /
+// estimateNew). Used by checkout: "when would THIS cart be ready, given the store
+// queue ahead of it?" The server version returned absolute readyAt timestamps;
+// here we return a relative wait in SECONDS plus the orders-ahead count, so the
+// frontend stays the single wait-time machine (readyAt = now + seconds).
+//
+// Kitchen model (identical to the server):
+//   - a store cooks `stations` batches at the same time;
+//   - each order line becomes ceil(qty / max_at_once) batches of cook_time_sec;
+//   - orders already 'preparing' keep the slot they started on;
+//   - waiting ('placed') orders take the earliest free slot, FCFS.
+//
+// `orders`: [{ id, status:'placed'|'preparing', created_at, preparing_at, items:[{menu_item_id, qty}] }]
+//           times in MILLISECONDS (matching the server shape).
+// `menuById`: { [menuItemId]: { cook_time_sec, max_at_once } }
+
+function scheduleKitchen(stations, orders, menuById, now) {
+  const slotCount = Math.max(1, stations | 0);
+  const slots = new Array(slotCount).fill(-Infinity);
+  const earliest = () => slots.indexOf(Math.min(...slots));
+  const batches = (o) =>
+    (o.items || []).flatMap((it) => {
+      const m = menuById[it.menu_item_id] || { cook_time_sec: 0, max_at_once: 1 };
+      const n = Math.ceil(it.qty / Math.max(1, m.max_at_once));
+      return Array.from({ length: n }, () => (Number(m.cook_time_sec) || 0) * 1000);
+    });
+
+  const preparing = orders
+    .filter((o) => o.status === 'preparing')
+    .sort((a, b) => a.preparing_at - b.preparing_at);
+  const waiting = orders
+    .filter((o) => o.status !== 'preparing')
+    .sort((a, b) => a.created_at - b.created_at);
+  const out = {};
+
+  for (const o of preparing) {
+    let ready = o.preparing_at;
+    for (const ms of batches(o)) {
+      const i = earliest();
+      slots[i] = Math.max(slots[i], o.preparing_at) + ms;
+      ready = Math.max(ready, slots[i]);
+    }
+    out[o.id] = { readyAt: Math.max(ready, now) };
+  }
+
+  for (let i = 0; i < slotCount; i++) slots[i] = Math.max(slots[i], now);
+
+  for (const o of waiting) {
+    let ready = now;
+    for (const ms of batches(o)) {
+      const i = earliest();
+      slots[i] += ms;
+      ready = Math.max(ready, slots[i]);
+    }
+    out[o.id] = { readyAt: ready };
+  }
+
+  return out;
+}
+
+/**
+ * Estimate when a NOT-YET-PLACED cart would be ready, scheduled behind the
+ * store's current queue. Returns a relative wait in whole seconds and how many
+ * orders are ahead of it.
+ *
+ * @param {Array<{id:string,status:string,created_at:number,preparing_at?:number,items:Array<{menu_item_id:string,qty:number}>}>} queueOrders
+ *        the store's active orders (ms timestamps), as returned by the queue API.
+ * @param {Array<{menu_item_id:string,qty:number}>} cartLines  the new cart's items.
+ * @param {Array<{id:string,cook_time_sec:number,max_at_once:number}>} cookingDetails
+ * @param {{ stations?: number, now?: number }} [options]
+ * @returns {{ seconds: number, ahead: number }}
+ */
+export function estimateNewOrderWait(queueOrders, cartLines, cookingDetails, options = {}) {
+  const stations = Math.max(1, Math.floor(options.stations ?? 2));
+  const now = options.now ?? Date.now();
+
+  const menuById = {};
+  for (const d of Array.isArray(cookingDetails) ? cookingDetails : []) {
+    if (d && d.id != null) menuById[d.id] = d;
+  }
+
+  const queue = (Array.isArray(queueOrders) ? queueOrders : []).map((o) => ({
+    id: o.id,
+    status: o.status === 'preparing' ? 'preparing' : 'placed',
+    created_at: Number(o.created_at) || now,
+    preparing_at: Number(o.preparing_at) || Number(o.created_at) || now,
+    items: o.items || o.order_items || [],
+  }));
+
+  // The probe lands behind the current queue (created just after "now").
+  const probe = { id: '__new', status: 'placed', created_at: now + 1, items: cartLines || [] };
+  const schedule = scheduleKitchen(stations, queue.concat([probe]), menuById, now);
+  const readyAt = schedule.__new ? schedule.__new.readyAt : now;
+
+  return {
+    seconds: Math.max(0, Math.round((readyAt - now) / 1000)),
+    ahead: queue.length,
+  };
+}
+
+export { scheduleKitchen };

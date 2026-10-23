@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { estimateWaitTime, formatWaitTime, WAIT_TIME_STRATEGIES } from '../waitTime.js'
+import { estimateWaitTime, formatWaitTime, WAIT_TIME_STRATEGIES, estimateNewOrderWait } from '../waitTime.js'
 
 // Cooking details used across tests.
 //   burger: 60s each, cooks 2 at once (batch size 2)
@@ -163,5 +163,60 @@ describe('formatWaitTime', () => {
     expect(formatWaitTime(45)).toBe('~45 sec')
     expect(formatWaitTime(60)).toBe('~1 min')
     expect(formatWaitTime(450)).toBe('~8 min') // 450/60 = 7.5 -> rounds to 8
+  })
+})
+
+
+// Fresh-order probe: ported from the server engine (common/engine.js estimateNew).
+// Mirrors server/test/engine.test.js, but returns relative { seconds, ahead }.
+describe('estimateNewOrderWait (checkout probe)', () => {
+  const MIN = 60 // seconds
+  // pasta: 300s, cooks 4 at once; kopi: 60s, cooks 12 at once
+  const COOK = [
+    { id: 'pasta', cook_time_sec: 300, max_at_once: 4 },
+    { id: 'kopi', cook_time_sec: 60, max_at_once: 12 },
+  ]
+
+  it('empty queue, one dish: wait = its cook time, 0 ahead', () => {
+    const r = estimateNewOrderWait([], [{ menu_item_id: 'pasta', qty: 1 }], COOK, { stations: 1, now: 0 })
+    expect(r.seconds).toBe(5 * MIN)
+    expect(r.ahead).toBe(0)
+  })
+
+  it('more than max_at_once makes another batch (1 slot, qty 5 pasta = 2 batches)', () => {
+    const r = estimateNewOrderWait([], [{ menu_item_id: 'pasta', qty: 5 }], COOK, { stations: 1, now: 0 })
+    expect(r.seconds).toBe(10 * MIN)
+  })
+
+  it('a waiting order ahead pushes the fresh order back (1 slot, FCFS)', () => {
+    const queue = [
+      { id: 'a', status: 'placed', created_at: 1, items: [{ menu_item_id: 'pasta', qty: 1 }] },
+    ]
+    const r = estimateNewOrderWait(queue, [{ menu_item_id: 'pasta', qty: 1 }], COOK, { stations: 1, now: 0 })
+    expect(r.seconds).toBe(10 * MIN) // behind the 5-min order
+    expect(r.ahead).toBe(1)
+  })
+
+  it('an order already cooking keeps its slot; the fresh order starts when it frees', () => {
+    const queue = [
+      { id: 'a', status: 'preparing', created_at: 0, preparing_at: -2 * MIN * 1000, items: [{ menu_item_id: 'pasta', qty: 1 }] },
+    ]
+    // 'a' finishes 3 min from now; a kopi (1 min) then runs -> 4 min.
+    const r = estimateNewOrderWait(queue, [{ menu_item_id: 'kopi', qty: 1 }], COOK, { stations: 1, now: 0 })
+    expect(r.seconds).toBe(4 * MIN)
+    expect(r.ahead).toBe(1)
+  })
+
+  it('two slots cook the queue order and the fresh order in parallel', () => {
+    const queue = [
+      { id: 'a', status: 'placed', created_at: 1, items: [{ menu_item_id: 'pasta', qty: 1 }] },
+    ]
+    const r = estimateNewOrderWait(queue, [{ menu_item_id: 'pasta', qty: 1 }], COOK, { stations: 2, now: 0 })
+    expect(r.seconds).toBe(5 * MIN) // both ready at 5 min
+  })
+
+  it('tolerates missing cooking details (treated as 0 cook time)', () => {
+    const r = estimateNewOrderWait([], [{ menu_item_id: 'unknown', qty: 2 }], COOK, { stations: 2, now: 0 })
+    expect(r.seconds).toBe(0)
   })
 })

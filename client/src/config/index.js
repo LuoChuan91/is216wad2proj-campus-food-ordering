@@ -7,6 +7,10 @@ export const config = {
   deliveryFee: 1.5,
   deliveryWindowMin: 10, // no courier within this many minutes -> the order switches to pickup
 
+  // How many dishes a kitchen cooks at once (mirror of the server's KITCHEN_SLOTS).
+  // The frontend wait-time engine uses this as its number of parallel stations.
+  kitchenSlots: 2,
+
   // How often the screens ask the server for news (orders, queues, delivery jobs)
   pollMs: 4000,
   catalogPollMs: 20000, // stores, menus and venues change less often

@@ -58,14 +58,13 @@ function normaliseJob(j) {
 }
 
 export const useOrdersStore = defineStore("orders", () => {
-  // Preserves the live slice of S.db, plus S.waits
+  // Preserves the live slice of S.db
   const db = reactive({
     orders: [], // a student's own orders, or a merchant's stores' orders
     jobs: [],
     expiredJobs: [],
     myJobs: [], // peer delivery
   });
-  const waits = reactive({ stores: {}, orders: {}, slots: 2 });
 
   function order(id) {
     return db.orders.find((o) => o.id === id);
@@ -88,15 +87,6 @@ export const useOrdersStore = defineStore("orders", () => {
       ACTIVE.includes(o.status) &&
       !(o.delivery && o.delivery.status === "delivered")
     );
-  }
-  // The live per-order ready times from the wait-time engine
-  function queue() {
-    return waits.orders;
-  }
-  // A store's current wait (only when it has a minutes figure), else null
-  function storeWait(storeId) {
-    const w = waits.stores[storeId];
-    return w && w.minutes != null ? w : null;
   }
   // The courier's current job (accepted or picked up), if any
   function activeJob() {
@@ -143,15 +133,6 @@ export const useOrdersStore = defineStore("orders", () => {
     const me = catalog.user(useSessionStore().session.userId);
     if (!me) return;
     const jobs = [];
-    jobs.push(
-      api.waitTimes().then((w) => {
-        Object.assign(waits, {
-          stores: w.stores || {},
-          orders: w.orders || {},
-          slots: w.slots,
-        });
-      }),
-    );
     if (me.role === "student") {
       jobs.push(api.profile(me.id).then((p) => Object.assign(me, p)));
       jobs.push(
@@ -294,38 +275,19 @@ export const useOrdersStore = defineStore("orders", () => {
   }
 
   // Ask the server's wait-time engine when the current cart would be ready
-  async function refreshEstimate() {
-    const ui = useUiStore();
-    const u = ui.ui.student;
-    if (!u.cart.lines.length) {
-      u.estimate = null;
-      return;
-    }
-    try {
-      u.estimate = await api.estimate(
-        u.cart.storeId,
-        u.cart.lines.map((l) => ({ menu_item_id: l.menu_item_id, qty: l.qty })),
-      );
-    } catch {
-      u.estimate = null;
-    }
-  }
+  // (removed: checkout now computes this on the frontend via useCartEstimate).
 
   return {
     db,
-    waits,
     order,
     me,
     ordersOf,
     isActive,
-    queue,
-    storeWait,
     activeJob,
     openJobs,
     earnings,
     loadLive,
     loadStoreOrders,
-    refreshEstimate,
     setOrderStatus,
     startPreparing,
     markReady,

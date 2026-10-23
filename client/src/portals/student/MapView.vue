@@ -7,15 +7,33 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useUiStore, DEFAULT_PLACE } from '@/stores/ui.js'
 import { useCatalogStore } from '@/stores/catalog.js'
-import { useOrdersStore } from '@/stores/orders.js'
 import * as E from '@/utils/engine.js'
 import { config as cfg } from '@/config/index.js'
 import { ensureRoute } from '@/utils/routing.js'
 import { LANDMARKS, shortName } from '@/utils/landmarks.js'
+import { acquireStoreWait, releaseStoreWait } from '@/composables/storeWaitCache.js'
 
 const ui = useUiStore()
 const catalog = useCatalogStore()
-const orders = useOrdersStore()
+
+// Live wait-time cache: one shared realtime engine per store (store:<id> /
+// queue_change), so the imperative venueTip HTML reads the SAME live number the
+// store cards show. We ref-count the stores currently on the map and release the
+// rest. Minutes are derived on the frontend from the engine's seconds.
+const waitStores = new Set()
+function syncWaitSubscriptions() {
+  const wanted = new Set()
+  for (const v of foodVenues()) for (const s of catalog.storesAt(v.id)) wanted.add(s.id)
+  for (const id of wanted) if (!waitStores.has(id)) { acquireStoreWait(id); waitStores.add(id) }
+  for (const id of [...waitStores]) if (!wanted.has(id)) { releaseStoreWait(id); waitStores.delete(id) }
+}
+// Read the live wait minutes for a store from the cache (null when not ready/0).
+function storeWaitMinutes(storeId) {
+  const entry = acquireStoreWait(storeId)
+  waitStores.add(storeId)
+  if (entry.loading || !entry.seconds) return null
+  return Math.max(1, Math.round(entry.seconds / 60))
+}
 
 const el = ref(null)
 const markers = {}
@@ -58,9 +76,9 @@ function venueTip(v) {
   const stores = catalog.storesAt(v.id)
   const open = stores.filter((s) => ui.open(s).open).length
   const rows = stores.map((s) => {
-    const w = orders.storeWait(s.id)
+    const mins = storeWaitMinutes(s.id)
     const isOpen = ui.open(s).open
-    return `<li><i style="background:${s.color}"></i>${esc(s.name)}<em class="${isOpen ? '' : 'off'}">${isOpen ? (w ? `~${w.minutes} min` : 'Open') : 'Closed'}</em></li>`
+    return `<li><i style="background:${s.color}"></i>${esc(s.name)}<em class="${isOpen ? '' : 'off'}">${isOpen ? (mins ? `~${mins} min` : 'Open') : 'Closed'}</em></li>`
   }).join('')
   const walk = ui.walk(v)
   return `<div class="map-tip-card"><strong>${esc(v.name)}</strong><small>${walk.minutes} min walk · ${open} of ${stores.length} open</small><ul>${rows}</ul><span class="tip-hint">Click to see the menus</span></div>`
@@ -179,9 +197,10 @@ onMounted(() => {
   frame(false)
   labels()
   fetchRoutes()
+  syncWaitSubscriptions()
   stops.push(watchEffect(sync))
   stops.push(watch(() => [ui.ui.student.venueId, ui.ui.student.sheet === 'venue'], () => frame(true)))
-  stops.push(watch(() => catalog.db.venues.length, (n, o) => { fetchRoutes(); if (n > o) frame(true) }))
+  stops.push(watch(() => catalog.db.venues.length, (n, o) => { fetchRoutes(); syncWaitSubscriptions(); if (n > o) frame(true) }))
   stops.push(watch(() => { const p = here(); return p.lat + ',' + p.lng }, () => {
     meMarker.setLatLng([here().lat, here().lng])
     fetchRoutes()
@@ -192,6 +211,8 @@ onMounted(() => {
 })
 onBeforeUnmount(() => {
   stops.forEach((s) => s())
+  for (const id of waitStores) releaseStoreWait(id)
+  waitStores.clear()
   if (ro) ro.disconnect()
   if (map) map.remove()
   map = null; campus = null; meMarker = null

@@ -43,24 +43,32 @@ function toApiError(err, action) {
  * @param {string} storeId  required
  * @param {string} [orderId]  when given, only orders created at/before this order count
  * @param {{ api?: typeof defaultApi }} [deps]  injectable api layer for testing
- * @returns {Promise<{ orderItems: Array<{menu_item_id: string, qty: number}>, cookingDetails: Array<{id: string, cook_time_sec: number, max_at_once: number}> }>}
+ * @returns {Promise<{ orderItems: Array<{menu_item_id: string, qty: number}>, cookingDetails: Array<{id: string, cook_time_sec: number, max_at_once: number}>, ahead: number }>}
  * @throws {ApiError}
  */
 export async function fetchQueue(storeId, orderId, deps = {}) {
   if (!storeId) throw new Error('fetchQueue: storeId is required')
   const api = deps.api || defaultApi
 
-  // 1. Fetch the orders ahead in the queue.
-  let orders
+  // 1. Fetch the orders ahead in the queue. The server returns
+  //    { orders, ahead }; tolerate a bare array for safety / older servers.
+  let payload
   try {
-    orders = await api.ordersAhead(storeId, orderId)
+    payload = await api.ordersAhead(storeId, orderId)
   } catch (err) {
     throw toApiError(err, 'load the queue')
   }
 
+  const orders = Array.isArray(payload) ? payload : (payload?.orders ?? [])
+  // Orders-ahead count: prefer the server's explicit count, else the array length.
+  const ahead =
+    payload && !Array.isArray(payload) && typeof payload.ahead === 'number'
+      ? payload.ahead
+      : orders.length
+
   // Flatten order_items from every queued order into a single list.
   const orderItems = []
-  for (const order of Array.isArray(orders) ? orders : []) {
+  for (const order of orders) {
     for (const oi of order.order_items || []) {
       orderItems.push({ menu_item_id: oi.menu_item_id, qty: oi.qty })
     }
@@ -79,5 +87,5 @@ export async function fetchQueue(storeId, orderId, deps = {}) {
     }
   }
 
-  return { orderItems, cookingDetails }
+  return { orderItems, cookingDetails, ahead }
 }

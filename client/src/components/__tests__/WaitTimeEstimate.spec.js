@@ -43,6 +43,7 @@ function makeFakeClient() {
 const queue = {
   orderItems: [{ menu_item_id: 'burger', qty: 2 }],
   cookingDetails: [{ id: 'burger', cook_time_sec: 60, max_at_once: 2 }],
+  ahead: 3,
 }
 
 describe('WaitTimeEstimate', () => {
@@ -70,6 +71,25 @@ describe('WaitTimeEstimate', () => {
     expect(wrapper.text()).toContain('~1 min')
     expect(client.channel).toHaveBeenCalledWith('store:store-1')
     expect(wrapper.text()).toContain('live')
+  })
+
+  it('does NOT show the orders-ahead count by default', async () => {
+    const { client } = makeFakeClient()
+    const wrapper = mount(WaitTimeEstimate, {
+      props: { storeId: 'store-1', supabaseClient: client },
+    })
+    await flushPromises()
+    expect(wrapper.text()).not.toContain('ahead')
+  })
+
+  it('appends "N orders ahead" when showAhead is set', async () => {
+    const { client } = makeFakeClient()
+    const wrapper = mount(WaitTimeEstimate, {
+      props: { storeId: 'store-1', supabaseClient: client, showAhead: true },
+    })
+    await flushPromises()
+    expect(wrapper.text()).toContain('~1 min')
+    expect(wrapper.text()).toContain('3 orders ahead')
   })
 
   it('refetches when a broadcast arrives', async () => {

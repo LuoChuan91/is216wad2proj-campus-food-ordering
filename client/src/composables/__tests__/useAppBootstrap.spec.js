@@ -17,8 +17,6 @@ vi.mock('@/services/api.js', () => ({
     destinations: vi.fn().mockResolvedValue([]),
     stores: vi.fn().mockResolvedValue([]),
     menu: vi.fn().mockResolvedValue([]),
-    waitTimes: vi.fn().mockResolvedValue({ stores: {}, orders: {}, slots: 2 }),
-    estimate: vi.fn().mockResolvedValue({ readyAt: 1, minutes: 1 }),
     studentOrders: vi.fn().mockResolvedValue([]),
     storeOrders: vi.fn().mockResolvedValue([]),
     openJobs: vi.fn().mockResolvedValue([]),
@@ -98,8 +96,8 @@ describe('useAppBootstrap', () => {
     // With no session, Q.me() is undefined, so refresh short-circuits and does
     // not call the live endpoints.
     await refresh()
-    expect(api.waitTimes).not.toHaveBeenCalled()
     expect(api.studentOrders).not.toHaveBeenCalled()
+    expect(api.myJobs).not.toHaveBeenCalled()
   })
 
   it('exposes stop() that clears the timers', async () => {

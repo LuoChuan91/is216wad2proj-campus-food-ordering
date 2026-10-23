@@ -24,8 +24,6 @@ export const api = {
   menu: () => http.get('/menu'),
 
   // live data
-  waitTimes: () => http.get('/wait-times'),
-  estimate: (storeId, items) => http.post('/wait-times/estimate', { store_id: storeId, items }),
   studentOrders: (studentId) => http.get('/orders', { params: { student_id: studentId } }),
   storeOrders: (storeId) => http.get('/orders', { params: { store_id: storeId } }),
   openJobs: () => http.get('/deliveries', { params: { status: 'open' } }),

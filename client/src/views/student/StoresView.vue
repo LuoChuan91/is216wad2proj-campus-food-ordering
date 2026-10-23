@@ -4,22 +4,37 @@
 //
 // Migrated from portals/student/StoresTab.vue. Renders in StudentLayout's persistent
 // KeepAlive tab layer. Behaviour unchanged.
-import { computed } from 'vue'
+import { computed, watch, onBeforeUnmount } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui.js'
 import { useCatalogStore } from '@/stores/catalog.js'
-import { useOrdersStore } from '@/stores/orders.js'
 import * as E from '@/utils/engine.js'
 import { shortName } from '@/utils/landmarks.js'
+import { acquireStoreWait, releaseStoreWait, peekStoreWait } from '@/composables/storeWaitCache.js'
 import WaitTimeEstimate from '@/components/WaitTimeEstimate.vue'
 
 const ui = useUiStore()
 const catalog = useCatalogStore()
-const orders = useOrdersStore()
 const { ui: uiState } = storeToRefs(ui)
 
 const u = computed(() => uiState.value.student)
 const list = computed(() => u.value.list)
+
+// Live wait minutes per store from the single frontend engine (store:<id>), used
+// by the "Shortest wait" sort. The cards themselves render <WaitTimeEstimate>.
+const waitStores = new Set()
+const storeWaitMins = (storeId) => {
+  const entry = peekStoreWait(storeId)
+  if (!entry || entry.loading || !entry.seconds) return null
+  return Math.max(1, Math.round(entry.seconds / 60))
+}
+function syncWaits() {
+  const wanted = new Set(catalog.db.stores.map((s) => s.id))
+  for (const id of wanted) if (!waitStores.has(id)) { acquireStoreWait(id); waitStores.add(id) }
+  for (const id of [...waitStores]) if (!wanted.has(id)) { releaseStoreWait(id); waitStores.delete(id) }
+}
+watch(() => catalog.db.stores.map((s) => s.id).join(','), syncWaits, { immediate: true })
+onBeforeUnmount(() => { for (const id of waitStores) releaseStoreWait(id); waitStores.clear() })
 
 // Filter chips: All, Open now, Offers, then every menu category (Noodles, Drinks, Bento Sets…)
 const categories = computed(() => [...new Set(catalog.db.menu.map((m) => m.category))].sort())
@@ -38,7 +53,7 @@ const SORTS = [
 
 const rows = computed(() => catalog.db.stores.map((s) => {
   const v = catalog.venue(s.venue_id)
-  return { s, v, open: ui.open(s), wait: orders.storeWait(s.id), walk: v ? ui.walk(v) : null, cats: catalog.menuOf(s.id).map((m) => m.category) }
+  return { s, v, open: ui.open(s), wait: storeWaitMins(s.id), walk: v ? ui.walk(v) : null, cats: catalog.menuOf(s.id).map((m) => m.category) }
 }))
 
 const shown = computed(() => {
@@ -52,7 +67,7 @@ const shown = computed(() => {
     if (f.startsWith('cat:')) return r.cats.includes(f.slice(4))
     return true
   })
-  const waitOf = (r) => (r.open.open && r.wait ? r.wait.minutes : 999)
+  const waitOf = (r) => (r.open.open && r.wait != null ? r.wait : 999)
   const walkOf = (r) => (r.walk ? r.walk.meters : 99999)
   const sorts = {
     recommended: (a, b) => Number(b.open.open) - Number(a.open.open) || (waitOf(a) + (a.walk ? a.walk.minutes : 0)) - (waitOf(b) + (b.walk ? b.walk.minutes : 0)),

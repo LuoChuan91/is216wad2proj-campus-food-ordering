@@ -41,7 +41,6 @@ export function studentUi(tab = "explore") {
     draft: { selected: [], qty: 1 },
     cart: { storeId: null, lines: [] },
     checkout: { type: "pickup", dropoffId: null, note: "" },
-    estimate: null, // when the cart would be ready, // TODO from the server (should not from server)
     pay: { state: "idle", orderId: null, error: "", result: null },
     trackOrderId: null,
     exploreSeen: tab === "explore",
@@ -312,7 +311,6 @@ export const useUiStore = defineStore("ui", () => {
   }
   function addToCart() {
     const catalog = useCatalogStore();
-    const orders = useOrdersStore();
     const u = ui.student;
     const item = catalog.item(u.itemId);
     const groups = catalog.groups(item.id);
@@ -330,7 +328,6 @@ export const useUiStore = defineStore("ui", () => {
     u.sheet = null;
   }
   function setLineQty(key, qty) {
-    const orders = useOrdersStore();
     const u = ui.student;
     const line = u.cart.lines.find((l) => l.key === key);
     if (!line) return;
@@ -342,11 +339,10 @@ export const useUiStore = defineStore("ui", () => {
         u.page = "store";
         if (u.storeId) go("/student/store/" + u.storeId);
       }
-    } else orders.refreshEstimate();
+    }
   }
   function openCheckout() {
     const catalog = useCatalogStore();
-    const orders = useOrdersStore();
     const u = ui.student;
     if (!u.cart.lines.length) return;
     u.page = "checkout";
@@ -358,7 +354,6 @@ export const useUiStore = defineStore("ui", () => {
         .slice()
         .sort((a, b) => E.distanceM(me, a) - E.distanceM(me, b))[0].id;
     }
-    orders.refreshEstimate();
   }
   function setFulfilment(type) {
     ui.student.checkout.type = type;
@@ -417,7 +412,6 @@ export const useUiStore = defineStore("ui", () => {
     if (u.pay.state === "done") {
       u.cart = { storeId: null, lines: [] };
       u.checkout.note = "";
-      u.estimate = null;
       u.pay = { state: "idle", orderId: null, error: "", result: null };
     }
     u.sheet = null;

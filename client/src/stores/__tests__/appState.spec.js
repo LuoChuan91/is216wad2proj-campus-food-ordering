@@ -16,8 +16,6 @@ vi.mock('@/services/api.js', () => ({
     destinations: vi.fn().mockResolvedValue([]),
     stores: vi.fn().mockResolvedValue([]),
     menu: vi.fn().mockResolvedValue([]),
-    waitTimes: vi.fn().mockResolvedValue({ stores: {}, orders: {}, slots: 2 }),
-    estimate: vi.fn().mockResolvedValue({ readyAt: 123, minutes: 7 }),
     studentOrders: vi.fn().mockResolvedValue([]),
     storeOrders: vi.fn().mockResolvedValue([]),
     openJobs: vi.fn().mockResolvedValue([]),
@@ -220,38 +218,22 @@ describe('session store: signIn resets per-user state', () => {
   })
 })
 
-describe('orders store: estimate and loadLive', () => {
+describe('orders store: loadLive', () => {
   beforeEach(() => { setActivePinia(createPinia()) })
 
-  it('refreshEstimate fills the estimate from the server when the cart has lines', async () => {
-    seedCatalog()
-    const ui = useUiStore()
-    const orders = useOrdersStore()
-    ui.openItem('m1'); ui.toggleOption('o1'); ui.addToCart()
-    await orders.refreshEstimate()
-    expect(ui.ui.student.estimate).toEqual({ readyAt: 123, minutes: 7 })
-  })
-
-  it('refreshEstimate clears the estimate when the cart is empty', async () => {
-    seedCatalog()
-    const orders = useOrdersStore()
-    const ui = useUiStore()
-    ui.ui.student.estimate = { minutes: 1 }
-    await orders.refreshEstimate()
-    expect(ui.ui.student.estimate).toBe(null)
-  })
-
-  it('loadLive loads wait times for a signed-in student', async () => {
+  it('loadLive loads the signed-in student\'s orders and jobs', async () => {
     seedCatalog()
     const session = useSessionStore()
     const orders = useOrdersStore()
     session.signIn('stu')
     await orders.loadLive()
-    expect(orders.waits.slots).toBe(2)
+    // No throw, and the live slice is populated (empty in this mock) — wait times
+    // are no longer part of loadLive (the frontend engine owns them now).
+    expect(Array.isArray(orders.db.orders)).toBe(true)
   })
 })
 
-describe('orders store: moved query helpers (me/ordersOf/isActive/queue/storeWait/activeJob/openJobs/earnings)', () => {
+describe('orders store: moved query helpers (me/ordersOf/isActive/activeJob/openJobs/earnings)', () => {
   beforeEach(() => { setActivePinia(createPinia()) })
 
   it('me returns the signed-in user profile', () => {
@@ -282,22 +264,6 @@ describe('orders store: moved query helpers (me/ordersOf/isActive/queue/storeWai
     expect(orders.isActive({ status: 'ready' })).toBe(true)
     expect(orders.isActive({ status: 'completed' })).toBe(false)
     expect(orders.isActive({ status: 'ready', delivery: { status: 'delivered' } })).toBe(false)
-  })
-
-  it('queue returns the live per-order ready times', () => {
-    seedCatalog()
-    const orders = useOrdersStore()
-    orders.waits.orders = { o1: { minutes: 5 } }
-    expect(orders.queue()).toEqual({ o1: { minutes: 5 } })
-  })
-
-  it('storeWait returns the wait only when minutes is set, else null', () => {
-    seedCatalog()
-    const orders = useOrdersStore()
-    orders.waits.stores = { s1: { minutes: 8 }, s2: { minutes: null } }
-    expect(orders.storeWait('s1')).toEqual({ minutes: 8 })
-    expect(orders.storeWait('s2')).toBe(null)
-    expect(orders.storeWait('nope')).toBe(null)
   })
 
   it('activeJob finds an accepted or picked_up job', () => {

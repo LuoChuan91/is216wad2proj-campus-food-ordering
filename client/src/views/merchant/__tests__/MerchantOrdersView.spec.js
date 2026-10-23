@@ -15,6 +15,16 @@ import { ref, h } from 'vue'
 
 vi.mock('@/common/supabase.js', () => ({ default: null }))
 
+// The frontend wait engine fetches the queue; stub it so the board's per-order
+// estimates are offline + deterministic.
+vi.mock('@/utils/waitTimeApi.js', () => ({
+  fetchQueue: vi.fn().mockResolvedValue({
+    orderItems: [{ menu_item_id: 'm1', qty: 1 }],
+    cookingDetails: [{ id: 'm1', cook_time_sec: 60, max_at_once: 2 }],
+    ahead: 1,
+  }),
+}))
+
 // Control the merchant live layer. The spy is created in a hoisted block (so it exists
 // before the hoisted vi.mock factory runs); the ref it returns is assigned in beforeEach,
 // where Vue's ref() is available.
@@ -34,6 +44,7 @@ import Icon from '@/components/icons/Icon.vue'
 import Mono from '@/components/icons/Mono.vue'
 import MerchantOrdersView from '../MerchantOrdersView.vue'
 import MerchantView from '../MerchantView.vue'
+import { _resetStoreWaitCache } from '@/composables/storeWaitCache.js'
 
 // A minimal <RouterView> stub that renders the orders body (what #/merchant resolves
 // to), wiring the shell's provide() to the body's inject(). A render function (not a
@@ -58,12 +69,12 @@ function seed() {
     { id: 'o1', code: 'E287', status: 'paid', type: 'pickup', store_id: 's1', student_name: 'Aiden Tan', created_at: Date.now(), items: [{ id: 'oi1', menu_item_id: 'm1', name: 'Chicken Teriyaki', qty: 1, option_names: [] }], delivery: null },
     { id: 'o2', code: 'E288', status: 'preparing', type: 'pickup', store_id: 's1', student_name: 'Bea Lim', created_at: Date.now(), items: [{ id: 'oi2', menu_item_id: 'm1', name: 'Chicken Teriyaki', qty: 2, option_names: [] }], delivery: null },
   ]
-  orders.waits.slots = 2
   return { catalog, orders, session }
 }
 
 describe('MerchantOrdersView (via the MerchantView shell)', () => {
   beforeEach(() => {
+    _resetStoreWaitCache()
     useStoreOrdersLive.mockReset()
     useStoreOrdersLive.mockReturnValue(live)
     live.liveConnected.value = true

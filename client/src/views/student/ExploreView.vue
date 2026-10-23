@@ -5,7 +5,7 @@
 // persistent KeepAlive tab layer (so the Leaflet map survives navigation). The
 // venue sheet it shows is driven by S.ui.student (a UI-store overlay, not a route),
 // kept in sync with #/student/venue/:venueId by router/sync.js.
-import { computed } from 'vue'
+import { computed, watch, onBeforeUnmount } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui.js'
 import { useCatalogStore } from '@/stores/catalog.js'
@@ -13,6 +13,7 @@ import { useOrdersStore } from '@/stores/orders.js'
 import * as E from '@/utils/engine.js'
 import { config as cfg } from '@/config/index.js'
 import { shortName } from '@/utils/landmarks.js'
+import { acquireStoreWait, releaseStoreWait, peekStoreWait } from '@/composables/storeWaitCache.js'
 import MapView from '@/portals/student/MapView.vue'
 import VenueSheet from '@/portals/student/VenueSheet.vue'
 
@@ -31,8 +32,31 @@ const near = computed(() => catalog.db.venues
   .filter((x) => x.stores.length)
   .sort((a, b) => a.walk.minutes - b.walk.minutes || a.walk.meters - b.walk.meters))
 const greeting = computed(() => { const h = E.parts(now.value).h; return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening' })
-const bestWait = (stores) => { const w = stores.filter((s) => ui.open(s).open).map((s) => orders.storeWait(s.id)).filter(Boolean).map((x) => x.minutes); return w.length ? Math.min(...w) : null }
+
+// Live "best wait" per venue from the single frontend engine (store:<id>): the
+// lowest wait among its open stores, in minutes (derived from the engine seconds).
+const storeWaitMins = (storeId) => {
+  const entry = peekStoreWait(storeId)
+  if (!entry || entry.loading || !entry.seconds) return null
+  return Math.max(1, Math.round(entry.seconds / 60))
+}
+const bestWait = (stores) => {
+  const mins = stores.filter((s) => ui.open(s).open).map((s) => storeWaitMins(s.id)).filter((m) => m != null)
+  return mins.length ? Math.min(...mins) : null
+}
 const openCount = (stores) => stores.filter((s) => ui.open(s).open).length
+
+// Keep a live engine for every store shown in the "near you" list (ref-counted,
+// shared with the map's own subscriptions).
+const waitStores = new Set()
+function syncWaits() {
+  const wanted = new Set()
+  for (const v of catalog.db.venues) for (const s of catalog.storesAt(v.id)) wanted.add(s.id)
+  for (const id of wanted) if (!waitStores.has(id)) { acquireStoreWait(id); waitStores.add(id) }
+  for (const id of [...waitStores]) if (!wanted.has(id)) { releaseStoreWait(id); waitStores.delete(id) }
+}
+watch(() => catalog.db.stores.map((s) => s.id).join(','), syncWaits, { immediate: true })
+onBeforeUnmount(() => { for (const id of waitStores) releaseStoreWait(id); waitStores.clear() })
 
 // Search stores (name, cuisine) and dishes (name, description, category)
 const results = computed(() => {
