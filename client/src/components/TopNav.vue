@@ -26,21 +26,36 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
 
 <template>
   <header class="topnav">
-    <div class="tn-brand"><AppMark :size="28" /><b>{{ cfg.appName }}</b><span class="tn-portal">{{ ROLE[me.role] }}</span></div>
+    <div class="tn-brand">
+      <AppMark :size="28" /><b>{{ cfg.appName }}</b><span class="tn-portal">{{ ROLE[me.role] }}</span>
+    </div>
     <span v-if="!online" class="tn-offline" role="status"><i></i>Reconnecting…</span>
-    <span class="tn-clock"><Icon name="clock" :size="14" /><span class="tn-date">{{ E.dateLabel(now) }},</span>{{ E.clock(now) }}</span>
+    <span class="tn-clock">
+      <Icon name="clock" :size="14" /><span class="tn-date">{{ E.dateLabel(now) }},</span>{{ E.clock(now) }}
+    </span>
     <div class="tn-menu">
-      <button type="button" class="tn-btn" aria-label="Notifications" :aria-expanded="menu === 'bell'" @click.stop="ui.toggleMenu('bell')"><Icon name="bell" :size="20" /><b v-if="unread" class="tn-dot">{{ unread }}</b></button>
+      <button type="button" class="tn-btn" aria-label="Notifications" :aria-expanded="menu === 'bell'"
+        @click.stop="ui.toggleMenu('bell')">
+        <Icon name="bell" :size="20" /><b v-if="unread" class="tn-dot">{{ unread }}</b>
+      </button>
       <div v-if="menu === 'bell'" class="tn-drop tn-bell">
         <h6>Notifications</h6>
         <NotificationPanel />
       </div>
     </div>
     <div class="tn-menu">
-      <button type="button" class="tn-acct" aria-label="Account menu" :aria-expanded="menu === 'account'" @click.stop="ui.toggleMenu('account')"><Avatar :name="me.name" :size="30" :tone="me.role === 'student' ? 'brand' : 'navy'" /><span class="tn-name">{{ me.name }}</span><Icon name="chevD" :size="16" /></button>
+      <button type="button" class="tn-acct" aria-label="Account menu" :aria-expanded="menu === 'account'"
+        @click.stop="ui.toggleMenu('account')">
+        <Avatar :name="me.name" :size="30" :tone="me.role === 'student' ? 'brand' : 'navy'" /><span class="tn-name">{{
+          me.name }}</span>
+        <Icon name="chevD" :size="16" />
+      </button>
       <div v-if="menu === 'account'" class="tn-drop">
-        <div class="tn-me"><strong>{{ me.name }}</strong><small>{{ me.email }}</small><span class="tag">{{ ROLE[me.role] }}</span></div>
-        <button type="button" class="tn-item" @click="session.signOut()"><Icon name="logout" :size="18" /><span>Switch account<small>Back to the sign-in page</small></span></button>
+        <div class="tn-me"><strong>{{ me.name }}</strong><small>{{ me.email }}</small><span class="tag">{{ ROLE[me.role]
+        }}</span></div>
+        <button type="button" class="tn-item" @click="session.signOut()">
+          <Icon name="logout" :size="18" /><span>Switch account<small>Back to the sign-in page</small></span>
+        </button>
       </div>
     </div>
   </header>
@@ -63,6 +78,7 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
   background: var(--navy);
   color: #fff;
 }
+
 .tn-brand {
   display: flex;
   align-items: center;
@@ -70,6 +86,7 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
   margin-right: auto;
   min-width: 0;
 }
+
 .tn-brand b {
   font-family: var(--font-display);
   font-size: 21px;
@@ -79,6 +96,7 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .tn-portal {
   font-size: 12px;
   font-weight: 700;
@@ -87,6 +105,7 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
   background: rgba(255, 255, 255, 0.14);
   color: #dfe4f7;
 }
+
 .tn-clock {
   display: inline-flex;
   align-items: center;
@@ -97,6 +116,7 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
+
 .tn-offline {
   display: inline-flex;
   align-items: center;
@@ -105,6 +125,7 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
   font-weight: 700;
   color: #ffd8cc;
 }
+
 .tn-offline i {
   width: 8px;
   height: 8px;
@@ -112,9 +133,11 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
   background: var(--brand);
   animation: live 1.4s infinite;
 }
+
 .tn-menu {
   position: relative;
 }
+
 .tn-btn,
 .tn-acct {
   border: 0;
@@ -126,31 +149,37 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
   gap: 8px;
   cursor: pointer;
 }
+
 .tn-btn {
   width: 40px;
   height: 40px;
   justify-content: center;
   position: relative;
 }
+
 .tn-acct {
   padding: 4px 8px 4px 4px;
   font-weight: 700;
   font-size: 14px;
 }
+
 .tn-acct :deep(.avatar.av-navy) {
   background: rgba(255, 255, 255, 0.2);
 }
+
 .tn-btn:hover,
 .tn-acct:hover,
 .tn-btn[aria-expanded="true"],
 .tn-acct[aria-expanded="true"] {
   background: rgba(255, 255, 255, 0.12);
 }
+
 .tn-btn:focus-visible,
 .tn-acct:focus-visible {
   outline: 3px solid rgba(255, 255, 255, 0.5);
   outline-offset: 1px;
 }
+
 .tn-dot {
   position: absolute;
   top: 3px;
@@ -166,11 +195,12 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
   place-items: center;
   box-shadow: 0 0 0 2px var(--navy);
 }
+
 .tn-drop {
   position: absolute;
   right: 0;
   top: calc(100% + 8px);
-  width: 300px;
+  width: min(300px, calc(100vw - 20px));
   max-height: calc(100vh - var(--nav-h) - 24px);
   overflow-y: auto;
   background: var(--paper);
@@ -182,6 +212,7 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
   padding: 8px;
   font-size: 13.5px;
 }
+
 .tn-drop h6 {
   font-size: 12px;
   text-transform: uppercase;
@@ -190,9 +221,11 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
   margin: 6px 8px 6px;
   font-weight: 800;
 }
+
 .tn-bell {
-  width: 340px;
+  width: min(340px, calc(100vw - 20px));
 }
+
 .tn-note {
   display: grid;
   grid-template-columns: 10px 1fr;
@@ -200,10 +233,12 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
   padding: 8px;
   border-radius: 12px;
 }
-.tn-note + .tn-note {
+
+.tn-note+.tn-note {
   border-top: 1px solid var(--line);
   border-radius: 0;
 }
+
 .tn-note i {
   width: 8px;
   height: 8px;
@@ -211,43 +246,53 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
   margin-top: 6px;
   background: var(--brand);
 }
+
 .tn-note.tone-ok i {
   background: var(--ok);
 }
+
 .tn-note.tone-warn i {
   background: #e5a019;
 }
+
 .tn-note.tone-info i {
   background: var(--info);
 }
+
 .tn-note strong {
   display: block;
   font-size: 13.5px;
 }
+
 .tn-note span {
   display: block;
   color: var(--ink-2);
   font-size: 12.5px;
 }
+
 .tn-note small {
   color: var(--muted);
   font-size: 11.5px;
 }
+
 .tn-me {
   padding: 8px 10px 10px;
   border-bottom: 1px solid var(--line);
   margin-bottom: 4px;
 }
+
 .tn-me strong {
   display: block;
   font-size: 15px;
 }
+
 .tn-me small {
   display: block;
   color: var(--muted);
   margin-bottom: 6px;
   word-break: break-all;
 }
+
 .tn-item {
   display: flex;
   align-items: flex-start;
@@ -262,23 +307,28 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
   font-weight: 700;
   cursor: pointer;
 }
+
 .tn-item :deep(.ic) {
   margin-top: 1px;
   color: var(--ink-2);
 }
+
 .tn-item small {
   display: block;
   color: var(--muted);
   font-weight: 500;
   font-size: 12px;
 }
+
 .tn-item:hover {
   background: var(--canvas);
 }
+
 .tn-item.danger {
   background: var(--late-soft);
   color: var(--late);
 }
+
 .tn-item.danger :deep(.ic) {
   color: var(--late);
 }

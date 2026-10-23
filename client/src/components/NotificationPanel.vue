@@ -26,7 +26,7 @@ function formatTime(at) {
       No notifications yet.
     </div>
 
-    <ul v-else class="list-group list-group-flush">
+    <ul v-else class="list-group list-group-flush notif-list">
       <li
         v-for="n in items"
         :key="n.id"
@@ -66,5 +66,15 @@ function formatTime(at) {
   width: 0.6rem;
   height: 0.6rem;
   display: inline-block;
+}
+
+/* Fixed, scrollable list: the panel never grows taller than this, however many
+   notifications there are — the list scrolls instead. Capped to the viewport so
+   it is always usable on short screens too. Host containers (the bell dropdown,
+   the full-screen page) constrain the WIDTH; this owns the HEIGHT. */
+.notif-list {
+  max-height: min(60vh, 24rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 </style>

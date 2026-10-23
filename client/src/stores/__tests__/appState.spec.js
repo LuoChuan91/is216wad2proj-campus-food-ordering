@@ -37,6 +37,7 @@ import { useSessionStore } from '../session.js'
 import { useCatalogStore } from '../catalog.js'
 import { useOrdersStore } from '../orders.js'
 import { useUiStore } from '../ui.js'
+import { useNotificationsStore } from '../notifications.js'
 
 // A small fixture: one venue, one store, one menu item with a required single-choice
 // group and an optional multi group.
@@ -162,23 +163,26 @@ describe('ui store: notify, toasts and run()', () => {
     vi.useFakeTimers()
   })
 
-  it('notify unshifts a notification and pushes a toast', () => {
+  it('notify writes a history item and a toast into the notifications store', () => {
     const ui = useUiStore()
+    const notes = useNotificationsStore()
     ui.notify('Hello', 'World', 'ok')
-    expect(ui.notifications[0].title).toBe('Hello')
-    expect(ui.toasts).toHaveLength(1)
+    expect(notes.items[0].title).toBe('Hello')
+    expect(notes.items[0].variant).toBe('success')
+    expect(notes.toasts).toHaveLength(1)
     vi.useRealTimers()
   })
 
   it('run() marks busy, returns the result and clears busy; a failure notifies', async () => {
     vi.useRealTimers()
     const ui = useUiStore()
+    const notes = useNotificationsStore()
     const ok = await ui.run('k1', async () => 'done')
     expect(ok).toBe('done')
     expect(ui.busy.k1).toBeUndefined()
     const bad = await ui.run('k2', async () => { throw new Error('nope') })
     expect(bad).toBe(null)
-    expect(ui.notifications[0].body).toBe('nope')
+    expect(notes.items[0].body).toBe('nope')
   })
 })
 
@@ -189,13 +193,14 @@ describe('session store: signIn resets per-user state', () => {
     seedCatalog()
     const session = useSessionStore()
     const ui = useUiStore()
+    const notes = useNotificationsStore()
     const orders = useOrdersStore()
     orders.db.orders = [{ id: 'x' }]
-    ui.notifications.push({ id: 1, title: 't' })
+    notes.items.push({ id: 1, title: 't' })
     session.signIn('stu')
     expect(session.session.userId).toBe('stu')
     expect(orders.db.orders).toEqual([])
-    expect(ui.notifications).toEqual([])
+    expect(notes.items).toEqual([])
     expect(ui.ui.student.tab).toBe('explore')
   })
 
@@ -343,15 +348,5 @@ describe('ui store: moved query helpers (open/unread)', () => {
     const status = ui.open({ is_open: false })
     expect(status.open).toBe(false)
     expect(status.label).toBe('Paused by the store')
-  })
-
-  it('unread counts notifications newer than the last seen id', () => {
-    seedCatalog()
-    const ui = useUiStore()
-    ui.notifications.push({ id: 3, title: 'c' }, { id: 2, title: 'b' }, { id: 1, title: 'a' })
-    ui.readId = 1
-    expect(ui.unread()).toBe(2)
-    ui.readId = 3
-    expect(ui.unread()).toBe(0)
   })
 })

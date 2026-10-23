@@ -5,7 +5,7 @@
 // type and the formatted delivery-fee string, and emits 'change' with the chosen
 // type when a segment is clicked. Markup, ARIA roles and icons are unchanged, so it
 // renders and behaves identically to the inline version.
-import Icon from '@/components/Icon.vue'
+import Icon from '@/components/icons/Icon.vue'
 
 defineProps({
   // 'pickup' | 'delivery'

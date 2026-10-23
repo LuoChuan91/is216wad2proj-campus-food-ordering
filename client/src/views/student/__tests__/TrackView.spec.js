@@ -17,9 +17,9 @@ import { setActivePinia } from 'pinia'
 import pinia from '@/stores/pinia.js'
 import { useCatalogStore } from '@/stores/catalog.js'
 import { useOrdersStore } from '@/stores/orders.js'
-import Icon from '@/components/Icon.vue'
-import Mono from '@/components/Mono.vue'
-import Avatar from '@/components/Avatar.vue'
+import Icon from '@/components/icons/Icon.vue'
+import Mono from '@/components/icons/Mono.vue'
+import Avatar from '@/components/icons/Avatar.vue'
 import TrackView from '../TrackView.vue'
 
 const globalCfg = { global: { components: { Icon, Mono, Avatar } } }

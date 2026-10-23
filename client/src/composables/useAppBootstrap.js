@@ -1,4 +1,4 @@
-// App bootstrap (the non-routing half of the old app/live.js).
+// App bootstrap.
 //
 // This performs everything the prototype's start-up did EXCEPT the hand-rolled
 // hash/popstate routing (which vue-router takes over in the next task):
@@ -8,7 +8,7 @@
 //   - keeps the tab title in step with who's signed in
 //   - closes menus on outside click, and menus/sheets on Escape
 //   - turns poll-diffs into notifications (announceChanges), preserving the
-//     meta/dedup contract with notifyBridge (meta.kind events are mirrored-skipped)
+//     meta/dedup contract (meta.kind events are mirror-skipped when realtime is connected)
 //
 // The realtime bridges (auth bridge + realtime notifications) are started in
 // App.vue's setup, not here, so App.vue's "Try again" button can re-run startApp()
@@ -25,6 +25,7 @@ import { useOrdersStore } from '@/stores/orders.js'
 import { useSessionStore } from '@/stores/session.js'
 import * as E from '@/utils/engine.js'
 import { config as cfg } from '@/config/index.js'
+import { buildNotification } from '@/utils/notificationMessages.js'
 import { startRouting } from '@/router/sync.js'
 
 const ROLE = { student: 'Student', merchant: 'Merchant', admin: 'Admin' }
@@ -68,23 +69,32 @@ function announceChanges() {
       if (!p) continue
       const s = catalog.store(o.store_id) || { name: 'The store' }
       const d = o.delivery
-      if (p.status === 'paid' && o.status === 'preparing') {
+      // Shared context so these messages read exactly like the realtime ones.
+      const ctx = () => {
         const q = orders.waits.orders[o.id]
-        ui.notify(`${s.name} is cooking your order`, `Order #${o.code}${q ? ' · ready around ' + E.clock(q.readyAt) : ''}`, 'info')
+        const drop = d ? catalog.dropoff(d.destination_id) : null
+        return {
+          order: o,
+          storeName: s.name,
+          dropoffName: drop ? drop.name : undefined,
+          courierName: d ? d.courier_name : undefined,
+          readyAtClock: q && q.readyAt ? E.clock(q.readyAt) : undefined,
+          deliveryWindowMin: cfg.deliveryWindowMin,
+        }
+      }
+      // order paid -> preparing: the "cooking" line (realtime fires on paid).
+      if (p.status === 'paid' && o.status === 'preparing') {
+        ui.notifyView(buildNotification({ kind: 'order', status: 'paid', order_id: o.id }, ctx()))
       }
       if (p.status !== 'ready' && o.status === 'ready') {
-        const meta = { kind: 'order', status: 'ready', order_id: o.id }
-        if (o.type === 'pickup') ui.notify('Your food is ready', `Collect order #${o.code} at ${s.name}`, 'ok', meta)
-        else if (d && d.courier_name) ui.notify('Your food is ready', `${first(d.courier_name)} is picking it up now`, 'ok', meta)
-        else ui.notify('Your food is ready', 'Waiting for a student courier to accept', 'ok', meta)
+        ui.notifyView(buildNotification({ kind: 'order', status: 'ready', order_id: o.id }, ctx()), { kind: 'order', status: 'ready', order_id: o.id })
       }
       if (d && p.d !== d.status) {
-        const drop = catalog.dropoff(d.destination_id)
-        if (d.status === 'accepted') ui.notify(`${first(d.courier_name)} accepted your delivery`, `They'll bring it to ${drop ? drop.name : 'you'}`, 'info', { kind: 'delivery', status: 'accepted', order_id: o.id })
-        if (d.status === 'picked_up') ui.notify('Your food is on the way', `${first(d.courier_name)} picked it up from ${s.name}`, 'brand', { kind: 'delivery', status: 'picked_up', order_id: o.id })
-        if (d.status === 'delivered') ui.notify('Delivered. Enjoy your meal!', `Dropped at ${drop ? drop.name : 'your drop-off point'}`, 'ok', { kind: 'delivery', status: 'delivered', order_id: o.id })
+        if (d.status === 'accepted') ui.notifyView(buildNotification({ kind: 'delivery', status: 'accepted', order_id: o.id }, ctx()), { kind: 'delivery', status: 'accepted', order_id: o.id })
+        if (d.status === 'picked_up') ui.notifyView(buildNotification({ kind: 'delivery', status: 'picked_up', order_id: o.id }, ctx()), { kind: 'delivery', status: 'picked_up', order_id: o.id })
+        if (d.status === 'delivered') ui.notifyView(buildNotification({ kind: 'delivery', status: 'delivered', order_id: o.id }, ctx()), { kind: 'delivery', status: 'delivered', order_id: o.id })
       }
-      if (!p.fallback && o.fallback) ui.notify('Switched to pickup', `No courier took your order in ${cfg.deliveryWindowMin} min. Collect it at ${s.name}. Delivery fee waived.`, 'warn', { kind: 'delivery', status: 'expired', order_id: o.id })
+      if (!p.fallback && o.fallback) ui.notifyView(buildNotification({ kind: 'delivery', status: 'expired', order_id: o.id }, ctx()), { kind: 'delivery', status: 'expired', order_id: o.id })
     }
     if (ui.courierOn && was.courierOn) {
       for (const j of orders.db.jobs) {

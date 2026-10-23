@@ -102,12 +102,12 @@ const courierLine = computed(() => {
         <small class="eyebrow">{{ phase.title }}</small>
         <template v-if="q && (order.status === 'paid' || order.status === 'preparing')">
           <div class="status-big">Ready ~{{ E.clock(q.readyAt) }}</div>
-          <p v-if="order.status === 'paid'">About {{ E.minsUntil(now, q.readyAt) }} min · <b>{{ plural(q.ahead, 'order', 'orders') }} ahead of you</b></p>
+          <p v-if="order.status === 'paid'">About {{ E.minsUntil(now, q.readyAt) }} min</p>
           <p v-else>About {{ E.minsUntil(now, q.readyAt) }} min<template v-if="order.preparing_at"> · cooking since {{ E.clock(order.preparing_at) }}</template></p>
           <div class="why">
-            <span><Icon name="receipt" :size="12" />{{ q.ahead }} ahead · {{ plural(q.dishesAhead, 'dish', 'dishes') }}</span>
-            <span><Icon name="flame" :size="12" />Kitchen cooks {{ ordersWaits.slots }} at once</span>
-            <span v-if="firstItem"><Icon name="clock" :size="12" />{{ Math.max(1, Math.round(firstItem.cook_time_sec / 60)) }} min per batch</span>
+            <span><Icon name="receipt" :size="12" />{{ q.ahead }} orders ahead</span>
+            <!-- <span><Icon name="flame" :size="12" />Kitchen cooks {{ ordersWaits.slots }} at once</span> -->
+            <!-- <span v-if="firstItem"><Icon name="clock" :size="12" />{{ Math.max(1, Math.round(firstItem.cook_time_sec / 60)) }} min per batch</span> -->
           </div>
         </template>
         <template v-else>

@@ -13,11 +13,11 @@ import { setRouter } from './router/nav.js'
 import { startApp } from './composables/useAppBootstrap.js'
 
 // Small pieces used on almost every screen, registered once so templates can use them anywhere
-import Icon from './components/Icon.vue'
-import AppMark from './components/AppMark.vue'
-import Mono from './components/Mono.vue'
-import Avatar from './components/Avatar.vue'
-import WaitChip from './components/WaitChip.vue'
+import Icon from './components/icons/Icon.vue'
+import AppMark from './components/icons/AppMark.vue'
+import Mono from './components/icons/Mono.vue'
+import Avatar from './components/icons/Avatar.vue'
+import WaitChip from './components/icons/WaitChip.vue'
 
 // vue-router owns navigation (createWebHashHistory keeps the #/... scheme). The
 // ui-store nav actions push through router/nav.js, which we point at this router

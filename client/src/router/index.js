@@ -44,6 +44,7 @@ const routes = [
     component: StudentLayout,
     meta: { role: 'student' },
     children: [
+      // mata allow guard and sync translate URL into screen state
       { path: 'explore', name: 'student-explore', component: StudentTabView, meta: { role: 'student', tab: 'explore' } },
       { path: 'venue/:venueId', name: 'student-venue', component: StudentTabView, meta: { role: 'student', tab: 'explore', sheet: 'venue' } },
       { path: 'stores', name: 'student-stores', component: StudentTabView, meta: { role: 'student', tab: 'stores' } },
@@ -80,8 +81,9 @@ const routes = [
     ],
   },
 
-  // Full-screen notifications page (NotificationBell links here on < md). Any
-  // signed-in role; the guard only requires a session (no role meta).
+  // Full-screen notifications page (the same NotificationPanel the TopNav bell
+  // shows). Any signed-in role; the guard only requires a session (no role meta).
+  // TODO might not need
   { path: '/notifications', name: 'notifications', component: NotificationsView },
 
   { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFoundView, meta: { public: true } },

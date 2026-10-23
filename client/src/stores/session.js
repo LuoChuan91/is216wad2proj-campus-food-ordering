@@ -12,6 +12,7 @@ import { reactive } from "vue";
 import { useCatalogStore } from "./catalog.js";
 import { useOrdersStore } from "./orders.js";
 import { useUiStore, studentUi, staffUi } from "./ui.js";
+import { useNotificationsStore } from "./notifications.js";
 import { go, replace, HOME } from "@/router/nav.js";
 
 const SESSION_KEY = "campus-delights-session";
@@ -73,10 +74,8 @@ export const useSessionStore = defineStore("session", () => {
     session$.userId = userId;
     session.save(userId, p.role);
 
-    ui.toasts.splice(0);
-    ui.notifications.splice(0);
+    useNotificationsStore().clear();
     ui.menu = null;
-    ui.readId = 0;
 
     orders.db.orders = [];
     orders.db.jobs = [];
@@ -98,7 +97,7 @@ export const useSessionStore = defineStore("session", () => {
     const ui = useUiStore();
     session$.userId = null;
     session.save(null);
-    ui.toasts.splice(0);
+    useNotificationsStore().clear();
     ui.menu = null;
     replace("/");
   }

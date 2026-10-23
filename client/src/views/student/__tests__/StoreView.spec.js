@@ -25,11 +25,11 @@ vi.mock('vue-router', () => ({ useRoute: () => route }))
 import { setActivePinia } from 'pinia'
 import pinia from '@/stores/pinia.js'
 import { useCatalogStore } from '@/stores/catalog.js'
-import Icon from '@/components/Icon.vue'
-import Mono from '@/components/Mono.vue'
-import AppMark from '@/components/AppMark.vue'
-import Avatar from '@/components/Avatar.vue'
-import WaitChip from '@/components/WaitChip.vue'
+import Icon from '@/components/icons/Icon.vue'
+import Mono from '@/components/icons/Mono.vue'
+import AppMark from '@/components/icons/AppMark.vue'
+import Avatar from '@/components/icons/Avatar.vue'
+import WaitChip from '@/components/icons/WaitChip.vue'
 import StoreView from '../StoreView.vue'
 
 const globalCfg = { global: { components: { Icon, Mono, AppMark, Avatar, WaitChip } } }

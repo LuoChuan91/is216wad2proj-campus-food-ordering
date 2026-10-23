@@ -5,8 +5,8 @@
 // Extracted from views/admin/AdminApprovalsView.vue. The three row kinds (pending,
 // verified, blocked) differ only in the `done` modifier, the status tag and which
 // buttons appear, so those are left to props/slots; the row shell is shared.
-import Avatar from '@/components/Avatar.vue'
-import Icon from '@/components/Icon.vue'
+import Avatar from '@/components/icons/Avatar.vue'
+import Icon from '@/components/icons/Icon.vue'
 import StatusTag from '@/components/StatusTag.vue'
 
 defineProps({

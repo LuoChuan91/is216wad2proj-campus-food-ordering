@@ -13,14 +13,14 @@ describe('NotificationToaster', () => {
     vi.useRealTimers()
   })
 
-  it('renders a toast for a toast-status notification, bottom-left container', async () => {
+  it('renders a toast for a toast-status notification, bottom-right container', async () => {
     const store = useNotificationsStore()
     const wrapper = mount(NotificationToaster)
     store.receive({ kind: 'order', status: 'ready', order_id: 'o1' })
     await flushPromises()
 
-    expect(wrapper.find('.toast-container.bottom-0.start-0').exists()).toBe(true)
-    expect(wrapper.text()).toContain('Order ready')
+    expect(wrapper.find('.toast-container.bottom-0.end-0').exists()).toBe(true)
+    expect(wrapper.text()).toContain('Your food is ready')
     expect(wrapper.findAll('.toast')).toHaveLength(1)
   })
 

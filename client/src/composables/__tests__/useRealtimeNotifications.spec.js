@@ -71,7 +71,7 @@ describe('useRealtimeNotifications', () => {
     // Simulate a broadcast message shape { event, payload }.
     state.handler({ event: 'notification', payload: { kind: 'order', status: 'ready', order_id: 'o1' } })
     expect(notifications.items).toHaveLength(1)
-    expect(notifications.items[0]).toMatchObject({ title: 'Order ready', orderId: 'o1' })
+    expect(notifications.items[0]).toMatchObject({ title: 'Your food is ready', orderId: 'o1' })
     expect(notifications.toasts).toHaveLength(1)
   })
 

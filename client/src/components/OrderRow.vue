@@ -8,7 +8,7 @@
 // price") and earlier ("<since> · price"), so the caller passes `variant`.
 import { computed } from 'vue'
 import * as E from '@/utils/engine.js'
-import Mono from '@/components/Mono.vue'
+import Mono from '@/components/icons/Mono.vue'
 import StatusTag from '@/components/StatusTag.vue'
 
 const props = defineProps({

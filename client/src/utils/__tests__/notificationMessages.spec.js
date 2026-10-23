@@ -1,31 +1,88 @@
 import { describe, it, expect } from 'vitest'
-import { toNotificationView, shouldToast } from '../notificationMessages.js'
+import { buildNotification, shouldToast } from '../notificationMessages.js'
 
-describe('toNotificationView', () => {
-  it('maps order statuses', () => {
-    expect(toNotificationView({ kind: 'order', status: 'paid' })).toMatchObject({ title: 'Order placed', toast: false })
-    expect(toNotificationView({ kind: 'order', status: 'ready' })).toMatchObject({ variant: 'success', toast: true })
-    expect(toNotificationView({ kind: 'order', status: 'completed' })).toMatchObject({ toast: true })
+// A pickup order and a delivery order to exercise the order-aware wording.
+const pickup = { code: 'E287', type: 'pickup' }
+const delivery = { code: 'D512', type: 'delivery', delivery: { courier_name: 'Mingli Tan', destination_id: 'd1' } }
+
+describe('buildNotification (shared, order-aware wording)', () => {
+  it('order paid -> the "cooking" line with store + ready time', () => {
+    const v = buildNotification(
+      { kind: 'order', status: 'paid', order_id: 'o1' },
+      { order: pickup, storeName: 'Hawker Corner', readyAtClock: '1:05pm' }
+    )
+    expect(v).toMatchObject({ title: 'Hawker Corner is cooking your order', variant: 'info', toast: false })
+    expect(v.body).toContain('#E287')
+    expect(v.body).toContain('1:05pm')
   })
 
-  it('maps delivery statuses', () => {
-    expect(toNotificationView({ kind: 'delivery', status: 'accepted' })).toMatchObject({ title: 'Delivery ready', toast: true })
-    expect(toNotificationView({ kind: 'delivery', status: 'picked_up' })).toMatchObject({ toast: true })
-    expect(toNotificationView({ kind: 'delivery', status: 'delivered' })).toMatchObject({ toast: false })
-    expect(toNotificationView({ kind: 'delivery', status: 'expired' })).toMatchObject({ title: 'Switched to pickup', variant: 'warning', toast: true })
+  it('order ready (pickup) -> "Collect order #code at store"', () => {
+    const v = buildNotification(
+      { kind: 'order', status: 'ready', order_id: 'o1' },
+      { order: pickup, storeName: 'Hawker Corner' }
+    )
+    expect(v).toMatchObject({ title: 'Your food is ready', variant: 'success', toast: true })
+    expect(v.body).toBe('Collect order #E287 at Hawker Corner')
+  })
+
+  it('order ready (delivery + courier) -> "<first> is picking it up now"', () => {
+    const v = buildNotification(
+      { kind: 'order', status: 'ready', order_id: 'o2' },
+      { order: delivery, storeName: 'Hawker Corner', courierName: 'Mingli Tan' }
+    )
+    expect(v.body).toBe('Mingli is picking it up now')
+  })
+
+  it('order ready (delivery, no courier) -> waiting line', () => {
+    const v = buildNotification(
+      { kind: 'order', status: 'ready', order_id: 'o2' },
+      { order: { code: 'D512', type: 'delivery', delivery: {} } }
+    )
+    expect(v.body).toBe('Waiting for a student courier to accept')
+  })
+
+  it('delivery accepted / picked_up / delivered use courier + drop-off', () => {
+    const acc = buildNotification({ kind: 'delivery', status: 'accepted', order_id: 'o2' }, { order: delivery, courierName: 'Mingli Tan', dropoffName: 'SOE Bench' })
+    expect(acc).toMatchObject({ title: 'Mingli accepted your delivery', variant: 'info', toast: true })
+    expect(acc.body).toBe("They'll bring it to SOE Bench")
+
+    const pick = buildNotification({ kind: 'delivery', status: 'picked_up', order_id: 'o2' }, { order: delivery, courierName: 'Mingli Tan', storeName: 'Hawker Corner' })
+    expect(pick).toMatchObject({ title: 'Your food is on the way', variant: 'secondary', toast: true })
+    expect(pick.body).toBe('Mingli picked it up from Hawker Corner')
+
+    const del = buildNotification({ kind: 'delivery', status: 'delivered', order_id: 'o2' }, { order: delivery, dropoffName: 'SOE Bench' })
+    expect(del).toMatchObject({ title: 'Delivered. Enjoy your meal!', variant: 'success', toast: false })
+    expect(del.body).toBe('Dropped at SOE Bench')
+  })
+
+  it('delivery expired -> "Switched to pickup" with window + store + fee waived', () => {
+    const v = buildNotification(
+      { kind: 'delivery', status: 'expired', order_id: 'o2' },
+      { order: delivery, storeName: 'Hawker Corner', deliveryWindowMin: 10 }
+    )
+    expect(v).toMatchObject({ title: 'Switched to pickup', variant: 'warning', toast: true })
+    expect(v.body).toContain('10 min')
+    expect(v.body).toContain('Hawker Corner')
+    expect(v.body).toContain('fee waived')
+  })
+
+  it('falls back to generic wording when context is missing', () => {
+    const v = buildNotification({ kind: 'order', status: 'ready', order_id: 'o1' })
+    expect(v).toMatchObject({ title: 'Your food is ready', toast: true })
+    expect(v.body).toContain('the store')
   })
 
   it('carries the original payload fields through', () => {
-    const view = toNotificationView({ kind: 'order', status: 'ready', order_id: 'o1', at: 't' })
-    expect(view).toMatchObject({ kind: 'order', status: 'ready', order_id: 'o1', at: 't' })
+    const v = buildNotification({ kind: 'order', status: 'ready', order_id: 'o1', at: 't' }, { order: pickup, storeName: 'X' })
+    expect(v).toMatchObject({ kind: 'order', status: 'ready', order_id: 'o1', at: 't' })
   })
 
   it('returns null for unknown / unmapped statuses', () => {
-    expect(toNotificationView({ kind: 'order', status: 'preparing' })).toBeNull()
-    expect(toNotificationView({ kind: 'delivery', status: 'open' })).toBeNull()
-    expect(toNotificationView({ kind: 'nope', status: 'ready' })).toBeNull()
-    expect(toNotificationView(null)).toBeNull()
-    expect(toNotificationView({})).toBeNull()
+    expect(buildNotification({ kind: 'order', status: 'preparing' })).toBeNull()
+    expect(buildNotification({ kind: 'delivery', status: 'open' })).toBeNull()
+    expect(buildNotification({ kind: 'nope', status: 'ready' })).toBeNull()
+    expect(buildNotification(null)).toBeNull()
+    expect(buildNotification({})).toBeNull()
   })
 })
 

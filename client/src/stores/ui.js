@@ -10,7 +10,7 @@ import * as E from "@/utils/engine.js";
 import { getRoute, ensureRoute } from "@/utils/routing.js";
 import { api } from "@/services/api.js";
 import { config as cfg } from "@/config/index.js";
-import { mirrorNotification } from "@/composables/notifyBridge.js";
+import { useNotificationsStore } from "@/stores/notifications.js";
 import { go } from "@/router/nav.js";
 import { useSessionStore } from "./session.js";
 import { useCatalogStore } from "./catalog.js";
@@ -24,7 +24,11 @@ export const DEFAULT_PLACE = {
 };
 
 let lineSeq = 0;
-let noteSeq = 0;
+let mirrorSeq = 0;
+
+// The app's poll-notification tones -> the Bootstrap variants the notifications
+// store / toaster use.
+const VARIANT = { ok: "success", info: "info", warn: "warning", error: "danger", brand: "secondary" };
 
 export function studentUi(tab = "explore") {
   return {
@@ -68,21 +72,55 @@ export const useUiStore = defineStore("ui", () => {
   const now = ref(Date.now());
   const ui = reactive({ student: studentUi(), staff: staffUi() });
   const courierOn = ref(false);
-  const notifications = reactive([]); // this tab's notification history (newest first)
-  const toasts = reactive([]);
   const menu = ref(null); // which top-bar dropdown is open
-  const readId = ref(0); // notifications up to this id have been seen in the bell
   const mapOffline = ref(false);
   const busy = reactive({}); // { [id]: true } while a button's request is running
 
-  /* ---------- notifications (pop-ups and the bell) ---------- */
+  /* ---------- notifications (pop-ups and the bell) ----------
+     This tab has ONE notification surface: the Pinia notifications store, shown
+     by NotificationToaster.vue (pop-ups) and NotificationPanel.vue (bell panel /
+     full-screen page).
+
+     Two entry points, both from the poll-diff path (useAppBootstrap):
+       notify(title, body, tone, meta)  — plain messages that have no realtime
+                 equivalent (account approved, a new delivery job, etc.). Always
+                 shown as a toast + history item.
+       notifyView(view, meta)           — order/delivery STATUS events, where
+                 `view` is the shared builder's output ({ title, body, variant,
+                 toast }) so the wording matches the realtime path exactly.
+
+     `meta` carries the order/delivery status for realtime-owned events: when the
+     Supabase channel is connected those arrive via realtime, so we skip them here
+     to avoid a duplicate; when it is down (or Supabase isn't configured) we mirror
+     them so nothing is lost. */
+  function pushView(view, meta, toast) {
+    try {
+      const store = useNotificationsStore();
+      if (meta && meta.kind && store.realtimeConnected) return;
+      const item = {
+        id: `b${Date.now()}_${mirrorSeq++}`,
+        title: view.title,
+        body: view.body,
+        variant: view.variant || "secondary",
+        at: new Date().toISOString(),
+        read: false,
+      };
+      store.items.unshift(item);
+      if (toast) store.toasts.push(item);
+    } catch (err) {
+      // Pinia not ready yet (very early start-up): skip rather than break the app.
+      console.warn("[notify] skipped:", err.message);
+    }
+  }
+
   function notify(title, body, tone = "brand", meta = null) {
-    const n = { id: ++noteSeq, title, body, tone, created_at: Date.now() };
-    notifications.unshift(n);
-    if (notifications.length > 30) notifications.length = 30;
-    pushToast(n);
-    // Also hand it notifications store, so bell panel and toasts show it.
-    mirrorNotification(n, meta);
+    pushView({ title, body, variant: VARIANT[tone] || "secondary" }, meta, true);
+  }
+
+  // Push a prebuilt view from buildNotification() (shared wording with realtime).
+  function notifyView(view, meta = null) {
+    if (!view) return;
+    pushView(view, meta, view.toast !== false);
   }
 
   // Runs an API call for a button: marks it busy, shows the server's error as a pop-up if it fails
@@ -103,22 +141,8 @@ export const useUiStore = defineStore("ui", () => {
     now.value = Date.now();
   }
 
-  /* pop-up notifications in this tab */
-  function pushToast(n) {
-    if (toasts.some((t) => t.id === n.id)) return;
-    toasts.push({ id: n.id, title: n.title, body: n.body, tone: n.tone });
-    const max = window.innerWidth < 720 ? 1 : 3; // phones show the newest one only
-    while (toasts.length > max) toasts.shift();
-    setTimeout(() => dismissToast(n.id), 6000);
-  }
-  function dismissToast(id) {
-    const i = toasts.findIndex((t) => t.id === id);
-    if (i >= 0) toasts.splice(i, 1);
-  }
   function toggleMenu(name) {
     menu.value = menu.value === name ? null : name;
-    if (menu.value === "bell")
-      readId.value = notifications.length ? notifications[0].id : 0;
   }
 
   /* ---------- place / walk helpers ---------- */
@@ -131,10 +155,6 @@ export const useUiStore = defineStore("ui", () => {
   // Whether a store is open now (respecting the opening-hours config flag)
   function open(store) {
     return E.openStatus(store, now.value, cfg.enforceOpeningHours);
-  }
-  // How many notifications are newer than the last one seen in the bell
-  function unread() {
-    return notifications.filter((n) => n.id > readId.value).length;
   }
 
   /* student navigation */
@@ -426,8 +446,8 @@ export const useUiStore = defineStore("ui", () => {
   }
 
   return {
-    loaded, loadError, online, now, ui, courierOn, notifications, toasts, menu, readId, mapOffline, busy,
-    notify, run, tick, pushToast, dismissToast, toggleMenu, place, walk, open, unread,
+    loaded, loadError, online, now, ui, courierOn, menu, mapOffline, busy,
+    notify, notifyView, run, tick, toggleMenu, place, walk, open,
     setTab, setSearch, setListSearch, setListFilter, setListSort, openStoreItem, openVenue, locate,
     closeSheet, openStore, back, openItem, toggleOption, setDraftQty, addToCart, setLineQty,
     openCheckout, setFulfilment, setDropoff, setNote, openPay, confirmPay, openTracking,

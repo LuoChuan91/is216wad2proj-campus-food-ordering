@@ -5,8 +5,8 @@
 // Extracted from views/student/StoreView.vue. The back action is emitted so the
 // view keeps owning navigation (A.back()). Markup and the --tint style var are
 // unchanged.
-import Icon from '@/components/Icon.vue'
-import Mono from '@/components/Mono.vue'
+import Icon from '@/components/icons/Icon.vue'
+import Mono from '@/components/icons/Mono.vue'
 
 defineProps({
   store: { type: Object, required: true },

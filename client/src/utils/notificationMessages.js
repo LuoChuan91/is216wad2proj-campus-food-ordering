@@ -1,18 +1,32 @@
-// Pure mapping from a realtime notification payload to what the UI should show.
+// Single source of truth for notification text.
 //
-// The database broadcast sends { kind, status, order_id, at } on the user's
-// channel. This module decides the human text, the Bootstrap colour variant, and
-// crucially whether the notification should pop up as a TOAST or just be recorded
-// in the notification list.
+// Both notification paths funnel through here so the wording is identical:
+//   - realtime  : the Supabase broadcast { kind, status, order_id } ->
+//                 notifications.receive() resolves the order/store/dropoff from
+//                 the stores and calls buildNotification().
+//   - poll-diff : useAppBootstrap.announceChanges() already has the order and
+//                 its lookups, so it calls buildNotification() directly.
 //
-// Toast rules (from the spec):
+// The wording below is the richer, order-aware copy that used to live inline in
+// announceChanges() (e.g. "Collect order #E287 at Hawker Corner"). When the
+// context (order/store/etc.) is missing we fall back to a short generic line so a
+// very-early or orphaned event still reads sensibly.
+//
+// `toast` (pop-up vs list-only) policy — from the spec / realtime SQL:
+//   order    paid       -> list only
 //   order    ready      -> toast
-//   order    completed  -> toast ("complete")
-//   delivery accepted   -> toast ("delivery is ready")
-//   delivery picked_up  -> toast ("order picked up")
-// Everything else that we notify about is list-only (no toast):
-//   order    paid       -> notify only ("order placed & paid")
-//   delivery delivered  -> notify only ("delivery completed")
+//   order    completed  -> toast
+//   delivery accepted   -> toast
+//   delivery picked_up  -> toast
+//   delivery delivered  -> list only
+//   delivery expired    -> toast  (switched to pickup)
+
+const TOAST = {
+  order: { paid: false, ready: true, completed: true },
+  delivery: { accepted: true, picked_up: true, delivered: false, expired: true },
+};
+
+const first = (name) => (name || '').split(' ')[0];
 
 /**
  * @typedef {Object} NotificationPayload
@@ -23,49 +37,97 @@
  */
 
 /**
- * @typedef {Object} NotificationView
- * @property {string} title
- * @property {string} body
- * @property {'success'|'info'|'warning'|'danger'|'secondary'} variant
- * @property {boolean} toast   // should this pop up as a toast?
+ * @typedef {Object} NotificationContext
+ * @property {object} [order]            the order row ({ code, type, delivery })
+ * @property {string} [storeName]        the pickup store's name
+ * @property {string} [dropoffName]      the delivery drop-off point's name
+ * @property {string} [courierName]      the courier's display name
+ * @property {string} [readyAtClock]     pre-formatted ready time, e.g. "1:05pm"
+ * @property {number} [deliveryWindowMin] the delivery window in minutes
  */
-
-// kind -> status -> view (title/body/variant/toast)
-const MESSAGES = {
-  order: {
-    paid: { title: 'Order placed', body: 'Your order is paid and sent to the kitchen.', variant: 'secondary', toast: false },
-    ready: { title: 'Order ready', body: 'Your order is ready for collection.', variant: 'success', toast: true },
-    completed: { title: 'Order complete', body: 'Your order is complete. Enjoy!', variant: 'success', toast: true },
-  },
-  delivery: {
-    accepted: { title: 'Delivery ready', body: 'A courier accepted your delivery.', variant: 'info', toast: true },
-    picked_up: { title: 'Order picked up', body: 'Your order has been picked up by the courier.', variant: 'info', toast: true },
-    delivered: { title: 'Delivery complete', body: 'Your order has been delivered.', variant: 'success', toast: false },
-    // No courier took the job in time: the order switched to self-pickup and the
-    // delivery fee was waived. Surfaced as a toast so the student notices the change.
-    expired: { title: 'Switched to pickup', body: 'No courier took your order in time, so it switched to self-pickup and the delivery fee was waived.', variant: 'warning', toast: true },
-  },
-};
 
 /**
- * Resolve a payload into a view. Returns null for statuses we do not surface
- * (so callers can simply skip them).
+ * Build the view for one notification. Pure: all variable data comes in via ctx.
+ * Returns null for statuses we do not surface.
+ *
  * @param {NotificationPayload} payload
- * @returns {(NotificationView & NotificationPayload) | null}
+ * @param {NotificationContext} [ctx]
+ * @returns {({ kind, status, order_id, at, title, body, variant, toast }) | null}
  */
-export function toNotificationView(payload) {
+export function buildNotification(payload, ctx = {}) {
   if (!payload || !payload.kind || !payload.status) return null;
-  const byStatus = MESSAGES[payload.kind];
-  if (!byStatus) return null;
-  const view = byStatus[payload.status];
-  if (!view) return null;
-  return { ...payload, ...view };
+  const toastByStatus = TOAST[payload.kind];
+  if (!toastByStatus || !(payload.status in toastByStatus)) return null;
+
+  const order = ctx.order || null;
+  const code = order?.code;
+  const store = ctx.storeName || 'the store';
+  const drop = ctx.dropoffName || 'your drop-off point';
+  const courier = first(ctx.courierName);
+  const delivery = order?.delivery || null;
+
+  let title;
+  let body;
+  let variant;
+
+  if (payload.kind === 'order') {
+    if (payload.status === 'paid') {
+      // announceChanges surfaces the "cooking" line; keep that richer wording.
+      title = `${ctx.storeName || 'The store'} is cooking your order`;
+      body = `Order #${code || '—'}${ctx.readyAtClock ? ' · ready around ' + ctx.readyAtClock : ''}`;
+      variant = 'info';
+    } else if (payload.status === 'ready') {
+      title = 'Your food is ready';
+      if (order && order.type !== 'pickup' && delivery && ctx.courierName) {
+        body = `${courier} is picking it up now`;
+      } else if (order && order.type !== 'pickup') {
+        body = 'Waiting for a student courier to accept';
+      } else {
+        body = `Collect order #${code || '—'} at ${store}`;
+      }
+      variant = 'success';
+    } else {
+      // completed
+      title = 'Order complete';
+      body = code ? `Order #${code} is complete. Enjoy!` : 'Your order is complete. Enjoy!';
+      variant = 'success';
+    }
+  } else {
+    // delivery
+    if (payload.status === 'accepted') {
+      title = `${courier || 'A courier'} accepted your delivery`;
+      body = `They'll bring it to ${drop}`;
+      variant = 'info';
+    } else if (payload.status === 'picked_up') {
+      title = 'Your food is on the way';
+      body = `${courier || 'The courier'} picked it up from ${store}`;
+      variant = 'secondary';
+    } else if (payload.status === 'delivered') {
+      title = 'Delivered. Enjoy your meal!';
+      body = `Dropped at ${drop}`;
+      variant = 'success';
+    } else {
+      // expired -> switched to pickup
+      title = 'Switched to pickup';
+      const mins = ctx.deliveryWindowMin != null ? `${ctx.deliveryWindowMin} min` : 'time';
+      body = `No courier took your order in ${mins}. Collect it at ${store}. Delivery fee waived.`;
+      variant = 'warning';
+    }
+  }
+
+  return {
+    ...payload,
+    title,
+    body,
+    variant,
+    toast: toastByStatus[payload.status],
+  };
 }
 
 /** True when the payload should pop up as a toast. */
 export function shouldToast(payload) {
-  const view = toNotificationView(payload);
-  return !!view && view.toast;
+  const by = TOAST[payload?.kind];
+  return !!by && !!by[payload?.status];
 }
 
-export { MESSAGES };
+export { TOAST };

@@ -1,11 +1,11 @@
 <script setup>
 // Full-page notifications list (the realtime notifications feature's full-screen
-// surface). NotificationBell links here on < md; on >= md the bell opens its own
-// offcanvas. Registered as the `/notifications` route so the link stays wired.
+// surface), registered as the `/notifications` route. The in-app surface is the
+// TopNav bell dropdown (which renders the same NotificationPanel); this page is a
+// dedicated full-screen view of the same history, reachable directly by URL.
 //   < md : fills the viewport height (minus any nav/header/footer) so it feels
 //          like a dedicated screen on mobile.
-//   >= md: sizes to its content (the bell's offcanvas is the primary desktop
-//          surface; this page is still reachable directly).
+//   >= md: sizes to its content.
 // Responsiveness is driven by Bootstrap utility classes; the only custom rule is
 // releasing the full-height constraint at >= md (Bootstrap has no stock
 // `min-vh-md-auto`).

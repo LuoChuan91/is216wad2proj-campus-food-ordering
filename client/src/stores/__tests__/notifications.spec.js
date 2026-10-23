@@ -12,7 +12,7 @@ describe('notifications store', () => {
     const n = store.receive({ kind: 'order', status: 'ready', order_id: 'o1' })
     expect(n).toBeTruthy()
     expect(store.items).toHaveLength(1)
-    expect(store.items[0]).toMatchObject({ title: 'Order ready', orderId: 'o1', read: false })
+    expect(store.items[0]).toMatchObject({ title: 'Your food is ready', orderId: 'o1', read: false })
   })
 
   it('pushes a toast only for toast statuses', () => {
