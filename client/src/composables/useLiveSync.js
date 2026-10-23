@@ -6,7 +6,7 @@
 //     "your data changed" -> debounced refresh(). (Per decision 1a we reuse the
 //     existing per-user channel rather than adding a new trigger.)
 //   - While the channel is SUBSCRIBED (realtime healthy), run only a LONG
-//     safety-net interval (decision 3a) in case a broadcast is missed.
+//     safety-net interval in case a broadcast is missed.
 //   - While NOT subscribed (channel error/closed, or no Supabase client at all),
 //     run the full fast poll so the app still updates.
 //

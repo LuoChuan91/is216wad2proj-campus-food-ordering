@@ -1,4 +1,4 @@
-// Catalog store (ported from app/state.js).
+// Catalog store.
 //
 // The slow-changing reference data loaded once at start-up (and re-polled rarely):
 // profiles, venues, delivery destinations, stores and the full menu. Also the
@@ -18,12 +18,11 @@ function initials(name) {
 const by = (arr, id) => arr.find((x) => x.id === id)
 
 export const useCatalogStore = defineStore('catalog', () => {
-  // Preserves the catalog slice of S.db
   const db = reactive({
     profiles: [], venues: [], destinations: [], stores: [], menu: [],
   })
 
-  // Adds display fields the database doesn't have: monogram, colour, cuisine (from the
+  // quick solution to decoration details that DB dont store: monogram, colour, cuisine (from the
   // menu categories) and where in the building the store is
   function decorateStores() {
     for (const [i, s] of db.stores.entries()) {
@@ -48,7 +47,7 @@ export const useCatalogStore = defineStore('catalog', () => {
     decorateStores()
   }
 
-  /* ---------- catalog queries (the "Q" catalog getters) ---------- */
+  /* ---------- catalog queries ---------- */
   const user = (id) => by(db.profiles, id)
   const venue = (id) => by(db.venues, id)
   const store = (id) => by(db.stores, id)

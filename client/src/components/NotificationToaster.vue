@@ -1,5 +1,5 @@
 <script setup>
-// Stacked in-app toasts, bottom-left (Bootstrap toast styling).
+// Stacked in-app toasts, bottom-left.
 //
 // Reads the active toast queue from the notifications store. Each toast auto
 // dismisses after `duration` ms, or when the user clicks the close button.
@@ -10,7 +10,8 @@ import { storeToRefs } from 'pinia'
 import { useNotificationsStore } from '@/stores/notifications.js'
 
 const props = defineProps({
-  duration: { type: Number, default: 6000 },
+  // toast last for 3min before auto dismissed
+  duration: { type: Number, default: 180000 },
 })
 
 const store = useNotificationsStore()
@@ -51,9 +52,9 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <!-- position-fixed bottom-0 start-0 => bottom-left corner -->
+  <!-- bottom-right corner -->
   <div
-    class="toast-container position-fixed bottom-0 start-0 p-3"
+    class="toast-container position-fixed bottom-0 end-0 p-3"
     style="z-index: 1090"
     aria-live="polite"
     aria-atomic="true"

@@ -23,15 +23,16 @@ const rejected = computed(() => students.value.filter((p) => p.status === 'block
 
 <template>
   <div class="adm scroll">
-    <h4>Waiting for approval <span class="count">{{ pending.length }}</span></h4>
-    <AdmRow v-for="p in pending" :key="p.id" :profile="p" tone="brand" tag-tone="info" tag-text="Student">
-      <button class="btn btn-outline-secondary btn-sm" :disabled="busy[p.id]" @click="orders.rejectStudent(p.id)">Reject</button>
-      <button class="btn btn-primary btn-sm" :disabled="busy[p.id]" @click="orders.approveStudent(p.id)">Approve</button>
-    </AdmRow>
     <p v-if="!pending.length" class="col-empty">Nobody is waiting. New accounts appear here.</p>
-    <h4>Verified students <span class="count">{{ activeStudents.length }}</span></h4>
-    <AdmRow v-for="p in activeStudents" :key="p.id" :profile="p" done tag-tone="ok" tag-text="Approved" tag-check>
-      <button class="btn btn-outline-secondary btn-sm" :disabled="busy[p.id]" @click="orders.rejectStudent(p.id)">Block</button>
+    <h4>Active / Inactive students <span class="count">{{ activeStudents.length }}</span></h4>
+    <AdmRow v-for="p in activeStudents" :key="p.id" :profile="p" done tag-tone="ok" tag-text="Active Student" tag-check>
+      <button class="btn btn-outline-warning btn-sm" :disabled="busy[p.id]" @click="orders.blockStudent(p.id)">Block</button>
+      <button class="btn btn-outline-danger btn-sm" :disabled="busy[p.id]" @click="orders.removeStudent(p.id)">Remove</button>
+    </AdmRow>
+    <AdmRow v-for="p in pending" :key="p.id" :profile="p" tone="brand" tag-tone="info" tag-text="Inactive Student">
+      <!-- TODO temp here for easy operation -->
+      <!-- <button class="btn btn-outline-secondary btn-sm" :disabled="busy[p.id]" @click="orders.blockStudent(p.id)">Reject</button>
+      <button class="btn btn-primary btn-sm" :disabled="busy[p.id]" @click="orders.approveStudent(p.id)">Approve</button> -->
     </AdmRow>
     <template v-if="rejected.length">
       <h4>Blocked or removed</h4>
