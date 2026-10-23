@@ -34,7 +34,7 @@ const fresh = props.o.status === 'paid' && now.value - props.o.created_at < 20e3
       <button v-if="o.status === 'paid'" class="btn btn-primary btn-sm" :disabled="busy[o.id]" @click="orders.startPreparing(o.id)">Start cooking</button>
       <button v-else-if="o.status === 'preparing'" class="btn btn-success btn-sm" :disabled="busy[o.id]" @click="orders.markReady(o.id)">Mark ready</button>
       <template v-else-if="o.status === 'ready'">
-        <button v-if="o.type === 'pickup'" class="btn btn-outline-secondary btn-sm" :disabled="busy[o.id]" @click="orders.markCollected(o.id)">Collected</button>
+        <span v-if="o.type === 'pickup' && o.status != 'completed'" class="courier"><Icon name="user" :size="12" />Customer is coming</span>
         <span v-else-if="d && d.status === 'open'" class="courier warn"><Icon name="clock" :size="12" />Waiting for courier · {{ E.countdown(d.expires_at - now) }}</span>
         <span v-else-if="d && d.status === 'accepted'" class="courier ok"><Icon name="bike" :size="12" />{{ shortName(d.courier_name) }} is coming</span>
       </template>

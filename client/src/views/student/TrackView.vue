@@ -21,7 +21,7 @@ const route = useRoute()
 const ui = useUiStore()
 const catalog = useCatalogStore()
 const orders = useOrdersStore()
-const { now } = storeToRefs(ui)
+const { now, busy } = storeToRefs(ui)
 
 const first = (name) => (name || '').split(' ')[0]
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`
@@ -67,7 +67,7 @@ const phase = computed(() => {
   if (o.status === 'ready' && dl && dl.status === 'picked_up') return { tone: 'brand', title: 'On the way', big: `${cn} is walking over`, sub: `To ${drop.value ? drop.value.name : 'you'}` }
   if (o.status === 'ready' && dl && dl.status === 'accepted') return { tone: 'ok', title: 'Ready', big: `${cn} is picking it up`, sub: `From ${s.name}, ${venueName.value}` }
   if (o.status === 'ready') return { tone: 'ok', title: 'Ready', big: 'Your food is ready', sub: 'Waiting for a student courier to accept the job' }
-  if (o.status === 'completed' && delivering.value) return { tone: 'ok', title: 'Delivered', big: 'Enjoy your meal', sub: `Dropped at ${drop.value ? drop.value.name : 'your drop-off point'}${dl.delivered_at ? ', ' + E.clock(dl.delivered_at) : ''}` }
+  if (o.status === 'completed' && dl) return { tone: 'ok', title: 'Delivered', big: 'Enjoy your meal', sub: `Dropped at ${drop.value ? drop.value.name : 'your drop-off point'}${dl.delivered_at ? ', ' + E.clock(dl.delivered_at) : ''}` }
   if (o.status === 'completed') return { tone: 'ok', title: 'Collected', big: 'Enjoy your meal', sub: o.completed_at ? `Collected at ${E.clock(o.completed_at)}` : '' }
   if (o.status === 'cancelled') return { tone: 'muted', title: 'Cancelled', big: 'Order cancelled', sub: '' }
   return { tone: 'muted', title: o.status, big: '', sub: '' }
@@ -102,54 +102,83 @@ const courierLine = computed(() => {
 <template>
   <section v-if="order && store" class="page track">
     <div class="bar">
-      <button class="icon-btn" aria-label="Back" @click="ui.back()"><Icon name="back" :size="20" /></button>
-      <div class="bar-title"><h3>Order #{{ order.code }}</h3><small>{{ store.name }} · {{ venueName }}</small></div>
+      <button class="icon-btn" aria-label="Back" @click="ui.back()">
+        <Icon name="back" :size="20" />
+      </button>
+      <div class="bar-title">
+        <h3>Order #{{ order.code }}</h3><small>{{ store.name }} · {{ venueName }}</small>
+      </div>
       <span class="live"><i></i>Live</span>
     </div>
     <div class="scroll track-body">
-      <div v-if="order.fallback" class="fallback-note"><Icon name="bag" :size="16" /><span><strong>Switched to pickup.</strong> No courier accepted within {{ cfg.deliveryWindowMin }} min, so the delivery fee was waived.</span></div>
+      <div v-if="order.fallback" class="fallback-note">
+        <Icon name="bag" :size="16" /><span><strong>Switched to pickup.</strong> No courier accepted within {{
+          cfg.deliveryWindowMin }} min, so the delivery fee was waived.</span>
+      </div>
       <div class="status-card" :class="'tone-' + phase.tone">
         <small class="eyebrow">{{ phase.title }}</small>
         <template v-if="q && (order.status === 'paid' || order.status === 'preparing')">
           <div class="status-big">Ready ~{{ E.clock(q.readyAt) }}</div>
           <p v-if="order.status === 'paid'">About {{ E.minsUntil(now, q.readyAt) }} min</p>
-          <p v-else>About {{ E.minsUntil(now, q.readyAt) }} min<template v-if="order.preparing_at"> · cooking since {{ E.clock(order.preparing_at) }}</template></p>
+          <p v-else>About {{ E.minsUntil(now, q.readyAt) }} min<template v-if="order.preparing_at"> · cooking since {{
+            E.clock(order.preparing_at) }}</template>
+          </p>
           <div class="why">
-            <span><Icon name="receipt" :size="12" />{{ q.ahead }} orders ahead</span>
-            <!-- <span><Icon name="flame" :size="12" />Kitchen cooks {{ ordersWaits.slots }} at once</span> -->
-            <!-- <span v-if="firstItem"><Icon name="clock" :size="12" />{{ Math.max(1, Math.round(firstItem.cook_time_sec / 60)) }} min per batch</span> -->
+            <span>
+              <Icon name="receipt" :size="12" />{{ q.ahead }} orders ahead
+            </span>
           </div>
         </template>
         <template v-else>
           <div class="status-big">{{ phase.big }}</div>
           <p>{{ phase.sub }}</p>
-          <p v-if="walkSeconds" class="walk-leg"><Icon name="walk" :size="12" />About {{ Math.max(1, Math.round(walkSeconds / 60)) }} min walk to {{ drop ? drop.name : 'you' }}</p>
+          <p v-if="walkSeconds" class="walk-leg">
+            <Icon name="walk" :size="12" />About {{ Math.max(1, Math.round(walkSeconds / 60)) }} min walk to {{ drop ?
+              drop.name : 'you' }}
+          </p>
         </template>
       </div>
 
       <div v-if="d && !order.fallback" class="panel courier" :class="'c-' + d.status">
         <template v-if="d.status === 'open'">
-          <div class="c-head"><span class="c-ic"><Icon name="bike" :size="20" /></span><div><strong>Finding a student courier</strong><small>Switches to pickup in {{ E.countdown(d.expires_at - now) }} if nobody accepts</small></div></div>
-          <div class="meter" :class="(d.expires_at - now) < 120e3 ? 'late' : (d.expires_at - now) < 300e3 ? 'warn' : 'ok'"><i :style="{ width: Math.max(0, (d.expires_at - now) / (cfg.deliveryWindowMin * 600)) + '%' }"></i></div>
+          <div class="c-head"><span class="c-ic">
+              <Icon name="bike" :size="20" />
+            </span>
+            <div><strong>Finding a student courier</strong><small>Switches to pickup in {{ E.countdown(d.expires_at -
+                now) }} if nobody accepts</small></div>
+          </div>
+          <div class="meter"
+            :class="(d.expires_at - now) < 120e3 ? 'late' : (d.expires_at - now) < 300e3 ? 'warn' : 'ok'"><i
+              :style="{ width: Math.max(0, (d.expires_at - now) / (cfg.deliveryWindowMin * 600)) + '%' }"></i></div>
         </template>
         <template v-else-if="d.courier_name">
-          <div class="c-head"><Avatar :name="d.courier_name" :size="40" tone="navy" /><div><strong>{{ d.courier_name }} is your courier</strong><small>{{ courierLine }}</small></div><Icon v-if="d.status === 'delivered'" name="check" :size="20" class="c-done" /></div>
+          <div class="c-head">
+            <Avatar :name="d.courier_name" :size="40" tone="navy" />
+            <div><strong>{{ d.courier_name }} is your courier</strong><small>{{ courierLine }}</small></div>
+            <Icon v-if="d.status === 'delivered'" name="check" :size="20" class="c-done" />
+          </div>
         </template>
-        <div v-if="drop" class="c-drop"><Icon name="pin" :size="14" />{{ drop.name }}<template v-if="d.note"> · “{{ d.note }}”</template></div>
+        <div v-if="drop" class="c-drop">
+          <Icon name="pin" :size="14" />{{ drop.name }}<template v-if="d.note"> · “{{ d.note }}”</template>
+        </div>
       </div>
 
       <ol class="steps">
-        <li v-for="s in steps" :key="s.k" :class="s.state"><i></i><span>{{ s.label }}</span><time v-if="s.at">{{ E.clock(s.at) }}</time></li>
+        <li v-for="s in steps" :key="s.k" :class="s.state"><i></i><span>{{ s.label }}</span><time v-if="s.at">{{
+          E.clock(s.at)
+            }}</time></li>
       </ol>
 
-      <ReceiptPanel
-        :lines="lines"
-        :discount="order.discount"
-        :paid="order.paid"
-        :payment="pay"
-        :fallback="order.fallback"
-        :fee-waived="order.fee_waived"
-      />
+      <ReceiptPanel :lines="lines" :discount="order.discount" :paid="order.paid" :payment="pay"
+        :fallback="order.fallback" :fee-waived="order.fee_waived" />
+
+      <button v-if="order.type === 'pickup'" 
+        class="btn btn-outline-secondary btn-sm" 
+        :disabled="order.status != 'ready' || busy[order.id]"
+        @click="orders.markCollected(order.id)"
+        >Collected
+      </button>
+
     </div>
   </section>
 </template>
@@ -162,10 +191,12 @@ const courierLine = computed(() => {
   flex: 1;
   min-width: 0;
 }
+
 .bar-title small {
   color: var(--muted);
   font-size: 12px;
 }
+
 .live {
   display: inline-flex;
   align-items: center;
@@ -179,6 +210,7 @@ const courierLine = computed(() => {
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
+
 .live i {
   width: 7px;
   height: 7px;
@@ -186,6 +218,7 @@ const courierLine = computed(() => {
   background: var(--ok);
   animation: live 1.4s infinite;
 }
+
 .track-body {
   flex: 1;
   padding: 12px 14px 24px;
@@ -193,6 +226,7 @@ const courierLine = computed(() => {
   flex-direction: column;
   gap: 10px;
 }
+
 .fallback-note {
   display: flex;
   gap: 8px;
@@ -203,24 +237,30 @@ const courierLine = computed(() => {
   padding: 10px 12px;
   font-size: 12.5px;
 }
+
 .status-card {
   border-radius: 20px;
   padding: 16px;
   color: #fff;
   background: var(--info);
 }
+
 .status-card.tone-brand {
   background: linear-gradient(140deg, #f06a43, var(--brand-600));
 }
+
 .status-card.tone-ok {
   background: linear-gradient(140deg, #1aa46f, #0c7049);
 }
+
 .status-card.tone-warn {
   background: linear-gradient(140deg, #e6a523, #b46d06);
 }
+
 .status-card.tone-info {
   background: linear-gradient(140deg, #3c74e8, #2148a8);
 }
+
 .status-card .eyebrow {
   display: block;
   text-transform: uppercase;
@@ -229,6 +269,7 @@ const courierLine = computed(() => {
   font-size: 11.5px;
   opacity: 0.85;
 }
+
 .status-big {
   font-size: 27px;
   font-weight: 800;
@@ -236,17 +277,20 @@ const courierLine = computed(() => {
   margin: 2px 0 2px;
   font-variant-numeric: tabular-nums;
 }
+
 .status-card p {
   margin: 0;
   font-size: 13.5px;
   opacity: 0.95;
 }
+
 .why {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
   margin-top: 10px;
 }
+
 .why span {
   display: inline-flex;
   align-items: center;
@@ -257,22 +301,27 @@ const courierLine = computed(() => {
   border-radius: 999px;
   padding: 3px 9px;
 }
+
 .courier {
   padding: 12px;
 }
+
 .c-head {
   display: flex;
   align-items: center;
   gap: 12px;
 }
+
 .c-head strong {
   display: block;
   font-size: 14px;
 }
+
 .c-head small {
   color: var(--muted);
   font-size: 12px;
 }
+
 .c-ic {
   width: 40px;
   height: 40px;
@@ -283,13 +332,16 @@ const courierLine = computed(() => {
   place-items: center;
   flex: none;
 }
+
 .c-done {
   margin-left: auto;
   color: var(--ok);
 }
+
 .courier .meter {
   margin-top: 10px;
 }
+
 .c-drop {
   display: flex;
   align-items: center;
@@ -301,11 +353,13 @@ const courierLine = computed(() => {
   font-weight: 600;
   color: var(--ink-2);
 }
+
 .steps {
   list-style: none;
   margin: 0;
   padding: 4px 6px;
 }
+
 .steps li {
   position: relative;
   display: flex;
@@ -315,6 +369,7 @@ const courierLine = computed(() => {
   font-size: 13.5px;
   color: var(--muted);
 }
+
 .steps li i {
   width: 14px;
   height: 14px;
@@ -325,6 +380,7 @@ const courierLine = computed(() => {
   position: relative;
   z-index: 1;
 }
+
 .steps li:not(:last-child)::after {
   content: "";
   position: absolute;
@@ -334,25 +390,31 @@ const courierLine = computed(() => {
   width: 2px;
   background: #dde1ea;
 }
+
 .steps li.done {
   color: var(--ink);
   font-weight: 600;
 }
+
 .steps li.done i {
   background: var(--ok);
   border-color: var(--ok);
 }
+
 .steps li.done:not(:last-child)::after {
   background: var(--ok);
 }
+
 .steps li.now {
   color: var(--ink);
   font-weight: 700;
 }
+
 .steps li.now i {
   border-color: var(--brand);
   box-shadow: 0 0 0 4px rgba(229, 81, 45, 0.18);
 }
+
 .steps time {
   margin-left: auto;
   font-size: 12px;

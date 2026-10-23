@@ -132,7 +132,6 @@ export const useOrdersStore = defineStore("orders", () => {
   }
 
   // Everything that changes from minute to minute, for whoever is signed in
-  // TODO might conflict with realtime update
   async function loadLive() {
     const catalog = useCatalogStore();
     const ui = useUiStore();
