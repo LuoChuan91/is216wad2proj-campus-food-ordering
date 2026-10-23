@@ -17,7 +17,7 @@ export const config = {
 
   // false: a store takes orders whenever its "Taking orders" switch is on, and its opening hours are
   // only shown. true: it also has to be inside its opening hours (the prototype's behaviour).
-  enforceOpeningHours: true,
+  enforceOpeningHours: false,
 
   // Map tiles: OpenStreetMap's own tile server needs no API key (CARTO's now does).
   // Keep the attribution: OpenStreetMap requires it.

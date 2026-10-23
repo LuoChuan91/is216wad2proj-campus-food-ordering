@@ -72,6 +72,23 @@ describe('buildNotification (shared, order-aware wording)', () => {
     expect(v.body).toContain('the store')
   })
 
+  it('derives the code from order_id when the order is not loaded (no "#—")', () => {
+    // Realtime fires on paid before loadLive pulls the order into the store.
+    const v = buildNotification({ kind: 'order', status: 'paid', order_id: 'abcd1234-....' })
+    expect(v.body).toContain('#ABCD') // first 4 chars of order_id, upper-cased
+    expect(v.body).not.toContain('—')
+  })
+
+  it('omits the "#" fragment entirely when there is no code and no order_id', () => {
+    const v = buildNotification({ kind: 'order', status: 'paid' })
+    expect(v.title).toBe('The store is cooking your order')
+    expect(v.body).toBe('Order')
+    expect(v.body).not.toContain('#')
+    const ready = buildNotification({ kind: 'order', status: 'ready' })
+    expect(ready.body).toBe('Collect order at the store')
+    expect(ready.body).not.toContain('#')
+  })
+
   it('carries the original payload fields through', () => {
     const v = buildNotification({ kind: 'order', status: 'ready', order_id: 'o1', at: 't' }, { order: pickup, storeName: 'X' })
     expect(v).toMatchObject({ kind: 'order', status: 'ready', order_id: 'o1', at: 't' })

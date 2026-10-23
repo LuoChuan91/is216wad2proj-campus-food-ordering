@@ -28,6 +28,7 @@ const money = E.money
 const store = computed(() => catalog.store(storeId.value))
 const venue = computed(() => (store.value ? catalog.venue(store.value.venue_id) : null))
 const open = computed(() => ui.open(store.value))
+const available = computed(() => catalog.storeAvailable(store.value))
 const cats = computed(() => {
   const m = new Map()
   for (const it of catalog.menuOf(store.value.id)) { if (!m.has(it.category)) m.set(it.category, []); m.get(it.category).push(it) }
@@ -42,6 +43,10 @@ const hasOptions = (it) => (it.option_groups || []).length > 0
 <template>
   <section v-if="store" class="page store-page">
     <StoreHero :store="store" :venue-name="venue ? shortName(venue.name) : ''" @back="ui.back()" />
+    <div v-if="!available" class="menu scroll">
+      <p class="empty-note">This store is currently unavailable.</p>
+    </div>
+    <template v-else>
     <div class="store-info">
       <StatusTag chip dot :tone="open.open ? 'ok' : 'muted'">{{ open.label }}</StatusTag>
       <StatusTag v-if="open.open" chip tone="info"><WaitTimeEstimate :store-id="store.id" /></StatusTag>
@@ -65,6 +70,7 @@ const hasOptions = (it) => (it.option_groups || []).length > 0
     <Transition name="rise">
       <CartBar v-if="cartHere" :count="cartCount" :total="cartTotal" @open="ui.openCheckout()" />
     </Transition>
+    </template>
   </section>
 </template>
 

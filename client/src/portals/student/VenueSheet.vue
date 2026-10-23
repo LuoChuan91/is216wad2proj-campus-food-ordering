@@ -14,7 +14,7 @@ const { ui: uiState } = storeToRefs(ui)
 const u = computed(() => uiState.value.student)
 const venue = computed(() => catalog.venue(u.value.venueId))
 const walk = computed(() => ui.walk(venue.value))
-const stores = computed(() => catalog.storesAt(venue.value.id).map((s) => ({ s, open: ui.open(s) })))
+const stores = computed(() => catalog.storesAt(venue.value.id).map((s) => ({ s, open: ui.open(s), available: catalog.storeAvailable(s) })))
 </script>
 
 <template>
@@ -34,18 +34,19 @@ const stores = computed(() => catalog.storesAt(venue.value.id).map((s) => ({ s, 
     </div>
     <div class="vsheet-list scroll">
       <p v-if="!stores.length" class="empty-note">No stores here yet.</p>
-      <button v-for="x in stores" :key="x.s.id" class="store-card" :class="{ closed: !x.open.open }"
-        @click="ui.openStore(x.s.id)">
+      <button v-for="x in stores" :key="x.s.id" class="store-card" :class="{ closed: !x.open.open, unavailable: !x.available }"
+        :disabled="!x.available" @click="ui.openStore(x.s.id)">
         <Mono :store="x.s" :size="46" />
         <span class="store-main">
           <strong>{{ x.s.name }}</strong>
           <small>{{ x.s.cuisine }} · {{ x.s.unit_no }}</small>
           <span class="tags">
-            <span class="tag" :class="x.open.open ? 'ok' : 'muted'">{{ x.open.open ? 'Open' : 'Closed' }}</span>
+            <span v-if="!x.available" class="tag muted">Unavailable</span>
+            <span v-else class="tag" :class="x.open.open ? 'ok' : 'muted'">{{ x.open.open ? 'Open' : 'Closed' }}</span>
             <span v-if="x.s.discount_type" class="tag brand">{{ E.discountShort(x.s) }}</span>
           </span>
         </span>
-        <span class="store-wait" v-if="x.open.open">
+        <span class="store-wait" v-if="x.available && x.open.open">
           <WaitTimeEstimate :store-id="x.s.id" />
         </span>
       </button>

@@ -11,7 +11,7 @@ const repository = require('../src/models/deliveries.repository');
 const ordersRepository = require('../src/models/orders.repository');
 const profilesRepository = require('../src/models/profiles.repository');
 
-let job, order, active, orderChanges;
+let job, order, activeCount, orderChanges;
 const people = {
   'stu-ben': { id: 'stu-ben', role: 'student', status: 'active', name: 'Ben' },
   'stu-amy': { id: 'stu-amy', role: 'student', status: 'active', name: 'Amy' },
@@ -21,11 +21,11 @@ const people = {
 test.beforeEach(() => {
   order = { id: 'order-1', student_id: 'stu-amy', store_id: 'store-1', status: 'paid', order_items: [{ qty: 2 }] };
   job = { id: 'job-1', order_id: 'order-1', status: 'open', courier_id: null, fee: 1.5, expires_at: new Date(Date.now() + 5 * 60e3).toISOString() };
-  active = null;
+  activeCount = 0;
   orderChanges = null;
   profilesRepository.findById = async (id) => people[id] || null;
   repository.findById = async () => ({ ...job, orders: order });
-  repository.findActiveForCourier = async () => active;
+  repository.countActiveForCourier = async () => activeCount;
   repository.update = async (id, from, changes) => (job.status === from ? Object.assign(job, changes) : null);
   ordersRepository.update = async (id, changes) => { orderChanges = changes; Object.assign(order, changes); return order; };
 });
@@ -47,8 +47,14 @@ test('409 when someone else took the job first', async () => {
   await assert.rejects(service.act('job-1', { action: 'accept', courier_id: 'stu-ben' }), (err) => err.status === 409);
 });
 
-test('409 when the courier is already on another delivery', async () => {
-  active = { id: 'job-0' };
+test('a courier can hold up to 4 jobs at once', async () => {
+  activeCount = 3; // already carrying 3 -> accepting a 4th is fine
+  const view = await service.act('job-1', { action: 'accept', courier_id: 'stu-ben' });
+  assert.equal(view.status, 'accepted');
+});
+
+test('409 when the courier already has 4 active jobs (the 5th is blocked)', async () => {
+  activeCount = 4;
   await assert.rejects(service.act('job-1', { action: 'accept', courier_id: 'stu-ben' }), (err) => err.status === 409);
 });
 

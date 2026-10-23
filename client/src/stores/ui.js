@@ -184,6 +184,8 @@ export const useUiStore = defineStore("ui", () => {
     ui.student.list.sort = s;
   }
   function openStoreItem(storeId, itemId) {
+    const catalog = useCatalogStore();
+    if (!catalog.storeAvailable(catalog.store(storeId))) return;
     openStore(storeId);
     openItem(itemId);
   }
@@ -241,6 +243,9 @@ export const useUiStore = defineStore("ui", () => {
     u.sheet = null;
   }
   function openStore(storeId) {
+    const catalog = useCatalogStore();
+    // A store whose merchant is blocked/removed is not orderable — ignore clicks.
+    if (!catalog.storeAvailable(catalog.store(storeId))) return;
     const u = ui.student;
     u.storeId = storeId;
     u.page = "store";

@@ -43,7 +43,9 @@ function jobView(d) {
 }
 
 const on = computed(() => courierOn.value)
-const active = computed(() => { const d = orders.activeJob(); return d ? jobView(d) : null })
+const MAX_JOBS = 4
+const activeList = computed(() => orders.activeJobs().map(jobView))
+const atLimit = computed(() => activeList.value.length >= MAX_JOBS)
 const jobs = computed(() => (on.value ? orders.openJobs().map(jobView) : []))
 const expired = computed(() => (on.value ? orders.db.expiredJobs.map(jobView) : []))
 const earn = computed(() => orders.earnings())
@@ -52,7 +54,7 @@ const earn = computed(() => orders.earnings())
 function syncJobWaits() {
   const wanted = new Map() // key -> { storeId, orderId }
   const add = (d) => { if (d && d.pickup_store_id && d.order_id) wanted.set(keyStr(d.pickup_store_id, d.order_id), { storeId: d.pickup_store_id, orderId: d.order_id }) }
-  const aj = orders.activeJob(); if (aj) add(aj)
+  for (const d of orders.activeJobs()) add(d)
   if (on.value) { for (const d of orders.openJobs()) add(d) }
   for (const [k, { storeId, orderId }] of wanted) if (!waitKeys.has(k)) { acquireStoreWait(storeId, orderId); waitKeys.add(k) }
   for (const k of [...waitKeys]) if (!wanted.has(k)) { const [storeId, orderId] = k.split('|'); releaseStoreWait(storeId, orderId); waitKeys.delete(k) }
@@ -78,9 +80,9 @@ onBeforeUnmount(() => {
       <div><small>Today</small><b>{{ money(earn.today) }}</b><span>{{ plural(earn.todayCount, 'delivery', 'deliveries') }}</span></div>
       <div><small>Last 7 days</small><b>{{ money(earn.week) }}</b><span>{{ plural(earn.weekCount, 'delivery', 'deliveries') }}</span></div>
     </div>
-    <template v-if="active">
-      <h4 class="sec">Current delivery</h4>
-      <div class="panel job active-job">
+    <template v-if="activeList.length">
+      <h4 class="sec">Current {{ activeList.length === 1 ? 'delivery' : 'deliveries' }} <span class="count">{{ activeList.length }}/{{ MAX_JOBS }}</span></h4>
+      <div v-for="active in activeList" :key="active.d.id" class="panel job active-job">
         <div class="job-top"><Mono :store="active.s" :size="36" /><div class="job-route"><strong>{{ active.s.name }}</strong><small>{{ active.vName }} → {{ active.drop.name }}</small></div><b class="fee">{{ money(active.d.fee) }}</b></div>
         <ol class="mini-steps">
           <li class="done">Accepted</li>
@@ -102,7 +104,7 @@ onBeforeUnmount(() => {
       <div class="job-top"><Mono :store="j.s" :size="36" /><div class="job-route"><strong>{{ j.s.name }}</strong><small>{{ j.vName }} → {{ j.drop.name }}</small></div><b class="fee">{{ money(j.d.fee) }}</b></div>
       <div class="job-meta"><span>{{ plural(j.items, 'item', 'items') }}</span><span><Icon name="walk" :size="12" />{{ j.walk.meters }} m</span><span :class="{ ok: j.o.status === 'ready' }">{{ j.o.status === 'ready' ? 'Food is ready' : (j.est ? 'Ready ~' + E.clock(j.est) : 'In the kitchen') }}</span></div>
       <div class="job-timer"><div class="meter" :class="j.left < 120e3 ? 'late' : j.left < 300e3 ? 'warn' : 'ok'"><i :style="{ width: Math.max(0, j.left / (cfg.deliveryWindowMin * 600)) + '%' }"></i></div><small>Expires in {{ E.countdown(j.left) }}</small></div>
-      <button class="btn btn-primary w-100" :disabled="!!active || busy[j.d.id]" @click="orders.acceptJob(j.d.id)">{{ active ? 'Finish your current delivery first' : 'Accept job' }}</button>
+      <button class="btn btn-primary w-100" :disabled="atLimit || busy[j.d.id]" @click="orders.acceptJob(j.d.id)">{{ atLimit ? 'Max ' + MAX_JOBS + ' jobs at once' : 'Accept job' }}</button>
     </div>
     <div v-for="j in expired" :key="j.d.id" class="panel job expired">
       <div class="job-top"><Mono :store="j.s" :size="36" /><div class="job-route"><strong>{{ j.s.name }}</strong><small>{{ j.vName }} → {{ j.drop.name }}</small></div><StatusTag tone="warn">Expired</StatusTag></div>

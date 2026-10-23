@@ -60,7 +60,12 @@ export function buildNotification(payload, ctx = {}) {
   if (!toastByStatus || !(payload.status in toastByStatus)) return null;
 
   const order = ctx.order || null;
-  const code = order?.code;
+  // Code: prefer the loaded order's code; otherwise derive it from order_id the
+  // same way the server does (first 4 chars, upper-cased), so a brand-new order's
+  // notification (fired by realtime before the order is in the store) still shows
+  // a real code instead of "#—". When neither is available, we omit the fragment.
+  const code = order?.code || (payload.order_id ? String(payload.order_id).slice(0, 4).toUpperCase() : null);
+  const codeTag = code ? ` #${code}` : '';
   const store = ctx.storeName || 'the store';
   const drop = ctx.dropoffName || 'your drop-off point';
   const courier = first(ctx.courierName);
@@ -74,7 +79,7 @@ export function buildNotification(payload, ctx = {}) {
     if (payload.status === 'paid') {
       // announceChanges surfaces the "cooking" line; keep that richer wording.
       title = `${ctx.storeName || 'The store'} is cooking your order`;
-      body = `Order #${code || '—'}${ctx.readyAtClock ? ' · ready around ' + ctx.readyAtClock : ''}`;
+      body = `Order${codeTag}${ctx.readyAtClock ? ' · ready around ' + ctx.readyAtClock : ''}`;
       variant = 'info';
     } else if (payload.status === 'ready') {
       title = 'Your food is ready';
@@ -83,7 +88,7 @@ export function buildNotification(payload, ctx = {}) {
       } else if (order && order.type !== 'pickup') {
         body = 'Waiting for a student courier to accept';
       } else {
-        body = `Collect order #${code || '—'} at ${store}`;
+        body = `Collect order${codeTag} at ${store}`;
       }
       variant = 'success';
     } else {

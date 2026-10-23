@@ -852,6 +852,10 @@ h4 .count {
 .store-card.closed {
   opacity: 0.6;
 }
+.store-card.unavailable {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 .store-main {
   flex: 1;
   min-width: 0;

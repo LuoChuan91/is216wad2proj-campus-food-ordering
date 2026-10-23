@@ -36,7 +36,7 @@ const { estimate: est } = useCartEstimate(
 )
 const drops = computed(() => {
   const me = ui.place()
-  return catalog.db.destinations.map((d) => ({ d, m: Math.round(E.distanceM(me, d)) })).sort((a, b) => a.m - b.m).slice(0, 3)
+  return catalog.db.destinations.map((d) => ({ d, m: Math.round(E.distanceM(me, d)) })).sort((a, b) => a.m - b.m)
 })
 </script>
 

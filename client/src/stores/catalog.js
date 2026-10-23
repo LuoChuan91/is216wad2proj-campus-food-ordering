@@ -64,9 +64,18 @@ export const useCatalogStore = defineStore('catalog', () => {
   const storesOf = (merchantId) => db.stores.filter((s) => s.merchant_id === merchantId)
   const menuOf = (storeId) => db.menu.filter((m) => m.store_id === storeId)
 
+  // A store is "available" to order from only when its merchant account is active.
+  // A blocked/removed (or missing) merchant makes the store unorderable, so the
+  // student store cards grey it out and it can't be opened.
+  function storeAvailable(store) {
+    if (!store) return false
+    const m = by(db.profiles, store.merchant_id)
+    return !!m && m.status === 'active'
+  }
+
   return {
     db,
     decorateStores, loadCatalog,
-    user, venue, store, item, dropoff, groups, options, storesAt, storesOf, menuOf,
+    user, venue, store, item, dropoff, groups, options, storesAt, storesOf, menuOf, storeAvailable,
   }
 })

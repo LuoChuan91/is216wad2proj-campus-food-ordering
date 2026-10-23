@@ -94,6 +94,12 @@ export const useOrdersStore = defineStore("orders", () => {
       (d) => d.status === "accepted" || d.status === "picked_up",
     );
   }
+  // ALL of the courier's in-progress jobs (a courier may carry up to 4 at once)
+  function activeJobs() {
+    return db.myJobs.filter(
+      (d) => d.status === "accepted" || d.status === "picked_up",
+    );
+  }
   // Open delivery jobs the courier may take (not their own orders)
   function openJobs() {
     return db.jobs.filter(
@@ -284,6 +290,7 @@ export const useOrdersStore = defineStore("orders", () => {
     ordersOf,
     isActive,
     activeJob,
+    activeJobs,
     openJobs,
     earnings,
     loadLive,

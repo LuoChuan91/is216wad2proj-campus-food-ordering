@@ -1,10 +1,13 @@
 <script setup>
-// The delivery drop-off picker on checkout: a radio list of the nearest drop-off
-// points plus a courier note field and the fallback hint.
+// The delivery drop-off picker on checkout: a searchable, scrollable radio list
+// of drop-off points (sorted nearest-first by the parent) plus a courier note
+// field and the fallback hint.
 //
 // { d, m } (destination + metres away). Emits 'pick' with a destination id and
 // 'note' with the typed note.
-defineProps({
+import { ref, computed } from 'vue'
+
+const props = defineProps({
   drops: { type: Array, default: () => [] },
   // Currently-selected destination id.
   selected: { type: String, default: '' },
@@ -14,21 +17,39 @@ defineProps({
   windowMin: { type: Number, default: 10 },
 })
 defineEmits(['pick', 'note'])
+
+// Filter drop-offs by name (case-insensitive). Keeps the nearest-first order.
+const query = ref('')
+const shownDrops = computed(() => {
+  const q = query.value.trim().toLowerCase()
+  if (!q) return props.drops
+  return props.drops.filter((x) => String(x.d.name || '').toLowerCase().includes(q))
+})
 </script>
 
 <template>
   <div class="panel co-drop">
     <strong class="co-label">Deliver to</strong>
-    <label v-for="x in drops" :key="x.d.id" class="drop" :class="{ on: selected === x.d.id }">
-      <input
-        type="radio"
-        class="form-check-input"
-        name="dropoff"
-        :checked="selected === x.d.id"
-        @change="$emit('pick', x.d.id)"
-      >
-      <span>{{ x.d.name }}</span><small>{{ x.m }} m away</small>
-    </label>
+    <input
+      class="form-control form-control-sm co-search"
+      type="search"
+      placeholder="Search drop-off points…"
+      aria-label="Search drop-off points"
+      v-model="query"
+    >
+    <div class="drop-list">
+      <p v-if="!shownDrops.length" class="drop-empty">No drop-off points match “{{ query }}”.</p>
+      <label v-for="x in shownDrops" :key="x.d.id" class="drop" :class="{ on: selected === x.d.id }">
+        <input
+          type="radio"
+          class="form-check-input"
+          name="dropoff"
+          :checked="selected === x.d.id"
+          @change="$emit('pick', x.d.id)"
+        >
+        <span>{{ x.d.name }}</span><small>{{ x.m }} m away</small>
+      </label>
+    </div>
     <input
       class="form-control form-control-sm co-note"
       maxlength="80"
@@ -45,6 +66,23 @@ defineEmits(['pick', 'note'])
 .co-label {
   display: block;
   margin-bottom: 6px;
+}
+.co-search {
+  margin-bottom: 6px;
+  border-radius: 10px;
+  font-size: 13px;
+}
+/* Fixed-height scroll so a long list of drop-off points never pushes the page;
+   it scrolls inside this box instead. */
+.drop-list {
+  max-height: 11rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.drop-empty {
+  margin: 8px 2px;
+  color: var(--muted);
+  font-size: 12.5px;
 }
 .drop {
   display: flex;

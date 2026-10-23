@@ -53,7 +53,7 @@ const SORTS = [
 
 const rows = computed(() => catalog.db.stores.map((s) => {
   const v = catalog.venue(s.venue_id)
-  return { s, v, open: ui.open(s), wait: storeWaitMins(s.id), walk: v ? ui.walk(v) : null, cats: catalog.menuOf(s.id).map((m) => m.category) }
+  return { s, v, open: ui.open(s), available: catalog.storeAvailable(s), wait: storeWaitMins(s.id), walk: v ? ui.walk(v) : null, cats: catalog.menuOf(s.id).map((m) => m.category) }
 }))
 
 const shown = computed(() => {
@@ -98,18 +98,19 @@ const openCount = computed(() => rows.value.filter((r) => r.open.open).length)
       </label>
     </div>
     <div class="store-list">
-      <button v-for="r in shown" :key="r.s.id" class="store-card" :class="{ closed: !r.open.open }" @click="ui.openStore(r.s.id)">
+      <button v-for="r in shown" :key="r.s.id" class="store-card" :class="{ closed: !r.open.open, unavailable: !r.available }" :disabled="!r.available" @click="ui.openStore(r.s.id)">
         <Mono :store="r.s" :size="46" />
         <span class="store-main">
           <strong>{{ r.s.name }}</strong>
           <small>{{ r.s.cuisine }}</small>
           <small v-if="r.v"><Icon name="walk" :size="12" />{{ r.walk.minutes }} min · {{ shortName(r.v.name) }}</small>
           <span class="tags">
-            <span class="tag" :class="r.open.open ? 'ok' : 'muted'">{{ r.open.open ? 'Open' : 'Closed' }}</span>
+            <span v-if="!r.available" class="tag muted">Unavailable</span>
+            <span v-else class="tag" :class="r.open.open ? 'ok' : 'muted'">{{ r.open.open ? 'Open' : 'Closed' }}</span>
             <span v-if="r.s.discount_type" class="tag brand">{{ E.discountShort(r.s) }}</span>
           </span>
         </span>
-        <span class="store-wait" v-if="r.open.open"><WaitTimeEstimate :store-id="r.s.id" /></span>
+        <span class="store-wait" v-if="r.available && r.open.open"><WaitTimeEstimate :store-id="r.s.id" /></span>
       </button>
       <p v-if="!shown.length" class="empty-note">No stores match. Try another filter.</p>
     </div>

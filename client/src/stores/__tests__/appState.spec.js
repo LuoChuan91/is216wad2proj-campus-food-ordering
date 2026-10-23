@@ -97,6 +97,18 @@ describe('catalog store', () => {
     expect(opts.find((o) => o.id === 'o1').group_id).toBe('g1')
     expect(opts).toHaveLength(4)
   })
+
+  it('storeAvailable is true only when the merchant account is active', () => {
+    const catalog = seedCatalog()
+    const s = catalog.store('s1')
+    expect(catalog.storeAvailable(s)).toBe(true)
+    catalog.user('mer').status = 'blocked'
+    expect(catalog.storeAvailable(s)).toBe(false)
+    catalog.user('mer').status = 'removed'
+    expect(catalog.storeAvailable(s)).toBe(false)
+    expect(catalog.storeAvailable(null)).toBe(false)
+    expect(catalog.storeAvailable({ merchant_id: 'ghost' })).toBe(false)
+  })
 })
 
 describe('ui store: cart, options and validate', () => {
@@ -215,6 +227,23 @@ describe('session store: signIn resets per-user state', () => {
     const session = useSessionStore()
     session.signIn('ghost')
     expect(session.session.userId).toBe(null)
+  })
+
+  it('courier flag survives a page refresh (restore) but resets on a fresh sign-in', () => {
+    try { sessionStorage.clear() } catch { /* ignore */ }
+    seedCatalog()
+    const session = useSessionStore()
+    const ui = useUiStore()
+    // Fresh sign-in starts Offline; the student toggles Available on.
+    session.signIn('stu')
+    expect(ui.courierOn).toBe(false)
+    session._saveCourier('stu', true)
+    // A page refresh restores the session (fresh:false) -> courier stays on.
+    session.restoreSession()
+    expect(ui.courierOn).toBe(true)
+    // A brand-new sign-in resets it to off.
+    session.signIn('stu')
+    expect(ui.courierOn).toBe(false)
   })
 })
 

@@ -24,11 +24,13 @@ const session = {
       return null;
     }
   },
-  save(id, role) {
+  save(id, role, { fresh = true } = {}) {
     try {
       if (id) {
         sessionStorage.setItem(SESSION_KEY, id);
-        if (role === "student") sessionStorage.setItem(courierKey(id), "0");
+        // Only a brand-new sign-in resets "available for jobs" to off; a page
+        // refresh (restore) must keep whatever the courier had toggled.
+        if (fresh && role === "student") sessionStorage.setItem(courierKey(id), "0");
       } else {
         sessionStorage.clear()
       }
@@ -63,18 +65,23 @@ export const useSessionStore = defineStore("session", () => {
 
   // TODO sign-in is simulated: pick an account from the database. Supabase Auth replaces this later.
   // navigate=false during restoreSession so a reload keeps the URL the user was on.
-  function signIn(userId, { navigate = true } = {}) {
+  // fresh=false during restoreSession so a page refresh PRESERVES the courier flag
+  // and REHYDRATES the notification history (a brand-new sign-in resets both).
+  function signIn(userId, { navigate = true, fresh = true } = {}) {
     const catalog = useCatalogStore();
     const orders = useOrdersStore();
     const ui = useUiStore();
+    const notes = useNotificationsStore();
     const p = catalog.user(userId);
     if (!p) return;
 
     // initialise session
     session$.userId = userId;
-    session.save(userId, p.role);
+    session.save(userId, p.role, { fresh });
 
-    useNotificationsStore().clear();
+    // Notifications: a fresh sign-in starts clean (and wipes stale stored
+    // history); a refresh restores the history.
+    notes.hydrate(userId, { fresh });
     ui.menu = null;
 
     orders.db.orders = [];
@@ -105,7 +112,7 @@ export const useSessionStore = defineStore("session", () => {
   function restoreSession() {
     const catalog = useCatalogStore();
     const id = session.load();
-    if (id && catalog.user(id)) signIn(id, { navigate: false });
+    if (id && catalog.user(id)) signIn(id, { navigate: false, fresh: false });
   }
 
   return {

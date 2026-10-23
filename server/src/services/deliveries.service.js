@@ -2,6 +2,9 @@ const repository = require('../models/deliveries.repository');
 const ordersRepository = require('../models/orders.repository');
 const profilesRepository = require('../models/profiles.repository');
 
+// A courier can carry several deliveries at once (pick up along the way).
+const MAX_ACTIVE_JOBS = 4;
+
 function httpError(status, message) {
   const err = new Error(message);
   err.status = status;
@@ -67,7 +70,7 @@ exports.act = async (deliveryId, { action, courier_id: courierId } = {}) => {
     if (d.status !== 'open') throw httpError(409, 'Someone else already took this job');
     if (Date.parse(d.expires_at) < Date.now()) throw httpError(409, 'This job has expired');
     if (d.orders && d.orders.student_id === courierId) throw httpError(400, "You can't deliver your own order");
-    if (await repository.findActiveForCourier(courierId)) throw httpError(409, 'Finish your current delivery first');
+    if (await repository.countActiveForCourier(courierId) >= MAX_ACTIVE_JOBS) throw httpError(409, `You can carry at most ${MAX_ACTIVE_JOBS} jobs at once`);
     saved = await repository.update(deliveryId, 'open', { status: 'accepted', courier_id: courierId, accepted_at: now });
     if (!saved) throw httpError(409, 'Someone else already took this job');
   } else {

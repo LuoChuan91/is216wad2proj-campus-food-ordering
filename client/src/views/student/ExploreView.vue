@@ -63,9 +63,9 @@ const results = computed(() => {
   const q = u.value.search.trim().toLowerCase()
   if (!q) return null
   const hit = (t) => String(t || '').toLowerCase().includes(q)
-  const stores = catalog.db.stores.filter((s) => hit(s.name) || hit(s.cuisine) || hit(s.description)).map((s) => ({ s, v: catalog.venue(s.venue_id), open: ui.open(s).open }))
+  const stores = catalog.db.stores.filter((s) => hit(s.name) || hit(s.cuisine) || hit(s.description)).map((s) => ({ s, v: catalog.venue(s.venue_id), open: ui.open(s).open, available: catalog.storeAvailable(s) }))
   const dishes = catalog.db.menu.filter((m) => hit(m.name) || hit(m.description) || hit(m.category)).slice(0, 12)
-    .map((m) => { const s = catalog.store(m.store_id); return { m, s, v: catalog.venue(s.venue_id), ok: m.available && ui.open(s).open } })
+    .map((m) => { const s = catalog.store(m.store_id); return { m, s, v: catalog.venue(s.venue_id), ok: m.available && ui.open(s).open && catalog.storeAvailable(s) } })
   return { stores, dishes }
 })
 </script>
@@ -85,10 +85,11 @@ const results = computed(() => {
         <div class="peek-head"><strong>Results for “{{ u.search.trim() }}”</strong></div>
         <div class="results-list scroll">
           <p v-if="!results.stores.length && !results.dishes.length" class="empty-note">Nothing matches. Try "noodles", "kopi" or "bento".</p>
-          <button v-for="x in results.stores" :key="x.s.id" class="venue-row" @click="ui.openStore(x.s.id)">
+          <button v-for="x in results.stores" :key="x.s.id" class="venue-row" :class="{ unavailable: !x.available }" :disabled="!x.available" @click="ui.openStore(x.s.id)">
             <Mono :store="x.s" :size="36" />
             <span class="venue-main"><strong>{{ x.s.name }}</strong><small>{{ x.s.cuisine }} · {{ shortName(x.v.name) }}</small></span>
-            <span class="tag" :class="x.open ? 'ok' : 'muted'">{{ x.open ? 'Open' : 'Closed' }}</span>
+            <span v-if="!x.available" class="tag muted">Unavailable</span>
+            <span v-else class="tag" :class="x.open ? 'ok' : 'muted'">{{ x.open ? 'Open' : 'Closed' }}</span>
           </button>
           <h4 v-if="results.dishes.length" class="sec">Dishes</h4>
           <button v-for="x in results.dishes" :key="x.m.id" class="venue-row" :disabled="!x.ok" @click="ui.openStoreItem(x.s.id, x.m.id)">

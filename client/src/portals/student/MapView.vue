@@ -77,8 +77,10 @@ function venueTip(v) {
   const open = stores.filter((s) => ui.open(s).open).length
   const rows = stores.map((s) => {
     const mins = storeWaitMinutes(s.id)
+    const available = catalog.storeAvailable(s)
     const isOpen = ui.open(s).open
-    return `<li><i style="background:${s.color}"></i>${esc(s.name)}<em class="${isOpen ? '' : 'off'}">${isOpen ? (mins ? `~${mins} min` : 'Open') : 'Closed'}</em></li>`
+    const label = !available ? 'Unavailable' : isOpen ? (mins ? `~${mins} min` : 'Open') : 'Closed'
+    return `<li><i style="background:${s.color}"></i>${esc(s.name)}<em class="${available && isOpen ? '' : 'off'}">${label}</em></li>`
   }).join('')
   const walk = ui.walk(v)
   return `<div class="map-tip-card"><strong>${esc(v.name)}</strong><small>${walk.minutes} min walk · ${open} of ${stores.length} open</small><ul>${rows}</ul><span class="tip-hint">Click to see the menus</span></div>`

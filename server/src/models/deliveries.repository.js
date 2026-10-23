@@ -55,6 +55,18 @@ exports.findActiveForCourier = async (courierId) => {
   return data[0] || null;
 };
 
+// How many deliveries this courier currently has in progress (accepted/picked_up).
+exports.countActiveForCourier = async (courierId) => {
+  const { count, error } = await supabase
+    .from('deliveries')
+    .select('id', { count: 'exact', head: true })
+    .eq('courier_id', courierId)
+    .in('status', ['accepted', 'picked_up']);
+
+  if (error) throw error;
+  return count || 0;
+};
+
 // Change a delivery only if it still has the status we expect (two couriers can't both accept a job).
 // Returns the saved row, or null when someone else got there first.
 exports.update = async (deliveryId, fromStatus, changes) => {
