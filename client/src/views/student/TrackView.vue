@@ -111,6 +111,9 @@ const courierLine = computed(() => {
       <span class="live"><i></i>Live</span>
     </div>
     <div class="scroll track-body">
+      <div class="container px-0">
+      <div class="row g-2">
+      <div class="col-12 col-lg-7 d-flex flex-column gap-2">
       <div v-if="order.fallback" class="fallback-note">
         <Icon name="bag" :size="16" /><span><strong>Switched to pickup.</strong> No courier accepted within {{
           cfg.deliveryWindowMin }} min, so the delivery fee was waived.</span>
@@ -169,6 +172,8 @@ const courierLine = computed(() => {
             }}</time></li>
       </ol>
 
+      </div>
+      <div class="col-12 col-lg-5 d-flex flex-column gap-2">
       <ReceiptPanel :lines="lines" :discount="order.discount" :paid="order.paid" :payment="pay"
         :fallback="order.fallback" :fee-waived="order.fee_waived" />
 
@@ -178,7 +183,9 @@ const courierLine = computed(() => {
         @click="orders.markCollected(order.id)"
         >Collected
       </button>
-
+      </div>
+      </div>
+      </div>
     </div>
   </section>
 </template>
@@ -222,9 +229,6 @@ const courierLine = computed(() => {
 .track-body {
   flex: 1;
   padding: 12px 14px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
 }
 
 .fallback-note {

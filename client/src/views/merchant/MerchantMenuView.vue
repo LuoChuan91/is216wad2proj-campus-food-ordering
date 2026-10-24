@@ -23,9 +23,13 @@ const menu = computed(() => catalog.menuOf(store.value.id).map((m) => ({ m, grou
 <template>
   <div class="m-menu scroll">
     <p class="m-hint">Switching an item off hides it from students straight away. Cook time and "at once" feed the wait-time estimate.</p>
-    <div v-for="x in menu" :key="x.m.id" class="mrow">
-      <div><strong>{{ x.m.name }}</strong><small>{{ money(x.m.price) }} · {{ x.m.category }} · {{ x.groups ? x.groups + (x.groups === 1 ? ' option group' : ' option groups') : 'no options' }} · {{ Math.max(1, Math.round(x.m.cook_time_sec / 60)) }} min, {{ x.m.max_at_once }} at once</small></div>
-      <label class="form-switch"><input class="form-check-input" type="checkbox" role="switch" :checked="x.m.available" :disabled="busy[x.m.id]" @change="orders.setItemAvailable(x.m.id, $event.target.checked)"><span>{{ x.m.available ? 'Available' : 'Sold out' }}</span></label>
+    <div class="row g-2">
+      <div v-for="x in menu" :key="x.m.id" class="col-12 col-md-6">
+        <div class="mrow h-100">
+          <div><strong>{{ x.m.name }}</strong><small>{{ money(x.m.price) }} · {{ x.m.category }} · {{ x.groups ? x.groups + (x.groups === 1 ? ' option group' : ' option groups') : 'no options' }} · {{ Math.max(1, Math.round(x.m.cook_time_sec / 60)) }} min, {{ x.m.max_at_once }} at once</small></div>
+          <label class="form-switch"><input class="form-check-input" type="checkbox" role="switch" :checked="x.m.available" :disabled="busy[x.m.id]" @change="orders.setItemAvailable(x.m.id, $event.target.checked)"><span>{{ x.m.available ? 'Available' : 'Sold out' }}</span></label>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -35,15 +39,10 @@ const menu = computed(() => catalog.menuOf(store.value.id).map((m) => ({ m, grou
 .m-menu {
   flex: 1;
   padding: 14px 18px;
-  display: grid;
-  gap: 8px;
-  align-content: start;
-  max-width: 900px;
-  width: 100%;
 }
 .m-hint {
   color: var(--muted);
-  margin: 0 0 4px;
+  margin: 0 0 12px;
 }
 .mrow {
   display: flex;

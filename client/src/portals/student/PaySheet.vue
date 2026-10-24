@@ -20,7 +20,7 @@ const code = computed(() => (result.value ? String(result.value.id).slice(0, 4).
 </script>
 
 <template>
-  <div class="sheet pay-sheet" role="dialog" aria-label="Payment">
+  <div class="sheet pay-sheet col-md-8 col-lg-6 mx-auto" role="dialog" aria-label="Payment">
     <div class="grab"></div>
     <template v-if="u.pay.state !== 'done'">
       <div class="sheet-head"><div><h3>Payment</h3><p>Simulated for now. No real money moves; we only save a payment record.</p></div>

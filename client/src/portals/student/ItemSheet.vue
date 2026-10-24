@@ -24,7 +24,7 @@ const blocked = (g, o) => !o.available || (g.type === 'multi' && !isOn(o) && v.v
 </script>
 
 <template>
-  <div class="sheet item-sheet" role="dialog" :aria-label="item.name">
+  <div class="sheet item-sheet col-md-8 col-lg-6 mx-auto" role="dialog" :aria-label="item.name">
     <div class="grab"></div>
     <div class="sheet-head">
       <div><h3>{{ item.name }}</h3><p>{{ item.description }} <b>From {{ money(item.price) }}</b></p></div>

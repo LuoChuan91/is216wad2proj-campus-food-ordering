@@ -81,31 +81,17 @@ body {
   overflow: clip;
 }
 
-/* student portal: a phone-width column, centred on bigger screens */
+/* student portal: fills the page; views lay out with the Bootstrap grid */
 .student-shell {
   position: absolute;
   inset: 0;
-  display: flex;
-  justify-content: center;
-  background:
-    radial-gradient(
-        circle at 1px 1px,
-        rgba(30, 42, 90, 0.07) 1px,
-        transparent 0
-      )
-      0 0 / 22px 22px,
-    linear-gradient(180deg, #eef0f6, #e6e9f2);
 }
 .student-frame {
   position: relative;
   width: 100%;
-  max-width: 480px;
   height: 100%;
   overflow: hidden;
   background: var(--canvas);
-  box-shadow:
-    0 0 0 1px var(--line),
-    0 20px 60px rgba(20, 24, 40, 0.12);
   isolation: isolate;
 }
 
@@ -475,20 +461,12 @@ h4 .count {
 }
 
 /* ---------- student portal ---------- */
-.student .tab-layer {
-  position: absolute;
-  inset: 0 0 64px 0;
-}
 .student .tab-layer > * {
   position: absolute;
   inset: 0;
 }
 .tabbar {
-  position: absolute;
   z-index: 15;
-  left: 0;
-  right: 0;
-  bottom: 0;
   height: 64px;
   padding: 6px 8px 8px;
   display: grid;
@@ -1541,10 +1519,7 @@ h4 .count {
 /* ---------- small screens ---------- */
 @media (max-width: 900px) {
   .si-wrap {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 24px;
     padding-top: 32px;
-    max-width: 560px;
   }
   .si-group h3 small {
     display: none;
@@ -1563,14 +1538,6 @@ h4 .count {
   .si-brand h1 {
     font-size: 38px;
   }
-  .board {
-    grid-template-columns: repeat(3, minmax(260px, 1fr));
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-  }
-  .kcol {
-    scroll-snap-align: start;
-  }
 }
 @media (max-width: 720px) {
   :root {
@@ -1579,11 +1546,6 @@ h4 .count {
   .topnav {
     gap: 6px;
     padding: 0 6px 0 12px;
-  }
-  .tn-date,
-  .tn-name,
-  .tn-portal {
-    display: none;
   }
   .tn-clock {
     font-size: 12.5px;
@@ -1598,10 +1560,6 @@ h4 .count {
     right: 8px;
     top: calc(var(--nav-h) + 6px);
     width: auto;
-  }
-  .student-frame {
-    max-width: none;
-    box-shadow: none;
   }
   /* merchant and admin: section switcher moves to the bottom */
   .merchant,
@@ -1631,11 +1589,6 @@ h4 .count {
   }
   .m-stat {
     align-items: flex-start;
-  }
-  .board {
-    grid-template-columns: repeat(3, 84%);
-    padding: 10px;
-    gap: 10px;
   }
   .m-menu,
   .adm {

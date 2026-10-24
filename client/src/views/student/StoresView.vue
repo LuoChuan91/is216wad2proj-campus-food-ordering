@@ -82,6 +82,7 @@ const openCount = computed(() => rows.value.filter((r) => r.open.open).length)
 
 <template>
   <div class="stores-tab scroll">
+    <div class="container px-0">
     <h2 class="tab-title">All stores</h2>
     <p class="tab-sub">{{ catalog.db.stores.length }} stores on campus · {{ openCount }} taking orders</p>
     <label class="search"><Icon name="search" :size="16" /><input type="search" placeholder="Search stores, dishes or buildings" aria-label="Search stores" :value="list.search" @input="ui.setListSearch($event.target.value)">
@@ -97,8 +98,9 @@ const openCount = computed(() => rows.value.filter((r) => r.open.open).length)
         </select>
       </label>
     </div>
-    <div class="store-list">
-      <button v-for="r in shown" :key="r.s.id" class="store-card" :class="{ closed: !r.open.open, unavailable: !r.available }" :disabled="!r.available" @click="ui.openStore(r.s.id)">
+    <div class="row g-2">
+      <div v-for="r in shown" :key="r.s.id" class="col-12 col-md-6 col-lg-4">
+      <button class="store-card h-100" :class="{ closed: !r.open.open, unavailable: !r.available }" :disabled="!r.available" @click="ui.openStore(r.s.id)">
         <Mono :store="r.s" :size="46" />
         <span class="store-main">
           <strong>{{ r.s.name }}</strong>
@@ -112,7 +114,9 @@ const openCount = computed(() => rows.value.filter((r) => r.open.open).length)
         </span>
         <span class="store-wait" v-if="r.available && r.open.open"><WaitTimeEstimate :store-id="r.s.id" /></span>
       </button>
-      <p v-if="!shown.length" class="empty-note">No stores match. Try another filter.</p>
+      </div>
+      <p v-if="!shown.length" class="empty-note col-12">No stores match. Try another filter.</p>
+    </div>
     </div>
   </div>
 </template>
@@ -180,9 +184,5 @@ const openCount = computed(() => rows.value.filter((r) => r.open.open).length)
   border-radius: 10px;
   padding-top: 3px;
   padding-bottom: 3px;
-}
-.store-list {
-  display: grid;
-  gap: 8px;
 }
 </style>

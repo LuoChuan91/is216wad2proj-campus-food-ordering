@@ -51,8 +51,9 @@ const groups = computed(() => {
 
 <template>
   <div class="signin">
-    <div class="si-wrap">
-      <section class="si-hero">
+    <div class="si-wrap container">
+      <div class="row g-4 g-lg-5 justify-content-center align-items-start">
+      <section class="si-hero col-12 col-md-10 col-lg-6 col-xl-7">
         <div class="si-brand"><AppMark :size="52" /><div><h1>{{ cfg.appName }}</h1><p>{{ cfg.tagline }}</p></div></div>
         <p class="si-lead">Order from SMU food stores, skip the queue, or bring a classmate's lunch over between lessons and keep the delivery fee.</p>
         <ul class="si-points">
@@ -62,6 +63,7 @@ const groups = computed(() => {
         </ul>
         <div class="si-note"><Icon name="sparkle" :size="18" /><div><strong>Sign-in is simulated for now.</strong> Pick any account from our database. Payments are simulated too. Open a second tab and sign in as someone else to watch an order move between them live.</div></div>
       </section>
+      <div class="col-12 col-md-10 col-lg-6 col-xl-5">
       <section class="si-card">
         <h2>Sign in</h2>
         <p class="si-sub">Pick an account.</p>
@@ -76,6 +78,8 @@ const groups = computed(() => {
           <button v-if="g.more" type="button" class="si-toggle" @click="showAll = true"><Icon name="plus" :size="16" />Show {{ g.more }} more students</button>
         </div>
       </section>
+      </div>
+      </div>
     </div>
     <footer class="si-foot">
       <span><Icon name="clock" :size="13" />{{ E.dateLabel(now) }}, {{ E.clock(now) }} in Singapore</span>
@@ -100,14 +104,7 @@ const groups = computed(() => {
 }
 .si-wrap {
   flex: 1;
-  width: 100%;
-  max-width: 1080px;
-  margin: 0 auto;
   padding: 56px 24px 24px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 470px);
-  gap: 48px;
-  align-items: start;
 }
 .si-hero {
   color: #fff;

@@ -72,6 +72,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="deliver scroll">
+    <div class="container px-0">
     <header class="dl-head">
       <div>
         <h2 class="tab-title">Deliver &amp; earn</h2>
@@ -80,17 +81,19 @@ onBeforeUnmount(() => {
       <label class="avail form-switch"><input class="form-check-input" type="checkbox" role="switch" :checked="on"
           @change="orders.setAvailable($event.target.checked)"><span>{{ on ? 'Available' : 'Offline' }}</span></label>
     </header>
-    <div class="panel earn">
-      <div><small>Today</small><b>{{ money(earn.today) }}</b><span>{{ plural(earn.todayCount, 'delivery', 'deliveries')
+    <div class="panel earn row gx-2 mx-0">
+      <div class="col-6"><small>Today</small><b>{{ money(earn.today) }}</b><span>{{ plural(earn.todayCount, 'delivery', 'deliveries')
           }}</span></div>
-      <div><small>Last 7 days</small><b>{{ money(earn.week) }}</b><span>{{ plural(earn.weekCount, 'delivery',
+      <div class="col-6"><small>Last 7 days</small><b>{{ money(earn.week) }}</b><span>{{ plural(earn.weekCount, 'delivery',
           'deliveries') }}</span></div>
     </div>
 
     <template v-if="activeList.length">
       <h4 class="sec">Current {{ activeList.length === 1 ? 'delivery' : 'deliveries' }} <span class="count">{{
         activeList.length }}/{{ MAX_JOBS }}</span></h4>
-      <div v-for="active in activeList" :key="active.d.id" class="panel job active-job">
+      <div class="row g-2">
+      <div v-for="active in activeList" :key="active.d.id" class="col-12 col-md-6 col-lg-4">
+      <div class="panel job active-job h-100 align-content-start">
         <div class="job-top">
           <Mono :store="active.s" :size="36" />
           <div class="job-route"><strong>{{ active.s.name }}</strong><small>{{ active.vName }} → {{ active.drop.name
@@ -124,6 +127,8 @@ onBeforeUnmount(() => {
           @click="orders.deliver(active.d.id)">Mark as
           delivered</button>
       </div>
+      </div>
+      </div>
     </template>
 
     <h4 class="sec">Jobs near you <span v-if="on" class="count">{{ jobs.length }}</span></h4>
@@ -135,7 +140,9 @@ onBeforeUnmount(() => {
       <Icon name="check" :size="26" />
       <p>No open jobs right now. You'll get a notification when one comes in.</p>
     </div>
-    <div v-for="j in jobs" :key="j.d.id" class="panel job">
+    <div class="row g-2">
+    <div v-for="j in jobs" :key="j.d.id" class="col-12 col-md-6 col-lg-4">
+    <div class="panel job h-100 align-content-start">
       <div class="job-top">
         <Mono :store="j.s" :size="36" />
         <div class="job-route"><strong>{{ j.s.name }}</strong><small>{{ j.vName }} → {{ j.drop.name }}</small></div><b
@@ -153,7 +160,9 @@ onBeforeUnmount(() => {
         atLimit
           ? 'Max ' + MAX_JOBS + ' jobs at once' : 'Accept job' }}</button>
     </div>
-    <div v-for="j in expired" :key="j.d.id" class="panel job expired">
+    </div>
+    <div v-for="j in expired" :key="j.d.id" class="col-12 col-md-6 col-lg-4">
+    <div class="panel job expired h-100 align-content-start">
       <div class="job-top">
         <Mono :store="j.s" :size="36" />
         <div class="job-route"><strong>{{ j.s.name }}</strong><small>{{ j.vName }} → {{ j.drop.name }}</small></div>
@@ -165,6 +174,9 @@ onBeforeUnmount(() => {
       <p class="aj-line warn">
         <Icon name="bag" :size="14" />Nobody accepted in {{ cfg.deliveryWindowMin }} min. Switched to pickup.
       </p>
+    </div>
+    </div>
+    </div>
     </div>
   </div>
 </template>
@@ -188,9 +200,6 @@ onBeforeUnmount(() => {
 }
 
 .earn {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
   background: var(--navy);
   border: 0;
   color: #fff;
@@ -219,7 +228,6 @@ onBeforeUnmount(() => {
 }
 
 .job {
-  margin-bottom: 10px;
   display: grid;
   gap: 10px;
 }

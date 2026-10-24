@@ -44,6 +44,9 @@ const drops = computed(() => {
   <section v-if="store" class="page checkout">
     <div class="bar"><button class="icon-btn" aria-label="Back" @click="ui.back()"><Icon name="back" :size="20" /></button><h3>Checkout</h3></div>
     <div class="scroll checkout-body">
+      <div class="container px-0">
+      <div class="row g-2">
+      <div class="col-12 col-lg-7 d-flex flex-column gap-2">
       <div class="panel co-store"><Mono :store="store" :size="38" /><div><strong>{{ store.name }}</strong><small>{{ venue ? shortName(venue.name) : '' }} · {{ store.unit_no }}</small></div></div>
       <div class="panel co-lines">
         <div v-for="l in lines" :key="l.key" class="co-line">
@@ -62,6 +65,8 @@ const drops = computed(() => {
         @pick="ui.setDropoff"
         @note="ui.setNote"
       />
+      </div>
+      <div class="col-12 col-lg-5 d-flex flex-column gap-2">
       <div v-if="est" class="panel co-est"><span class="co-est-ic"><Icon name="clock" :size="18" /></span><div><strong>Ready around {{ E.clock(est.readyAt) }}</strong><small>{{ plural(est.ahead, 'order', 'orders') }} ahead · about {{ E.minsUntil(now, est.readyAt) }} min</small></div></div>
       <div class="panel co-sum">
         <div><span>Subtotal</span><span>{{ money(t.subtotal) }}</span></div>
@@ -69,8 +74,17 @@ const drops = computed(() => {
         <div v-if="u.checkout.type === 'delivery'"><span>Delivery fee</span><span>{{ money(t.delivery_fee) }}</span></div>
         <div class="total"><span>Total</span><span>{{ money(t.total) }}</span></div>
       </div>
+      </div>
+      </div>
+      </div>
     </div>
-    <div class="pay-bar"><button class="btn btn-primary btn-lg w-100" @click="ui.openPay()">Pay {{ money(t.total) }}</button></div>
+    <div class="pay-bar">
+      <div class="container px-0">
+        <div class="row justify-content-end">
+          <div class="col-12 col-lg-5"><button class="btn btn-primary btn-lg w-100" @click="ui.openPay()">Pay {{ money(t.total) }}</button></div>
+        </div>
+      </div>
+    </div>
   </section>
 </template>
 
@@ -81,9 +95,6 @@ const drops = computed(() => {
 .checkout-body {
   flex: 1;
   padding: 12px 14px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
 }
 .co-store {
   display: flex;

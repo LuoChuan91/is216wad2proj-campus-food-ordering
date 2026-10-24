@@ -10,6 +10,7 @@ import { config as cfg } from '@/config/index.js'
 import { ROLE } from '@/composables/useAppBootstrap.js'
 import { useNotificationsStore } from '@/stores/notifications.js'
 import NotificationPanel from '@/components/NotificationPanel.vue'
+import TabBar from '@/portals/student/TabBar.vue'
 
 const ui = useUiStore()
 const orders = useOrdersStore()
@@ -27,11 +28,14 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
 <template>
   <header class="topnav">
     <div class="tn-brand">
-      <AppMark :size="28" /><b>{{ cfg.appName }}</b><span class="tn-portal">{{ ROLE[me.role] }}</span>
+      <AppMark :size="28" /><b>{{ cfg.appName }}</b><span class="tn-portal d-none d-lg-inline">{{ ROLE[me.role] }}</span>
+    </div>
+    <div class="flex-grow-1 d-flex">
+      <TabBar v-if="me.role === 'student' && me.status === 'active'" top class="d-none d-md-flex" />
     </div>
     <span v-if="!online" class="tn-offline" role="status"><i></i>Reconnecting…</span>
     <span class="tn-clock">
-      <Icon name="clock" :size="14" /><span class="tn-date">{{ E.dateLabel(now) }},</span>{{ E.clock(now) }}
+      <Icon name="clock" :size="14" /><span class="tn-date d-none d-xl-inline">{{ E.dateLabel(now) }},</span>{{ E.clock(now) }}
     </span>
     <div class="tn-menu">
       <button type="button" class="tn-btn" aria-label="Notifications" :aria-expanded="menu === 'bell'"
@@ -46,7 +50,7 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
     <div class="tn-menu">
       <button type="button" class="tn-acct" aria-label="Account menu" :aria-expanded="menu === 'account'"
         @click.stop="ui.toggleMenu('account')">
-        <Avatar :name="me.name" :size="30" :tone="me.role === 'student' ? 'brand' : 'navy'" /><span class="tn-name">{{
+        <Avatar :name="me.name" :size="30" :tone="me.role === 'student' ? 'brand' : 'navy'" /><span class="tn-name d-none d-lg-inline">{{
           me.name }}</span>
         <Icon name="chevD" :size="16" />
       </button>
@@ -83,7 +87,6 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
   display: flex;
   align-items: center;
   gap: 9px;
-  margin-right: auto;
   min-width: 0;
 }
 

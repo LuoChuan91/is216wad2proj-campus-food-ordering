@@ -14,6 +14,8 @@ const first = (name) => name.split(' ')[0]
 
 <template>
   <div class="pending">
+    <div class="row justify-content-center mx-0">
+    <div class="col-12 col-md-8 col-lg-6 px-0">
     <AppMark :size="64" />
     <h2 v-if="waiting">Hi {{ first(me.name) }}, you're almost in</h2>
     <h2 v-else>We couldn't verify your account</h2>
@@ -22,6 +24,8 @@ const first = (name) => name.split(' ')[0]
     <div class="pending-card">
       <div class="pc-status" :class="waiting ? 'warn' : 'late'"><i></i>{{ waiting ? 'Waiting for approval' : me.status === 'removed' ? 'Account removed' : 'Account blocked' }}</div>
       <dl><div><dt>Email</dt><dd>{{ me.email }}</dd></div></dl>
+    </div>
+    </div>
     </div>
   </div>
 </template>

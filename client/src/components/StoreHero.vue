@@ -19,7 +19,7 @@ defineEmits(['back'])
 <template>
   <div class="store-hero" :style="{ '--tint': store.color }">
     <button class="icon-btn glass" aria-label="Back" @click="$emit('back')"><Icon name="back" :size="20" /></button>
-    <div class="hero-row">
+    <div class="hero-row container px-0">
       <Mono :store="store" :size="56" ring />
       <div><h2>{{ store.name }}</h2><p>{{ venueName }} · {{ store.unit_no }}</p></div>
     </div>

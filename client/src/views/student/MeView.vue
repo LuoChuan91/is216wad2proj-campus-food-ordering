@@ -22,11 +22,15 @@ const stats = computed(() => ({ orders: orders.ordersOf(me.value.id).length, ear
 
 <template>
   <div class="me-tab scroll">
+    <div class="row justify-content-center mx-0">
+    <div class="col-12 col-md-8 col-lg-6 px-0">
     <div class="me-card"><Avatar :name="me.name" :size="64" tone="brand" /><h2>{{ me.name }}</h2><p>{{ me.email }}</p><span class="tag ok"><Icon name="shield" :size="12" />Verified SMU student</span></div>
-    <div class="panel me-stats"><div><b>{{ stats.orders }}</b><small>orders</small></div><div><b>{{ stats.earn.weekCount }}</b><small>deliveries this week</small></div><div><b>{{ money(stats.earn.week) }}</b><small>earned this week</small></div></div>
+    <div class="panel me-stats row gx-2 mx-0"><div class="col-4"><b>{{ stats.orders }}</b><small>orders</small></div><div class="col-4"><b>{{ stats.earn.weekCount }}</b><small>deliveries this week</small></div><div class="col-4"><b>{{ money(stats.earn.week) }}</b><small>earned this week</small></div></div>
     <div class="panel me-list">
       <label class="me-row form-switch"><span><strong>Delivery jobs</strong><small>Get notified when someone nearby wants food delivered</small></span><input class="form-check-input" type="checkbox" role="switch" :checked="courierOn" @change="orders.setAvailable($event.target.checked)"></label>
       <button type="button" class="me-row" @click="sessionStore.signOut()"><span><strong>Sign out</strong><small>Switch to another account</small></span><Icon name="logout" :size="18" /></button>
+    </div>
+    </div>
     </div>
   </div>
 </template>
@@ -51,10 +55,7 @@ const stats = computed(() => ({ orders: orders.ordersOf(me.value.id).length, ear
   margin: 0 auto;
 }
 .me-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
   text-align: center;
-  gap: 8px;
 }
 .me-stats b {
   display: block;

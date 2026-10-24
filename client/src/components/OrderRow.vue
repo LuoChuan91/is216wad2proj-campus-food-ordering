@@ -64,7 +64,6 @@ const label = computed(() => {
   align-items: center;
   gap: 12px;
   text-align: left;
-  margin-bottom: 8px;
   cursor: pointer;
 }
 

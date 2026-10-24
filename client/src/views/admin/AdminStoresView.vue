@@ -31,7 +31,7 @@ onBeforeUnmount(() => { for (const id of waitStores) releaseStoreWait(id); waitS
 
 <template>
   <div class="adm scroll">
-    <div class="table-wrap">
+    <div class="table-wrap table-responsive">
       <table class="adm-table">
         <thead><tr><th>Store</th><th>Venue</th><th>Merchant account</th><th>Discount</th><th>Queue</th><th>Status</th></tr></thead>
         <tbody><tr v-for="x in stores" :key="x.s.id"><td><Mono :store="x.s" :size="24" /> {{ x.s.name }}</td><td>{{ x.v ? x.v.name : '–' }}</td><td>{{ x.m ? x.m.email : '–' }}</td><td>{{ E.discountShort(x.s) || '–' }}</td><td>{{ x.waiting }}</td><td><StatusTag :tone="x.open.open ? 'ok' : 'muted'">{{ x.open.open ? 'Open' : 'Closed' }}</StatusTag></td></tr></tbody>
@@ -44,7 +44,6 @@ onBeforeUnmount(() => { for (const id of waitStores) releaseStoreWait(id); waitS
 /* Admin stores table (moved from the global prototype stylesheet).
    The .adm wrapper + .scroll stay global (shared with the approvals view). */
 .table-wrap {
-  overflow-x: auto;
   margin-top: 12px;
   border: 1px solid var(--line);
   border-radius: 14px;

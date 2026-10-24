@@ -48,27 +48,35 @@ const hasOptions = (it) => (it.option_groups || []).length > 0
     </div>
     <template v-else>
     <div class="store-info">
+      <div class="container px-0 d-flex flex-wrap gap-2">
       <StatusTag chip dot :tone="open.open ? 'ok' : 'muted'">{{ open.label }}</StatusTag>
       <StatusTag v-if="open.open" chip tone="info"><WaitTimeEstimate :store-id="store.id" /></StatusTag>
       <StatusTag v-if="store.discount_type" chip tone="brand">{{ E.discountLabel(store) }}</StatusTag>
+      </div>
     </div>
     <div class="menu scroll" :class="{ 'with-cart': cartHere }">
+      <div class="container px-0">
       <p v-if="store.description" class="store-desc">{{ store.description }}</p>
       <template v-for="[cat, items] in cats" :key="cat">
         <h4 class="menu-cat">{{ cat }}</h4>
-        <button v-for="it in items" :key="it.id" class="menu-item" :class="{ soldout: !it.available }" :disabled="!it.available || !open.open" @click="ui.openItem(it.id)">
-          <span class="mi-text">
-            <strong>{{ it.name }}</strong>
-            <small v-if="it.description">{{ it.description }}</small>
-            <span class="mi-meta"><b>{{ money(it.price) }}</b><StatusTag v-if="hasOptions(it)">Customisable</StatusTag><StatusTag v-if="!it.available" tone="muted">Sold out</StatusTag></span>
-          </span>
-          <span v-if="it.available && open.open" class="mi-add"><Icon name="plus" :size="18" :stroke="2.4" /></span>
-        </button>
+        <div class="row g-2">
+          <div v-for="it in items" :key="it.id" class="col-12 col-md-6 col-lg-4">
+            <button class="menu-item h-100" :class="{ soldout: !it.available }" :disabled="!it.available || !open.open" @click="ui.openItem(it.id)">
+              <span class="mi-text">
+                <strong>{{ it.name }}</strong>
+                <small v-if="it.description">{{ it.description }}</small>
+                <span class="mi-meta"><b>{{ money(it.price) }}</b><StatusTag v-if="hasOptions(it)">Customisable</StatusTag><StatusTag v-if="!it.available" tone="muted">Sold out</StatusTag></span>
+              </span>
+              <span v-if="it.available && open.open" class="mi-add"><Icon name="plus" :size="18" :stroke="2.4" /></span>
+            </button>
+          </div>
+        </div>
       </template>
       <p v-if="!cats.length" class="empty-note">This store hasn't added its menu yet.</p>
+      </div>
     </div>
     <Transition name="rise">
-      <CartBar v-if="cartHere" :count="cartCount" :total="cartTotal" @open="ui.openCheckout()" />
+      <CartBar v-if="cartHere" class="col-md-8 col-lg-6 mx-auto" :count="cartCount" :total="cartTotal" @open="ui.openCheckout()" />
     </Transition>
     </template>
   </section>
@@ -78,9 +86,6 @@ const hasOptions = (it) => (it.option_groups || []).length > 0
 /* Store page: open/wait/discount row + menu (moved from the global stylesheet).
    .page/.scroll/.empty-note stay global (shared chrome). */
 .store-info {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
   padding: 12px 14px 4px;
   flex: none;
 }
@@ -114,7 +119,6 @@ const hasOptions = (it) => (it.option_groups || []).length > 0
   background: var(--paper);
   border-radius: 18px;
   padding: 12px 12px 12px 14px;
-  margin-bottom: 8px;
   cursor: pointer;
   color: inherit;
 }

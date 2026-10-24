@@ -28,11 +28,21 @@ const past = computed(() => rows.value.filter((r) => !orders.isActive(r.o)))
 
 <template>
   <div class="orders-tab scroll">
+    <div class="container px-0">
     <h2 class="tab-title">Your orders</h2>
     <p v-if="!active.length && !past.length" class="empty-note">No orders yet. Find a store on the map to start.</p>
     <h4 v-if="active.length" class="sec">Active</h4>
-    <OrderRow v-for="r in active" :key="r.o.id" :order="r.o" :store="r.s" :count="r.n" :busy="busy" variant="active" @open="ui.openTracking" />
+    <div class="row g-2">
+      <div v-for="r in active" :key="r.o.id" class="col-12 col-md-6 col-lg-4">
+        <OrderRow class="h-100" :order="r.o" :store="r.s" :count="r.n" :busy="busy" variant="active" @open="ui.openTracking" />
+      </div>
+    </div>
     <h4 v-if="past.length" class="sec">Earlier</h4>
-    <OrderRow v-for="r in past" :key="r.o.id" :order="r.o" :store="r.s" variant="past" :now="now" @open="ui.openTracking" />
+    <div class="row g-2">
+      <div v-for="r in past" :key="r.o.id" class="col-12 col-md-6 col-lg-4">
+        <OrderRow class="h-100" :order="r.o" :store="r.s" variant="past" :now="now" @open="ui.openTracking" />
+      </div>
+    </div>
+    </div>
   </div>
 </template>

@@ -29,13 +29,17 @@ const cols = computed(() => [
 
 <template>
   <div class="board">
-    <section v-for="c in cols" :key="c.k" class="kcol" :class="'col-' + c.k">
-      <h5>{{ c.title }} <span>{{ c.list.length }}</span></h5>
-      <div class="col-list scroll">
-        <OrderCard v-for="o in c.list" :key="o.id" :o="o" :est="est[o.id]" />
-        <p v-if="!c.list.length" class="col-empty">No orders</p>
+    <div class="row gx-3 h-100">
+      <div v-for="c in cols" :key="c.k" class="col-4 h-100">
+        <section class="kcol h-100" :class="'col-' + c.k">
+          <h5>{{ c.title }} <span>{{ c.list.length }}</span></h5>
+          <div class="col-list scroll">
+            <OrderCard v-for="o in c.list" :key="o.id" :o="o" :est="est[o.id]" />
+            <p v-if="!c.list.length" class="col-empty">No orders</p>
+          </div>
+        </section>
       </div>
-    </section>
+    </div>
   </div>
 </template>
 
@@ -45,9 +49,6 @@ const cols = computed(() => [
 .board {
   flex: 1;
   min-height: 0;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
   padding: 14px;
 }
 .kcol {
