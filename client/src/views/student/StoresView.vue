@@ -100,19 +100,19 @@ const openCount = computed(() => rows.value.filter((r) => r.open.open).length)
     </div>
     <div class="row g-2">
       <div v-for="r in shown" :key="r.s.id" class="col-12 col-md-6 col-lg-4">
-      <button class="store-card h-100" :class="{ closed: !r.open.open, unavailable: !r.available }" :disabled="!r.available" @click="ui.openStore(r.s.id)">
+      <button class="store-card d-flex align-items-center gap-3 w-100 h-100 p-2 text-start bg-white border rounded-4" :class="{ 'opacity-75': r.available && !r.open.open, 'opacity-50': !r.available }" :disabled="!r.available" @click="ui.openStore(r.s.id)">
         <Mono :store="r.s" :size="46" />
-        <span class="store-main">
+        <span class="d-flex flex-column flex-grow-1 overflow-hidden">
           <strong>{{ r.s.name }}</strong>
-          <small>{{ r.s.cuisine }}</small>
-          <small v-if="r.v"><Icon name="walk" :size="12" />{{ r.walk.minutes }} min · {{ shortName(r.v.name) }}</small>
-          <span class="tags">
+          <small class="text-body-secondary">{{ r.s.cuisine }}</small>
+          <small v-if="r.v" class="d-inline-flex align-items-center gap-1 text-body-secondary"><Icon name="walk" :size="12" />{{ r.walk.minutes }} min · {{ shortName(r.v.name) }}</small>
+          <span class="d-flex flex-wrap gap-1 mt-1">
             <span v-if="!r.available" class="tag muted">Unavailable</span>
             <span v-else class="tag" :class="r.open.open ? 'ok' : 'muted'">{{ r.open.open ? 'Open' : 'Closed' }}</span>
             <span v-if="r.s.discount_type" class="tag brand">{{ E.discountShort(r.s) }}</span>
           </span>
         </span>
-        <span class="store-wait" v-if="r.available && r.open.open"><WaitTimeEstimate :store-id="r.s.id" /></span>
+        <span v-if="r.available && r.open.open" class="flex-shrink-0"><WaitTimeEstimate :store-id="r.s.id" /></span>
       </button>
       </div>
       <p v-if="!shown.length" class="empty-note col-12">No stores match. Try another filter.</p>
@@ -124,7 +124,7 @@ const openCount = computed(() => rows.value.filter((r) => r.open.open).length)
 <style scoped>
 /* Stores list: filter chips + sort row (moved from the global stylesheet).
    Kept global (shared): .stores-tab padding, .tab-title, .search, and the
-   .store-card/.store-main cards (also used by the venue sheet). */
+   .store-card hover rule (also used by the venue sheet). */
 .tab-sub {
   color: var(--muted);
   font-size: 13px;

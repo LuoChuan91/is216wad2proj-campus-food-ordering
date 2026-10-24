@@ -80,7 +80,7 @@ const results = computed(() => {
     </div>
     <Transition name="sheet" mode="out-in">
       <VenueSheet v-if="u.sheet === 'venue' && catalog.venue(u.venueId)" :key="u.venueId" />
-      <div v-else-if="results" key="results" class="peek results">
+      <div v-else-if="results" key="results" class="peek results col-md-8 col-lg-6 mx-auto">
         <div class="grab"></div>
         <div class="peek-head"><strong>Results for “{{ u.search.trim() }}”</strong></div>
         <div class="results-list scroll">
@@ -99,7 +99,7 @@ const results = computed(() => {
           </button>
         </div>
       </div>
-      <div v-else key="peek" class="peek">
+      <div v-else key="peek" class="peek col-md-8 col-lg-6 mx-auto">
         <div class="grab"></div>
         <div class="peek-head"><strong>Near you</strong>
           <button type="button" class="where" :title="u.locateError || 'Use my real location'" @click="ui.locate()"><Icon :name="u.locating ? 'clock' : 'locate'" :size="13" />{{ u.locating ? 'Locating…' : ui.place().label }}</button></div>

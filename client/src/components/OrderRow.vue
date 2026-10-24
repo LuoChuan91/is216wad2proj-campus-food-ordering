@@ -11,6 +11,7 @@ import * as E from '@/utils/engine.js'
 import Mono from '@/components/icons/Mono.vue'
 import StatusTag from '@/components/StatusTag.vue'
 import { useOrdersStore } from '@/stores/orders.js'
+import { orderStatusLabel } from '@/utils/orderStatus.js'
 
 
 const orders = useOrdersStore()
@@ -31,12 +32,7 @@ const money = E.money
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`
 
 // The human-facing status label (exact behaviour preserved from OrdersView).
-const label = computed(() => {
-  const o = props.order
-  if (o.status === 'completed') return o.delivery && !o.fallback ? 'Delivered' : 'Collected'
-  if (o.status === 'ready' && o.delivery && o.delivery.status === 'picked_up') return 'On the way'
-  return { pending: 'Pending', paid: 'In queue', preparing: 'Cooking', ready: 'Ready', cancelled: 'Cancelled' }[o.status] || o.status
-})
+const label = computed(() => orderStatusLabel(props.order))
 </script>
 
 <template>

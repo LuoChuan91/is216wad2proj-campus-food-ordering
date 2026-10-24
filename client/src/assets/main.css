@@ -138,6 +138,7 @@ body {
   color-scheme: light;
   --bs-body-bg: #fff;
   --bs-body-color: var(--ink);
+  --bs-secondary-color: var(--muted);
   --bs-border-color: var(--line);
   --bs-body-font-family: var(--font-ui);
   --bs-primary: #e5512d;
@@ -812,57 +813,8 @@ h4 .count {
   display: grid;
   gap: 8px;
 }
-.store-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  text-align: left;
-  border: 1px solid var(--line);
-  background: var(--paper);
-  border-radius: 18px;
-  padding: 11px;
-  cursor: pointer;
-}
 .store-card:hover {
-  border-color: #cfd4e0;
-}
-.store-card.closed {
-  opacity: 0.6;
-}
-.store-card.unavailable {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-.store-main {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.store-main strong {
-  font-size: 14.5px;
-}
-.store-main small {
-  color: var(--muted);
-  font-size: 12px;
-}
-.tags {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-  margin-top: 3px;
-}
-.store-wait {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 3px;
-}
-.store-wait small {
-  color: var(--muted);
-  font-size: 11px;
+  --bs-border-color: #cfd4e0;
 }
 
 /* map pins (Leaflet divIcons) */
@@ -1347,13 +1299,6 @@ h4 .count {
 }
 
 /* ---------- added in the Vue + Express version ---------- */
-
-/* Stores tab: every store in one list */
-.store-main small {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
 
 /* checkout and payment */
 
