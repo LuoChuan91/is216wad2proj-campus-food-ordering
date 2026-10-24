@@ -10,6 +10,7 @@ import { config as cfg } from '@/config/index.js'
 import { ROLE } from '@/composables/useAppBootstrap.js'
 import { useNotificationsStore } from '@/stores/notifications.js'
 import NotificationPanel from '@/components/NotificationPanel.vue'
+import StatusTag from '@/components/StatusTag.vue'
 import TabBar from '@/portals/student/TabBar.vue'
 
 const ui = useUiStore()
@@ -55,8 +56,7 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
         <Icon name="chevD" :size="16" />
       </button>
       <div class="tn-drop dropdown-menu dropdown-menu-end border-0">
-        <div class="tn-me"><strong>{{ me.name }}</strong><small>{{ me.email }}</small><span class="tag">{{ ROLE[me.role]
-        }}</span></div>
+        <div class="tn-me"><strong>{{ me.name }}</strong><small>{{ me.email }}</small><StatusTag>{{ ROLE[me.role] }}</StatusTag></div>
         <button type="button" class="tn-item" @click="session.signOut()">
           <Icon name="logout" :size="18" /><span>Switch account<small>Back to the sign-in page</small></span>
         </button>

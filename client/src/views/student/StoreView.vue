@@ -49,9 +49,9 @@ const hasOptions = (it) => (it.option_groups || []).length > 0
     <template v-else>
     <div class="store-info">
       <div class="container px-0 d-flex flex-wrap gap-2">
-      <StatusTag chip dot :tone="open.open ? 'ok' : 'muted'">{{ open.label }}</StatusTag>
-      <StatusTag v-if="open.open" chip tone="info"><WaitTimeEstimate :store-id="store.id" /></StatusTag>
-      <StatusTag v-if="store.discount_type" chip tone="brand">{{ E.discountLabel(store) }}</StatusTag>
+      <StatusTag dot :tone="open.open ? 'ok' : 'muted'">{{ open.label }}</StatusTag>
+      <WaitTimeEstimate v-if="open.open" :store-id="store.id" />
+      <StatusTag v-if="store.discount_type" tone="brand">{{ E.discountLabel(store) }}</StatusTag>
       </div>
     </div>
     <div class="menu scroll" :class="{ 'with-cart': cartHere }">

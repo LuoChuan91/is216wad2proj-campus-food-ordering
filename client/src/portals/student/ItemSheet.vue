@@ -3,6 +3,7 @@
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui.js'
+import StatusTag from '@/components/StatusTag.vue'
 import { useCatalogStore } from '@/stores/catalog.js'
 import * as E from '@/utils/engine.js'
 
@@ -34,11 +35,11 @@ const blocked = (g, o) => !o.available || (g.type === 'multi' && !isOn(o) && v.v
       <section v-for="g in groups" :key="g.id" class="opt-group">
         <header class="d-flex justify-content-between align-items-center mb-2">
           <strong>{{ g.name }}</strong>
-          <span class="rule d-inline-flex align-items-center gap-1" :class="v.byGroup[g.id].ok ? 'ok' : (v.byGroup[g.id].count ? 'warn' : '')">
+          <StatusTag :tone="v.byGroup[g.id].ok ? 'ok' : (v.byGroup[g.id].count ? 'warn' : '')">
             <template v-if="v.byGroup[g.id].ok"><Icon name="check" :size="12" :stroke="3" />{{ g.type === 'multi' ? v.byGroup[g.id].count + ' picked' : (v.byGroup[g.id].count ? 'Chosen' : E.ruleLabel(g)) }}</template>
             <template v-else-if="v.byGroup[g.id].count">{{ v.byGroup[g.id].count }} of {{ v.byGroup[g.id].min }} minimum</template>
             <template v-else>{{ E.ruleLabel(g) }}</template>
-          </span>
+          </StatusTag>
         </header>
         <div :class="g.type === 'multi' && opts(g).length > 5 ? 'opt-grid' : 'opt-list'">
           <button v-for="o in opts(g)" :key="o.id" class="opt d-flex align-items-center gap-2 text-start" :class="{ on: isOn(o), blocked: blocked(g, o), radio: g.type === 'single' }" :disabled="blocked(g, o)" :aria-pressed="isOn(o)" @click="ui.toggleOption(o.id)">

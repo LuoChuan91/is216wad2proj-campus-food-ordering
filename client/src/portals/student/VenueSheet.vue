@@ -3,6 +3,7 @@
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui.js'
+import StatusTag from '@/components/StatusTag.vue'
 import { useCatalogStore } from '@/stores/catalog.js'
 import * as E from '@/utils/engine.js'
 import WaitTimeEstimate from '@/components/WaitTimeEstimate.vue'
@@ -42,9 +43,9 @@ const stores = computed(() => catalog.storesAt(venue.value.id).map((s) => ({ s, 
           <strong>{{ x.s.name }}</strong>
           <small class="text-body-secondary">{{ x.s.cuisine }} · {{ x.s.unit_no }}</small>
           <span class="d-flex flex-wrap gap-1 mt-1">
-            <span v-if="!x.available" class="tag muted">Unavailable</span>
-            <span v-else class="tag" :class="x.open.open ? 'ok' : 'muted'">{{ x.open.open ? 'Open' : 'Closed' }}</span>
-            <span v-if="x.s.discount_type" class="tag brand">{{ E.discountShort(x.s) }}</span>
+            <StatusTag v-if="!x.available" tone="muted">Unavailable</StatusTag>
+            <StatusTag v-else :tone="x.open.open ? 'ok' : 'muted'">{{ x.open.open ? 'Open' : 'Closed' }}</StatusTag>
+            <StatusTag v-if="x.s.discount_type" tone="brand">{{ E.discountShort(x.s) }}</StatusTag>
           </span>
         </span>
         <span v-if="x.available && x.open.open" class="flex-shrink-0">

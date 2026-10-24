@@ -7,6 +7,7 @@
 import { computed, watch, onBeforeUnmount } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui.js'
+import StatusTag from '@/components/StatusTag.vue'
 import { useCatalogStore } from '@/stores/catalog.js'
 import * as E from '@/utils/engine.js'
 import { shortName } from '@/utils/landmarks.js'
@@ -88,7 +89,7 @@ const openCount = computed(() => rows.value.filter((r) => r.open.open).length)
     <label class="search d-flex align-items-center gap-2"><Icon name="search" :size="16" /><input type="search" placeholder="Search stores, dishes or buildings" aria-label="Search stores" :value="list.search" @input="ui.setListSearch($event.target.value)">
       <button v-if="list.search" type="button" class="icon-btn sm" aria-label="Clear search" @click="ui.setListSearch('')"><Icon name="close" :size="12" /></button></label>
     <div class="filter-row scroll" role="group" aria-label="Filter stores">
-      <button v-for="c in chips" :key="c.id" type="button" class="chip filter" :class="{ on: list.filter === c.id }" :aria-pressed="list.filter === c.id" @click="ui.setListFilter(c.id)">{{ c.label }}</button>
+      <button v-for="c in chips" :key="c.id" type="button" class="chip filter d-inline-flex align-items-center rounded-pill fw-bold text-nowrap" :class="{ on: list.filter === c.id }" :aria-pressed="list.filter === c.id" @click="ui.setListFilter(c.id)">{{ c.label }}</button>
     </div>
     <div class="sort-row">
       <span>{{ shown.length }} {{ shown.length === 1 ? 'store' : 'stores' }}</span>
@@ -107,9 +108,9 @@ const openCount = computed(() => rows.value.filter((r) => r.open.open).length)
           <small class="text-body-secondary">{{ r.s.cuisine }}</small>
           <small v-if="r.v" class="d-inline-flex align-items-center gap-1 text-body-secondary"><Icon name="walk" :size="12" />{{ r.walk.minutes }} min · {{ shortName(r.v.name) }}</small>
           <span class="d-flex flex-wrap gap-1 mt-1">
-            <span v-if="!r.available" class="tag muted">Unavailable</span>
-            <span v-else class="tag" :class="r.open.open ? 'ok' : 'muted'">{{ r.open.open ? 'Open' : 'Closed' }}</span>
-            <span v-if="r.s.discount_type" class="tag brand">{{ E.discountShort(r.s) }}</span>
+            <StatusTag v-if="!r.available" tone="muted">Unavailable</StatusTag>
+            <StatusTag v-else :tone="r.open.open ? 'ok' : 'muted'">{{ r.open.open ? 'Open' : 'Closed' }}</StatusTag>
+            <StatusTag v-if="r.s.discount_type" tone="brand">{{ E.discountShort(r.s) }}</StatusTag>
           </span>
         </span>
         <span v-if="r.available && r.open.open" class="flex-shrink-0"><WaitTimeEstimate :store-id="r.s.id" /></span>

@@ -8,6 +8,7 @@
 import { computed, watch, onBeforeUnmount } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui.js'
+import StatusTag from '@/components/StatusTag.vue'
 import { useCatalogStore } from '@/stores/catalog.js'
 import { useOrdersStore } from '@/stores/orders.js'
 import * as E from '@/utils/engine.js'
@@ -88,14 +89,14 @@ const results = computed(() => {
           <button v-for="x in results.stores" :key="x.s.id" class="venue-row d-flex align-items-center gap-3 w-100 text-start" :class="{ unavailable: !x.available }" :disabled="!x.available" @click="ui.openStore(x.s.id)">
             <Mono :store="x.s" :size="36" />
             <span class="venue-main d-flex flex-column flex-grow-1 overflow-hidden"><strong>{{ x.s.name }}</strong><small class="d-inline-flex align-items-center gap-1">{{ x.s.cuisine }} · {{ shortName(x.v.name) }}</small></span>
-            <span v-if="!x.available" class="tag muted">Unavailable</span>
-            <span v-else class="tag" :class="x.open ? 'ok' : 'muted'">{{ x.open ? 'Open' : 'Closed' }}</span>
+            <StatusTag v-if="!x.available" tone="muted">Unavailable</StatusTag>
+            <StatusTag v-else :tone="x.open ? 'ok' : 'muted'">{{ x.open ? 'Open' : 'Closed' }}</StatusTag>
           </button>
           <h4 v-if="results.dishes.length" class="sec">Dishes</h4>
           <button v-for="x in results.dishes" :key="x.m.id" class="venue-row d-flex align-items-center gap-3 w-100 text-start" :disabled="!x.ok" @click="ui.openStoreItem(x.s.id, x.m.id)">
             <span class="venue-ic d-flex align-items-center justify-content-center flex-shrink-0"><Icon name="bag" :size="16" /></span>
             <span class="venue-main d-flex flex-column flex-grow-1 overflow-hidden"><strong>{{ x.m.name }}</strong><small class="d-inline-flex align-items-center gap-1">{{ x.s.name }} · {{ shortName(x.v.name) }}</small></span>
-            <b v-if="x.ok" class="price">{{ money(x.m.price) }}</b><span v-else class="tag muted">{{ x.m.available ? 'Closed' : 'Sold out' }}</span>
+            <b v-if="x.ok" class="price">{{ money(x.m.price) }}</b><StatusTag v-else tone="muted">{{ x.m.available ? 'Closed' : 'Sold out' }}</StatusTag>
           </button>
         </div>
       </div>

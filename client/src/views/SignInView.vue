@@ -6,6 +6,7 @@
 import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui.js'
+import StatusTag from '@/components/StatusTag.vue'
 import { useCatalogStore } from '@/stores/catalog.js'
 import { useSessionStore } from '@/stores/session.js'
 import * as E from '@/utils/engine.js'
@@ -72,7 +73,7 @@ const groups = computed(() => {
           <button v-for="x in g.people" :key="x.p.id" type="button" class="si-acct" @click="session.signIn(x.p.id)">
             <Avatar :name="x.p.name" :size="38" :tone="x.p.role === 'student' ? 'brand' : 'navy'" />
             <span class="si-who"><strong>{{ x.p.name }}</strong><small>{{ x.blurb }}</small></span>
-            <span v-if="x.badge" class="tag" :class="x.badge.tone">{{ x.badge.text }}</span>
+            <StatusTag v-if="x.badge" :tone="x.badge.tone">{{ x.badge.text }}</StatusTag>
             <Icon name="chevR" :size="16" class="si-go" />
           </button>
           <button v-if="g.more" type="button" class="si-toggle" @click="showAll = true"><Icon name="plus" :size="16" />Show {{ g.more }} more students</button>

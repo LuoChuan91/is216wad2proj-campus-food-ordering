@@ -3,6 +3,7 @@
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui.js'
+import StatusTag from '@/components/StatusTag.vue'
 import { useOrdersStore } from '@/stores/orders.js'
 import * as E from '@/utils/engine.js'
 
@@ -23,7 +24,7 @@ const fresh = props.o.status === 'paid' && now.value - props.o.created_at < 20e3
   <article class="ocard d-grid gap-2 flex-shrink-0" :class="['st-' + o.status, { fresh }]">
     <header class="d-flex align-items-center gap-2">
       <b class="ocode">#{{ o.code }}</b>
-      <span class="tag" :class="o.type === 'delivery' ? 'info' : 'muted'"><Icon :name="o.type === 'delivery' ? 'bike' : 'bag'" :size="11" />{{ o.type === 'delivery' ? 'Delivery' : 'Pickup' }}</span>
+      <StatusTag :tone="o.type === 'delivery' ? 'info' : 'muted'"><Icon :name="o.type === 'delivery' ? 'bike' : 'bag'" :size="11" />{{ o.type === 'delivery' ? 'Delivery' : 'Pickup' }}</StatusTag>
       <span class="waited ms-auto d-inline-flex align-items-center gap-1" :class="tone" :title="'Waiting ' + waited + ' min'"><i></i>{{ waited < 1 ? 'new' : waited < 120 ? waited + ' min' : E.since(o.created_at, now) }}</span>
     </header>
     <div class="who">{{ shortName(o.student_name) }}</div>

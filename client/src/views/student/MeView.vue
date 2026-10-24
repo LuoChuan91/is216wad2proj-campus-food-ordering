@@ -6,6 +6,7 @@
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui.js'
+import StatusTag from '@/components/StatusTag.vue'
 import { useOrdersStore } from '@/stores/orders.js'
 import { useSessionStore } from '@/stores/session.js'
 import * as E from '@/utils/engine.js'
@@ -24,7 +25,7 @@ const stats = computed(() => ({ orders: orders.ordersOf(me.value.id).length, ear
   <div class="me-tab scroll">
     <div class="row justify-content-center mx-0">
     <div class="col-12 col-md-8 col-lg-6 px-0">
-    <div class="me-card text-center"><Avatar :name="me.name" :size="64" tone="brand" /><h2>{{ me.name }}</h2><p>{{ me.email }}</p><span class="tag ok"><Icon name="shield" :size="12" />Verified SMU student</span></div>
+    <div class="me-card text-center"><Avatar :name="me.name" :size="64" tone="brand" /><h2>{{ me.name }}</h2><p>{{ me.email }}</p><StatusTag tone="ok"><Icon name="shield" :size="12" />Verified SMU student</StatusTag></div>
     <div class="panel me-stats row gx-2 mx-0"><div class="col-4"><b>{{ stats.orders }}</b><small>orders</small></div><div class="col-4"><b>{{ stats.earn.weekCount }}</b><small>deliveries this week</small></div><div class="col-4"><b>{{ money(stats.earn.week) }}</b><small>earned this week</small></div></div>
     <div class="panel me-list">
       <label class="me-row form-switch d-flex align-items-center justify-content-between gap-3 w-100"><span><strong class="d-block">Delivery jobs</strong><small class="d-block">Get notified when someone nearby wants food delivered</small></span><input class="form-check-input" type="checkbox" role="switch" :checked="courierOn" @change="orders.setAvailable($event.target.checked)"></label>

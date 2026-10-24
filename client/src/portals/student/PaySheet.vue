@@ -3,6 +3,7 @@
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui.js'
+import StatusTag from '@/components/StatusTag.vue'
 import { useCatalogStore } from '@/stores/catalog.js'
 import * as E from '@/utils/engine.js'
 import { config as cfg } from '@/config/index.js'
@@ -26,7 +27,7 @@ const code = computed(() => (result.value ? String(result.value.id).slice(0, 4).
       <div class="sheet-head d-flex justify-content-between align-items-start gap-2"><div><h3>Payment</h3><p>Simulated for now. No real money moves; we only save a payment record.</p></div>
         <button class="icon-btn" aria-label="Close" :disabled="u.pay.state === 'processing'" @click="ui.closeSheet()"><Icon name="close" :size="18" /></button></div>
       <div class="pay-amount text-center"><small>You pay {{ store ? store.name : '' }}</small><b class="d-block">{{ money(t ? t.total : 0) }}</b></div>
-      <div class="pay-method d-flex align-items-center gap-3"><span class="pm-ic d-flex align-items-center justify-content-center flex-shrink-0"><Icon name="wallet" :size="20" /></span><div><strong class="d-block">Campus wallet</strong><small>Sample payment method</small></div><span class="tag ms-auto">Simulated</span></div>
+      <div class="pay-method d-flex align-items-center gap-3"><span class="pm-ic d-flex align-items-center justify-content-center flex-shrink-0"><Icon name="wallet" :size="20" /></span><div><strong class="d-block">Campus wallet</strong><small>Sample payment method</small></div><StatusTag class="ms-auto">Simulated</StatusTag></div>
       <p v-if="u.pay.state === 'error'" class="pay-error" role="alert">{{ u.pay.error }}</p>
       <div class="sheet-foot d-flex align-items-center gap-3">
         <button class="btn btn-primary btn-lg w-100" :disabled="u.pay.state === 'processing'" @click="ui.confirmPay()">

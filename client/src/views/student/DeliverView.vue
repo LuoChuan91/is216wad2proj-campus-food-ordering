@@ -148,9 +148,9 @@ onBeforeUnmount(() => {
         <div class="job-route flex-grow-1 overflow-hidden"><strong class="d-block">{{ j.s.name }}</strong><small>{{ j.vName }} → {{ j.drop.name }}</small></div><b
           class="fee">{{ money(j.d.fee) }}</b>
       </div>
-      <div class="job-meta d-flex flex-wrap gap-1"><span class="d-inline-flex align-items-center gap-1">{{ plural(j.items, 'item', 'items') }}</span><span class="d-inline-flex align-items-center gap-1">
+      <div class="d-flex flex-wrap gap-1"><StatusTag>{{ plural(j.items, 'item', 'items') }}</StatusTag><StatusTag>
           <Icon name="walk" :size="12" />{{ j.walk.meters }} m
-        </span><span class="d-inline-flex align-items-center gap-1" :class="{ ok: j.o.status === 'ready' }">{{ j.o.status === 'ready' ? 'Food is ready' : (j.est ? 'Ready~' + E.clock(j.est) : 'In the kitchen') }}</span></div>
+        </StatusTag><StatusTag :tone="j.o.status === 'ready' ? 'ok' : ''">{{ j.o.status === 'ready' ? 'Food is ready' : (j.est ? 'Ready~' + E.clock(j.est) : 'In the kitchen') }}</StatusTag></div>
       <div class="job-timer d-flex align-items-center gap-2">
         <div class="meter flex-grow-1" :class="j.left < 120e3 ? 'late' : j.left < 300e3 ? 'warn' : 'ok'"><i
             :style="{ width: Math.max(0, j.left / (cfg.deliveryWindowMin * 600)) + '%' }"></i></div><small>Expires in {{
@@ -224,20 +224,6 @@ onBeforeUnmount(() => {
 
 .fee {
   font-size: 17px;
-  color: var(--ok);
-}
-
-.job-meta span {
-  font-size: 11.5px;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: var(--canvas);
-  color: var(--ink-2);
-}
-
-.job-meta span.ok {
-  background: var(--ok-soft);
   color: var(--ok);
 }
 
