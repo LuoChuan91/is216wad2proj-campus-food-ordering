@@ -115,6 +115,7 @@ onBeforeUnmount(() => {
   font-family: var(--font-ui);
   font-size: 13px;
   line-height: 1.3;
+  pointer-events: auto;
 }
 /* Tone accent (left border) per Bootstrap-style variant. */
 .toast-card.tone-success { border-left-color: var(--ok, #1aa46f); }

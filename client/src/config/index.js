@@ -4,7 +4,7 @@ export const config = {
   appName: 'Campus Delights',
   tagline: 'Skip the queue. Eat between classes.',
 
-  deliveryFee: 1.5,
+  deliveryFee: 0.8,
   deliveryWindowMin: 10, // no courier within this many minutes -> the order switches to pickup
 
   // How many dishes a kitchen cooks at once (mirror of the server's KITCHEN_SLOTS).

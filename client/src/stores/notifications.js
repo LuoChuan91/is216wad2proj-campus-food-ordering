@@ -145,6 +145,12 @@ export const useNotificationsStore = defineStore('notifications', () => {
     if (n) n.read = true
   }
 
+  function markAllRead() {
+    items.value.forEach((n) => {
+      n.read = true
+    })
+  }
+
   function clear() {
     dropNotes(currentUserId)
     currentUserId = null
@@ -152,5 +158,5 @@ export const useNotificationsStore = defineStore('notifications', () => {
     toasts.value = []
   }
 
-  return { items, toasts, realtimeConnected, setRealtimeConnected, hydrate, receive, dismissToast, markRead, clear }
+  return { items, toasts, realtimeConnected, setRealtimeConnected, hydrate, receive, dismissToast, markRead, markAllRead, clear }
 })

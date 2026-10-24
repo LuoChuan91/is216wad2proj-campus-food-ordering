@@ -42,7 +42,6 @@ const first = (name) => (name || '').split(' ')[0];
  * @property {string} [storeName]        the pickup store's name
  * @property {string} [dropoffName]      the delivery drop-off point's name
  * @property {string} [courierName]      the courier's display name
- * @property {string} [readyAtClock]     pre-formatted ready time, e.g. "1:05pm"
  * @property {number} [deliveryWindowMin] the delivery window in minutes
  */
 
@@ -78,8 +77,8 @@ export function buildNotification(payload, ctx = {}) {
   if (payload.kind === 'order') {
     if (payload.status === 'paid') {
       // announceChanges surfaces the "cooking" line; keep that richer wording.
-      title = `${ctx.storeName || 'The store'} is cooking your order`;
-      body = `Order${codeTag}${ctx.readyAtClock ? ' · ready around ' + ctx.readyAtClock : ''}`;
+      title = `Order submitted`;
+      body = `Your order reference is ${codeTag}`;
       variant = 'info';
     } else if (payload.status === 'ready') {
       title = 'Your food is ready';
