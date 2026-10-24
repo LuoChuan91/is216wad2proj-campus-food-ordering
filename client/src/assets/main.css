@@ -1498,14 +1498,6 @@ h4 .count {
   .tn-brand b {
     font-size: 18px;
   }
-  .tn-drop,
-  .tn-bell {
-    position: fixed;
-    left: 8px;
-    right: 8px;
-    top: calc(var(--nav-h) + 6px);
-    width: auto;
-  }
   /* merchant and admin: section switcher moves to the bottom */
   .merchant,
   .admin {

@@ -82,7 +82,6 @@ export const useSessionStore = defineStore("session", () => {
     // Notifications: a fresh sign-in starts clean (and wipes stale stored
     // history); a refresh restores the history.
     notes.hydrate(userId, { fresh });
-    ui.menu = null;
 
     orders.db.orders = [];
     orders.db.jobs = [];
@@ -105,7 +104,6 @@ export const useSessionStore = defineStore("session", () => {
     session$.userId = null;
     session.save(null);
     useNotificationsStore().clear();
-    ui.menu = null;
     replace("/");
   }
 

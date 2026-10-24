@@ -71,7 +71,6 @@ export const useUiStore = defineStore("ui", () => {
   const now = ref(Date.now());
   const ui = reactive({ student: studentUi(), staff: staffUi() });
   const courierOn = ref(false);
-  const menu = ref(null); // which top-bar dropdown is open
   const mapOffline = ref(false);
   const busy = reactive({}); // { [id]: true } while a button's request is running
 
@@ -138,10 +137,6 @@ export const useUiStore = defineStore("ui", () => {
 
   function tick() {
     now.value = Date.now();
-  }
-
-  function toggleMenu(name) {
-    menu.value = menu.value === name ? null : name;
   }
 
   /* ---------- place / walk helpers ---------- */
@@ -445,8 +440,8 @@ export const useUiStore = defineStore("ui", () => {
   }
 
   return {
-    loaded, loadError, online, now, ui, courierOn, menu, mapOffline, busy,
-    notify, notifyView, run, tick, toggleMenu, place, walk, open,
+    loaded, loadError, online, now, ui, courierOn, mapOffline, busy,
+    notify, notifyView, run, tick, place, walk, open,
     setTab, setSearch, setListSearch, setListFilter, setListSort, openStoreItem, openVenue, locate,
     closeSheet, openStore, back, openItem, toggleOption, setDraftQty, addToCart, setLineQty,
     openCheckout, setFulfilment, setDropoff, setNote, openPay, confirmPay, openTracking,

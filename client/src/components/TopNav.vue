@@ -15,7 +15,7 @@ import TabBar from '@/portals/student/TabBar.vue'
 const ui = useUiStore()
 const orders = useOrdersStore()
 const session = useSessionStore()
-const { online, now, menu } = storeToRefs(ui)
+const { online, now } = storeToRefs(ui)
 
 const me = computed(() => orders.me())
 
@@ -37,24 +37,24 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
     <span class="tn-clock">
       <Icon name="clock" :size="14" /><span class="tn-date d-none d-xl-inline">{{ E.dateLabel(now) }},</span>{{ E.clock(now) }}
     </span>
-    <div class="tn-menu">
-      <button type="button" class="tn-btn" aria-label="Notifications" :aria-expanded="menu === 'bell'"
-        @click.stop="ui.toggleMenu('bell')">
+    <div class="tn-menu dropdown">
+      <button type="button" class="tn-btn" aria-label="Notifications" aria-expanded="false"
+        data-bs-toggle="dropdown" data-bs-auto-close="outside" data-bs-offset="0,8">
         <Icon name="bell" :size="20" /><b v-if="unread" class="tn-dot">{{ unread }}</b>
       </button>
-      <div v-if="menu === 'bell'" class="tn-drop tn-bell">
+      <div class="tn-drop tn-bell dropdown-menu dropdown-menu-end border-0">
         <h6>Notifications</h6>
         <NotificationPanel />
       </div>
     </div>
-    <div class="tn-menu">
-      <button type="button" class="tn-acct" aria-label="Account menu" :aria-expanded="menu === 'account'"
-        @click.stop="ui.toggleMenu('account')">
+    <div class="tn-menu dropdown">
+      <button type="button" class="tn-acct" aria-label="Account menu" aria-expanded="false"
+        data-bs-toggle="dropdown" data-bs-offset="0,8">
         <Avatar :name="me.name" :size="30" :tone="me.role === 'student' ? 'brand' : 'navy'" /><span class="tn-name d-none d-lg-inline">{{
           me.name }}</span>
         <Icon name="chevD" :size="16" />
       </button>
-      <div v-if="menu === 'account'" class="tn-drop">
+      <div class="tn-drop dropdown-menu dropdown-menu-end border-0">
         <div class="tn-me"><strong>{{ me.name }}</strong><small>{{ me.email }}</small><span class="tag">{{ ROLE[me.role]
         }}</span></div>
         <button type="button" class="tn-item" @click="session.signOut()">
@@ -200,9 +200,6 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
 }
 
 .tn-drop {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 8px);
   width: min(300px, calc(100vw - 20px));
   max-height: calc(100vh - var(--nav-h) - 24px);
   overflow-y: auto;
