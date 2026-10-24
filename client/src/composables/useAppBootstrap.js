@@ -101,7 +101,7 @@ function announceChanges() {
         if (was.jobs.has(j.id) || j.order.student_id === me.id) continue
         const s = catalog.store(j.pickup_store_id)
         const drop = catalog.dropoff(j.destination_id)
-        ui.notify(`New delivery job · ${E.money(j.fee)}`, `${s ? s.name : 'A store'} → ${drop ? drop.name : 'campus'}`, 'ok')
+        ui.notify(`New delivery job`, `${s ? s.name : 'A store'} → ${drop ? drop.name : 'campus'}`, 'ok')
       }
     }
     for (const j of orders.db.myJobs) {

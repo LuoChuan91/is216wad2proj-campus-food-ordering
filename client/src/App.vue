@@ -15,13 +15,15 @@ import { startApp, refresh } from './composables/useAppBootstrap.js'
 import { startRealtimeAuthBridge } from '@/composables/realtimeAuthBridge.js'
 import { useRealtimeNotifications } from '@/composables/useRealtimeNotifications.js'
 import { useLiveSync } from '@/composables/useLiveSync.js'
+import { useOpenDeliveriesLive } from '@/composables/useOpenDeliveries.js'
+
 import TopNav from './components/TopNav.vue'
 import NotificationToaster from './components/NotificationToaster.vue'
 
 const session = useSessionStore() // browser tab dont share session
 const orders = useOrdersStore()
 const ui = useUiStore()
-const { loaded, loadError } = storeToRefs(ui)
+const { loaded, loadError, courierOn } = storeToRefs(ui)
 
 const me = computed(() => orders.me())
 const route = useRoute()
@@ -36,6 +38,15 @@ useRealtimeNotifications()
 // user's data, with polling as a fallback (fast when realtime is down, a long
 // safety-net while it's connected)..
 useLiveSync(() => session.session.userId, refresh)
+
+useOpenDeliveriesLive({
+  enabled: courierOn,
+  fetchDeliveries: async () => {
+    // When a broadcast is received, trigger the global refresh 
+    // to fetch the new jobs and populate orders.db.jobs
+    await refresh() 
+  }
+})
 </script>
 
 <template>
