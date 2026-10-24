@@ -20,23 +20,23 @@ const fresh = props.o.status === 'paid' && now.value - props.o.created_at < 20e3
 </script>
 
 <template>
-  <article class="ocard" :class="['st-' + o.status, { fresh }]">
-    <header>
+  <article class="ocard d-grid gap-2 flex-shrink-0" :class="['st-' + o.status, { fresh }]">
+    <header class="d-flex align-items-center gap-2">
       <b class="ocode">#{{ o.code }}</b>
       <span class="tag" :class="o.type === 'delivery' ? 'info' : 'muted'"><Icon :name="o.type === 'delivery' ? 'bike' : 'bag'" :size="11" />{{ o.type === 'delivery' ? 'Delivery' : 'Pickup' }}</span>
-      <span class="waited" :class="tone" :title="'Waiting ' + waited + ' min'"><i></i>{{ waited < 1 ? 'new' : waited < 120 ? waited + ' min' : E.since(o.created_at, now) }}</span>
+      <span class="waited ms-auto d-inline-flex align-items-center gap-1" :class="tone" :title="'Waiting ' + waited + ' min'"><i></i>{{ waited < 1 ? 'new' : waited < 120 ? waited + ' min' : E.since(o.created_at, now) }}</span>
     </header>
     <div class="who">{{ shortName(o.student_name) }}</div>
-    <ul class="olines"><li v-for="l in o.items" :key="l.id"><b>{{ l.qty }}×</b> {{ l.name }}<small v-if="l.option_names.length">{{ l.option_names.join(' · ') }}</small></li></ul>
-    <div v-if="o.fallback" class="fb"><Icon name="bag" :size="12" />Switched to pickup · no courier</div>
-    <footer>
-      <span v-if="est && o.status !== 'ready'" class="est"><Icon name="clock" :size="12" />Ready ~{{ E.clock(est.readyAt) }}</span>
-      <button v-if="o.status === 'paid'" class="btn btn-primary btn-sm" :disabled="busy[o.id]" @click="orders.startPreparing(o.id)">Start cooking</button>
-      <button v-else-if="o.status === 'preparing'" class="btn btn-success btn-sm" :disabled="busy[o.id]" @click="orders.markReady(o.id)">Mark ready</button>
+    <ul class="olines list-unstyled m-0 d-grid"><li v-for="l in o.items" :key="l.id"><b>{{ l.qty }}×</b> {{ l.name }}<small v-if="l.option_names.length" class="d-block">{{ l.option_names.join(' · ') }}</small></li></ul>
+    <div v-if="o.fallback" class="fb d-flex align-items-center gap-1"><Icon name="bag" :size="12" />Switched to pickup · no courier</div>
+    <footer class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
+      <span v-if="est && o.status !== 'ready'" class="est d-inline-flex align-items-center gap-1"><Icon name="clock" :size="12" />Ready ~{{ E.clock(est.readyAt) }}</span>
+      <button v-if="o.status === 'paid'" class="btn btn-primary btn-sm ms-auto" :disabled="busy[o.id]" @click="orders.startPreparing(o.id)">Start cooking</button>
+      <button v-else-if="o.status === 'preparing'" class="btn btn-success btn-sm ms-auto" :disabled="busy[o.id]" @click="orders.markReady(o.id)">Mark ready</button>
       <template v-else-if="o.status === 'ready'">
-        <span v-if="o.type === 'pickup' && o.status != 'completed'" class="courier"><Icon name="user" :size="12" />Customer is coming</span>
-        <span v-else-if="d && d.status === 'open'" class="courier warn"><Icon name="clock" :size="12" />Waiting for courier · {{ E.countdown(d.expires_at - now) }}</span>
-        <span v-else-if="d && d.status === 'accepted'" class="courier ok"><Icon name="bike" :size="12" />{{ shortName(d.courier_name) }} is coming</span>
+        <span v-if="o.type === 'pickup' && o.status != 'completed'" class="courier d-inline-flex align-items-center gap-1"><Icon name="user" :size="12" />Customer is coming</span>
+        <span v-else-if="d && d.status === 'open'" class="courier warn d-inline-flex align-items-center gap-1"><Icon name="clock" :size="12" />Waiting for courier · {{ E.countdown(d.expires_at - now) }}</span>
+        <span v-else-if="d && d.status === 'accepted'" class="courier ok d-inline-flex align-items-center gap-1"><Icon name="bike" :size="12" />{{ shortName(d.courier_name) }} is coming</span>
       </template>
     </footer>
   </article>
@@ -49,9 +49,6 @@ const fresh = props.o.status === 'paid' && now.value - props.o.created_at < 20e3
   border-radius: 14px;
   padding: 10px;
   border: 1px solid var(--line);
-  display: grid;
-  gap: 6px;
-  flex: none;
 }
 .ocard.st-preparing {
   border-left: 4px solid var(--brand);
@@ -73,20 +70,11 @@ const fresh = props.o.status === 'paid' && now.value - props.o.created_at < 20e3
     box-shadow: 0 0 0 0 rgba(229, 81, 45, 0);
   }
 }
-.ocard header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
 .ocode {
   font-size: 15px;
   font-variant-numeric: tabular-nums;
 }
 .waited {
-  margin-left: auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
   font-size: 11px;
   font-weight: 800;
 }
@@ -109,22 +97,13 @@ const fresh = props.o.status === 'paid' && now.value - props.o.created_at < 20e3
   font-weight: 700;
 }
 .olines {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 2px;
   font-size: 12.5px;
 }
 .olines small {
-  display: block;
   color: var(--muted);
   font-size: 11.5px;
 }
 .fb {
-  display: flex;
-  align-items: center;
-  gap: 5px;
   background: var(--warn-soft);
   color: #7a4c06;
   font-weight: 700;
@@ -132,30 +111,14 @@ const fresh = props.o.status === 'paid' && now.value - props.o.created_at < 20e3
   border-radius: 8px;
   padding: 4px 8px;
 }
-.ocard footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  flex-wrap: wrap;
-}
 .est {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
   color: var(--ink-2);
   font-size: 11.5px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
-.ocard footer .btn {
-  margin-left: auto;
-}
 .courier.warn,
 .courier.ok {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
   font-size: 11.5px;
   font-weight: 700;
   padding: 0;

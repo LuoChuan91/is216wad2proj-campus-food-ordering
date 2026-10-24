@@ -101,20 +101,20 @@ const courierLine = computed(() => {
 
 <template>
   <section v-if="order && store" class="page track">
-    <div class="bar">
+    <div class="bar d-flex align-items-center gap-2">
       <button class="icon-btn" aria-label="Back" @click="ui.back()">
         <Icon name="back" :size="20" />
       </button>
-      <div class="bar-title">
+      <div class="bar-title flex-grow-1 overflow-hidden">
         <h3>Order #{{ order.code }}</h3><small>{{ store.name }} · {{ venueName }}</small>
       </div>
-      <span class="live"><i></i>Live</span>
+      <span class="live d-inline-flex align-items-center gap-2"><i></i>Live</span>
     </div>
     <div class="scroll track-body">
       <div class="container px-0">
       <div class="row g-2">
       <div class="col-12 col-lg-7 d-flex flex-column gap-2">
-      <div v-if="order.fallback" class="fallback-note">
+      <div v-if="order.fallback" class="fallback-note d-flex align-items-start gap-2">
         <Icon name="bag" :size="16" /><span><strong>Switched to pickup.</strong> No courier accepted within {{
           cfg.deliveryWindowMin }} min, so the delivery fee was waived.</span>
       </div>
@@ -126,8 +126,8 @@ const courierLine = computed(() => {
           <p v-else>About {{ E.minsUntil(now, q.readyAt) }} min<template v-if="order.preparing_at"> · cooking since {{
             E.clock(order.preparing_at) }}</template>
           </p>
-          <div class="why">
-            <span>
+          <div class="why d-flex flex-wrap gap-2 mt-2">
+            <span class="d-inline-flex align-items-center gap-1">
               <Icon name="receipt" :size="12" />{{ q.ahead }} orders ahead
             </span>
           </div>
@@ -144,7 +144,7 @@ const courierLine = computed(() => {
 
       <div v-if="d && !order.fallback" class="panel courier" :class="'c-' + d.status">
         <template v-if="d.status === 'open'">
-          <div class="c-head"><span class="c-ic">
+          <div class="c-head d-flex align-items-center gap-3"><span class="c-ic d-flex align-items-center justify-content-center flex-shrink-0 rounded-circle">
               <Icon name="bike" :size="20" />
             </span>
             <div><strong>Finding a student courier</strong><small>Switches to pickup in {{ E.countdown(d.expires_at -
@@ -155,19 +155,19 @@ const courierLine = computed(() => {
               :style="{ width: Math.max(0, (d.expires_at - now) / (cfg.deliveryWindowMin * 600)) + '%' }"></i></div>
         </template>
         <template v-else-if="d.courier_name">
-          <div class="c-head">
+          <div class="c-head d-flex align-items-center gap-3">
             <Avatar :name="d.courier_name" :size="40" tone="navy" />
             <div><strong>{{ d.courier_name }} is your courier</strong><small>{{ courierLine }}</small></div>
-            <Icon v-if="d.status === 'delivered'" name="check" :size="20" class="c-done" />
+            <Icon v-if="d.status === 'delivered'" name="check" :size="20" class="c-done ms-auto" />
           </div>
         </template>
-        <div v-if="drop" class="c-drop">
+        <div v-if="drop" class="c-drop d-flex align-items-center gap-2 mt-2 pt-2">
           <Icon name="pin" :size="14" />{{ drop.name }}<template v-if="d.note"> · “{{ d.note }}”</template>
         </div>
       </div>
 
-      <ol class="steps">
-        <li v-for="s in steps" :key="s.k" :class="s.state"><i></i><span>{{ s.label }}</span><time v-if="s.at">{{
+      <ol class="steps list-unstyled m-0">
+        <li v-for="s in steps" :key="s.k" class="d-flex align-items-center gap-2" :class="s.state"><i></i><span>{{ s.label }}</span><time v-if="s.at">{{
           E.clock(s.at)
             }}</time></li>
       </ol>
@@ -194,10 +194,6 @@ const courierLine = computed(() => {
 /* Order tracking page (moved from the global stylesheet). Kept global: .page/.bar
    chrome, @keyframes live (shared with the top-bar offline dot), the .meter base
    (shared with the deliver tab) and .panel. */
-.bar-title {
-  flex: 1;
-  min-width: 0;
-}
 
 .bar-title small {
   color: var(--muted);
@@ -205,9 +201,6 @@ const courierLine = computed(() => {
 }
 
 .live {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
   font-size: 11.5px;
   font-weight: 800;
   color: var(--ok);
@@ -232,9 +225,6 @@ const courierLine = computed(() => {
 }
 
 .fallback-note {
-  display: flex;
-  gap: 8px;
-  align-items: flex-start;
   background: var(--warn-soft);
   color: #6b4105;
   border-radius: 14px;
@@ -288,17 +278,7 @@ const courierLine = computed(() => {
   opacity: 0.95;
 }
 
-.why {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin-top: 10px;
-}
-
 .why span {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
   font-size: 11.5px;
   font-weight: 700;
   background: rgba(255, 255, 255, 0.18);
@@ -308,12 +288,6 @@ const courierLine = computed(() => {
 
 .courier {
   padding: 12px;
-}
-
-.c-head {
-  display: flex;
-  align-items: center;
-  gap: 12px;
 }
 
 .c-head strong {
@@ -329,16 +303,11 @@ const courierLine = computed(() => {
 .c-ic {
   width: 40px;
   height: 40px;
-  border-radius: 50%;
   background: var(--warn-soft);
   color: var(--warn);
-  display: grid;
-  place-items: center;
-  flex: none;
 }
 
 .c-done {
-  margin-left: auto;
   color: var(--ok);
 }
 
@@ -347,11 +316,6 @@ const courierLine = computed(() => {
 }
 
 .c-drop {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 10px;
-  padding-top: 10px;
   border-top: 1px solid var(--line);
   font-size: 12.5px;
   font-weight: 600;
@@ -359,16 +323,11 @@ const courierLine = computed(() => {
 }
 
 .steps {
-  list-style: none;
-  margin: 0;
   padding: 4px 6px;
 }
 
 .steps li {
   position: relative;
-  display: flex;
-  align-items: center;
-  gap: 10px;
   padding: 6px 0 6px 2px;
   font-size: 13.5px;
   color: var(--muted);

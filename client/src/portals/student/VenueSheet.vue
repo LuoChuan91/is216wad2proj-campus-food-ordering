@@ -20,10 +20,10 @@ const stores = computed(() => catalog.storesAt(venue.value.id).map((s) => ({ s, 
 <template>
   <div class="vsheet col-md-8 col-lg-6 mx-auto">
     <div class="grab"></div>
-    <div class="vsheet-head">
+    <div class="vsheet-head d-flex justify-content-between align-items-start gap-2">
       <div>
         <h3>{{ venue.name }}</h3>
-        <p>
+        <p class="d-flex align-items-center flex-wrap gap-1">
           <Icon name="walk" :size="14" />{{ walk.minutes }} min walk · {{ walk.meters }} m <span class="src">{{
             walk.source === 'osrm' ? 'OSRM walking route' : 'distance estimate' }}</span>
         </p>
@@ -32,7 +32,7 @@ const stores = computed(() => catalog.storesAt(venue.value.id).map((s) => ({ s, 
         <Icon name="close" :size="18" />
       </button>
     </div>
-    <div class="vsheet-list scroll">
+    <div class="vsheet-list scroll d-grid gap-2">
       <p v-if="!stores.length" class="empty-note">No stores here yet.</p>
       <button v-for="x in stores" :key="x.s.id" class="store-card d-flex align-items-center gap-3 w-100 p-2 text-start bg-white border rounded-4"
         :class="{ 'opacity-75': x.available && !x.open.open, 'opacity-50': !x.available }"

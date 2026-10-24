@@ -29,7 +29,7 @@ const shownDrops = computed(() => {
 
 <template>
   <div class="panel co-drop">
-    <strong class="co-label">Deliver to</strong>
+    <strong class="co-label d-block mb-2">Deliver to</strong>
     <input
       class="form-control form-control-sm co-search"
       type="search"
@@ -39,15 +39,15 @@ const shownDrops = computed(() => {
     >
     <div class="drop-list">
       <p v-if="!shownDrops.length" class="drop-empty">No drop-off points match “{{ query }}”.</p>
-      <label v-for="x in shownDrops" :key="x.d.id" class="drop" :class="{ on: selected === x.d.id }">
+      <label v-for="x in shownDrops" :key="x.d.id" class="drop d-flex align-items-center gap-2" :class="{ on: selected === x.d.id }">
         <input
           type="radio"
-          class="form-check-input"
+          class="form-check-input m-0 flex-shrink-0"
           name="dropoff"
           :checked="selected === x.d.id"
           @change="$emit('pick', x.d.id)"
         >
-        <span>{{ x.d.name }}</span><small>{{ x.m }} m away</small>
+        <span class="flex-grow-1">{{ x.d.name }}</span><small>{{ x.m }} m away</small>
       </label>
     </div>
     <input
@@ -63,10 +63,6 @@ const shownDrops = computed(() => {
 
 <style scoped>
 /* Delivery drop-off picker (moved from the global stylesheet). */
-.co-label {
-  display: block;
-  margin-bottom: 6px;
-}
 .co-search {
   margin-bottom: 6px;
   border-radius: 10px;
@@ -85,9 +81,6 @@ const shownDrops = computed(() => {
   font-size: 12.5px;
 }
 .drop {
-  display: flex;
-  align-items: center;
-  gap: 10px;
   padding: 9px 4px;
   font-size: 13.5px;
   font-weight: 600;
@@ -96,16 +89,9 @@ const shownDrops = computed(() => {
 .drop + .drop {
   border-top: 1px solid var(--line);
 }
-.drop span {
-  flex: 1;
-}
 .drop small {
   color: var(--muted);
   font-weight: 600;
-}
-.drop .form-check-input {
-  margin: 0;
-  flex: none;
 }
 .co-note {
   margin-top: 8px;

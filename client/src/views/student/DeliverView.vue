@@ -73,18 +73,18 @@ onBeforeUnmount(() => {
 <template>
   <div class="deliver scroll">
     <div class="container px-0">
-    <header class="dl-head">
+    <header class="dl-head d-flex align-items-start justify-content-between gap-2 mb-3">
       <div>
         <h2 class="tab-title">Deliver &amp; earn</h2>
-        <p>Pick up food on your way and keep the delivery fee.</p>
+        <p class="mt-1 mb-0">Pick up food on your way and keep the delivery fee.</p>
       </div>
       <label class="avail form-switch"><input class="form-check-input" type="checkbox" role="switch" :checked="on"
           @change="orders.setAvailable($event.target.checked)"><span>{{ on ? 'Available' : 'Offline' }}</span></label>
     </header>
     <div class="panel earn row gx-2 mx-0">
-      <div class="col-6"><small>Today</small><b>{{ money(earn.today) }}</b><span>{{ plural(earn.todayCount, 'delivery', 'deliveries')
+      <div class="col-6 d-flex flex-column"><small>Today</small><b>{{ money(earn.today) }}</b><span>{{ plural(earn.todayCount, 'delivery', 'deliveries')
           }}</span></div>
-      <div class="col-6"><small>Last 7 days</small><b>{{ money(earn.week) }}</b><span>{{ plural(earn.weekCount, 'delivery',
+      <div class="col-6 d-flex flex-column"><small>Last 7 days</small><b>{{ money(earn.week) }}</b><span>{{ plural(earn.weekCount, 'delivery',
           'deliveries') }}</span></div>
     </div>
 
@@ -93,30 +93,30 @@ onBeforeUnmount(() => {
         activeList.length }}/{{ MAX_JOBS }}</span></h4>
       <div class="row g-2">
       <div v-for="active in activeList" :key="active.d.id" class="col-12 col-md-6 col-lg-4">
-      <div class="panel job active-job h-100 align-content-start">
-        <div class="job-top">
+      <div class="panel job active-job d-grid gap-2 h-100 align-content-start">
+        <div class="d-flex align-items-center gap-2">
           <Mono :store="active.s" :size="36" />
-          <div class="job-route"><strong>{{ active.s.name }}</strong><small>{{ active.vName }} → {{ active.drop.name
+          <div class="job-route flex-grow-1 overflow-hidden"><strong class="d-block">{{ active.s.name }}</strong><small>{{ active.vName }} → {{ active.drop.name
               }}</small></div><b class="fee">{{ money(active.d.fee) }}</b>
         </div>
         <strong>Order reference:  #{{ active.o.code }}</strong>
-        <ol class="mini-steps">
-          <li class="done">Accepted</li>
-          <li :class="active.d.status === 'picked_up' ? 'done' : 'now'">Picked up</li>
-          <li :class="active.d.status === 'picked_up' ? 'now' : ''">Delivered</li>
+        <ol class="mini-steps list-unstyled d-flex gap-1 m-0">
+          <li class="flex-fill done">Accepted</li>
+          <li class="flex-fill" :class="active.d.status === 'picked_up' ? 'done' : 'now'">Picked up</li>
+          <li class="flex-fill" :class="active.d.status === 'picked_up' ? 'now' : ''">Delivered</li>
         </ol>
-        <p class="aj-line" v-if="active.d.status === 'accepted' && active.o.status !== 'ready'">
+        <p class="aj-line d-flex align-items-center gap-2 m-0" v-if="active.d.status === 'accepted' && active.o.status !== 'ready'">
           <Icon name="flame" :size="14" />Kitchen is cooking<template v-if="active.est">, ready ~{{ E.clock(active.est)
             }}</template>.
           Head to {{ active.vName }}.
         </p>
-        <p class="aj-line ok" v-else-if="active.d.status === 'accepted'">
+        <p class="aj-line ok d-flex align-items-center gap-2 m-0" v-else-if="active.d.status === 'accepted'">
           <Icon name="check" :size="14" />Food is ready at {{ active.s.name }}.
         </p>
-        <p class="aj-line" v-else>
+        <p class="aj-line d-flex align-items-center gap-2 m-0" v-else>
           <Icon name="walk" :size="14" />Walk {{ active.walk.meters }} m to {{ active.drop.name }}.
         </p>
-        <p v-if="active.d.note" class="aj-line">
+        <p v-if="active.d.note" class="aj-line d-flex align-items-center gap-2 m-0">
           <Icon name="mail" :size="14" />“{{ active.d.note }}”
         </p>
         <button v-if="active.d.status === 'accepted'" class="btn btn-primary w-100"
@@ -142,17 +142,17 @@ onBeforeUnmount(() => {
     </div>
     <div class="row g-2">
     <div v-for="j in jobs" :key="j.d.id" class="col-12 col-md-6 col-lg-4">
-    <div class="panel job h-100 align-content-start">
-      <div class="job-top">
+    <div class="panel job d-grid gap-2 h-100 align-content-start">
+      <div class="d-flex align-items-center gap-2">
         <Mono :store="j.s" :size="36" />
-        <div class="job-route"><strong>{{ j.s.name }}</strong><small>{{ j.vName }} → {{ j.drop.name }}</small></div><b
+        <div class="job-route flex-grow-1 overflow-hidden"><strong class="d-block">{{ j.s.name }}</strong><small>{{ j.vName }} → {{ j.drop.name }}</small></div><b
           class="fee">{{ money(j.d.fee) }}</b>
       </div>
-      <div class="job-meta"><span>{{ plural(j.items, 'item', 'items') }}</span><span>
+      <div class="job-meta d-flex flex-wrap gap-1"><span class="d-inline-flex align-items-center gap-1">{{ plural(j.items, 'item', 'items') }}</span><span class="d-inline-flex align-items-center gap-1">
           <Icon name="walk" :size="12" />{{ j.walk.meters }} m
-        </span><span :class="{ ok: j.o.status === 'ready' }">{{ j.o.status === 'ready' ? 'Food is ready' : (j.est ? 'Ready~' + E.clock(j.est) : 'In the kitchen') }}</span></div>
-      <div class="job-timer">
-        <div class="meter" :class="j.left < 120e3 ? 'late' : j.left < 300e3 ? 'warn' : 'ok'"><i
+        </span><span class="d-inline-flex align-items-center gap-1" :class="{ ok: j.o.status === 'ready' }">{{ j.o.status === 'ready' ? 'Food is ready' : (j.est ? 'Ready~' + E.clock(j.est) : 'In the kitchen') }}</span></div>
+      <div class="job-timer d-flex align-items-center gap-2">
+        <div class="meter flex-grow-1" :class="j.left < 120e3 ? 'late' : j.left < 300e3 ? 'warn' : 'ok'"><i
             :style="{ width: Math.max(0, j.left / (cfg.deliveryWindowMin * 600)) + '%' }"></i></div><small>Expires in {{
               E.countdown(j.left) }}</small>
       </div>
@@ -162,16 +162,16 @@ onBeforeUnmount(() => {
     </div>
     </div>
     <div v-for="j in expired" :key="j.d.id" class="col-12 col-md-6 col-lg-4">
-    <div class="panel job expired h-100 align-content-start">
-      <div class="job-top">
+    <div class="panel job expired d-grid gap-2 h-100 align-content-start">
+      <div class="d-flex align-items-center gap-2">
         <Mono :store="j.s" :size="36" />
-        <div class="job-route"><strong>{{ j.s.name }}</strong><small>{{ j.vName }} → {{ j.drop.name }}</small></div>
+        <div class="job-route flex-grow-1 overflow-hidden"><strong class="d-block">{{ j.s.name }}</strong><small>{{ j.vName }} → {{ j.drop.name }}</small></div>
         <StatusTag tone="warn">Expired</StatusTag>
       </div>
-      <div class="job-timer">
-        <div class="meter late"><i style="width:0"></i></div><small>Expired at {{ E.clock(j.d.expires_at) }}</small>
+      <div class="job-timer d-flex align-items-center gap-2">
+        <div class="meter late flex-grow-1"><i style="width:0"></i></div><small>Expired at {{ E.clock(j.d.expires_at) }}</small>
       </div>
-      <p class="aj-line warn">
+      <p class="aj-line warn d-flex align-items-center gap-2 m-0">
         <Icon name="bag" :size="14" />Nobody accepted in {{ cfg.deliveryWindowMin }} min. Switched to pickup.
       </p>
     </div>
@@ -185,17 +185,8 @@ onBeforeUnmount(() => {
 /* Deliver tab (moved from the global prototype stylesheet).
    Shared bits kept global: .deliver padding, .avail/.form-switch, .meter*,
    .panel, .sec, .count, .empty/.empty-note. */
-.dl-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 12px;
-}
-
 .dl-head p {
   color: var(--ink-2);
-  margin: 4px 0 0;
   font-size: 13px;
 }
 
@@ -203,11 +194,6 @@ onBeforeUnmount(() => {
   background: var(--navy);
   border: 0;
   color: #fff;
-}
-
-.earn div {
-  display: flex;
-  flex-direction: column;
 }
 
 .earn small {
@@ -227,24 +213,7 @@ onBeforeUnmount(() => {
   opacity: 0.8;
 }
 
-.job {
-  display: grid;
-  gap: 10px;
-}
-
-.job-top {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.job-route {
-  flex: 1;
-  min-width: 0;
-}
-
 .job-route strong {
-  display: block;
   font-size: 14px;
 }
 
@@ -258,16 +227,7 @@ onBeforeUnmount(() => {
   color: var(--ok);
 }
 
-.job-meta {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
 .job-meta span {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
   font-size: 11.5px;
   font-weight: 700;
   padding: 2px 8px;
@@ -279,13 +239,6 @@ onBeforeUnmount(() => {
 .job-meta span.ok {
   background: var(--ok-soft);
   color: var(--ok);
-}
-
-.job-timer {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 10px;
-  align-items: center;
 }
 
 .job-timer small {
@@ -304,16 +257,7 @@ onBeforeUnmount(() => {
   box-shadow: 0 0 0 3px var(--brand-soft);
 }
 
-.mini-steps {
-  list-style: none;
-  display: flex;
-  margin: 0;
-  padding: 0;
-  gap: 6px;
-}
-
 .mini-steps li {
-  flex: 1;
   text-align: center;
   font-size: 11.5px;
   font-weight: 700;
@@ -334,10 +278,6 @@ onBeforeUnmount(() => {
 }
 
 .aj-line {
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 6px;
   font-size: 12.5px;
   font-weight: 600;
   color: var(--ink-2);

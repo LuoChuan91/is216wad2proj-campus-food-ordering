@@ -85,7 +85,7 @@ const openCount = computed(() => rows.value.filter((r) => r.open.open).length)
     <div class="container px-0">
     <h2 class="tab-title">All stores</h2>
     <p class="tab-sub">{{ catalog.db.stores.length }} stores on campus · {{ openCount }} taking orders</p>
-    <label class="search"><Icon name="search" :size="16" /><input type="search" placeholder="Search stores, dishes or buildings" aria-label="Search stores" :value="list.search" @input="ui.setListSearch($event.target.value)">
+    <label class="search d-flex align-items-center gap-2"><Icon name="search" :size="16" /><input type="search" placeholder="Search stores, dishes or buildings" aria-label="Search stores" :value="list.search" @input="ui.setListSearch($event.target.value)">
       <button v-if="list.search" type="button" class="icon-btn sm" aria-label="Clear search" @click="ui.setListSearch('')"><Icon name="close" :size="12" /></button></label>
     <div class="filter-row scroll" role="group" aria-label="Filter stores">
       <button v-for="c in chips" :key="c.id" type="button" class="chip filter" :class="{ on: list.filter === c.id }" :aria-pressed="list.filter === c.id" @click="ui.setListFilter(c.id)">{{ c.label }}</button>

@@ -36,8 +36,8 @@ provide('adminPending', pending)
       <button :class="{ on: t.adminTab === 'stores' }" @click="ui.setAdminTab('stores')"><Icon name="store" :size="20" /><span>Stores</span></button>
     </nav>
     <div class="m-main">
-      <header class="m-top">
-        <div class="m-title"><strong>Campus dining admin</strong><small>{{ me.name }} · {{ me.email }}</small></div>
+      <header class="m-top d-flex align-items-center flex-wrap gap-3">
+        <div class="m-title d-flex flex-column flex-grow-1 overflow-hidden"><strong>Campus dining admin</strong><small>{{ me.name }} · {{ me.email }}</small></div>
         <StatCard label="Verified students" :value="activeStudents.length" />
         <StatCard label="Venues" :value="venues.length" />
         <StatCard label="Stores" :value="stores.length" />

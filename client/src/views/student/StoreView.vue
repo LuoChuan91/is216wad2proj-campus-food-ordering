@@ -61,13 +61,13 @@ const hasOptions = (it) => (it.option_groups || []).length > 0
         <h4 class="menu-cat">{{ cat }}</h4>
         <div class="row g-2">
           <div v-for="it in items" :key="it.id" class="col-12 col-md-6 col-lg-4">
-            <button class="menu-item h-100" :class="{ soldout: !it.available }" :disabled="!it.available || !open.open" @click="ui.openItem(it.id)">
-              <span class="mi-text">
+            <button class="menu-item d-flex align-items-center gap-3 w-100 h-100 text-start bg-white border rounded-4" :class="{ 'opacity-50': !it.available }" :disabled="!it.available || !open.open" @click="ui.openItem(it.id)">
+              <span class="mi-text d-flex flex-column flex-grow-1 overflow-hidden">
                 <strong>{{ it.name }}</strong>
                 <small v-if="it.description">{{ it.description }}</small>
-                <span class="mi-meta"><b>{{ money(it.price) }}</b><StatusTag v-if="hasOptions(it)">Customisable</StatusTag><StatusTag v-if="!it.available" tone="muted">Sold out</StatusTag></span>
+                <span class="mi-meta d-flex align-items-center gap-2 mt-1"><b>{{ money(it.price) }}</b><StatusTag v-if="hasOptions(it)">Customisable</StatusTag><StatusTag v-if="!it.available" tone="muted">Sold out</StatusTag></span>
               </span>
-              <span v-if="it.available && open.open" class="mi-add"><Icon name="plus" :size="18" :stroke="2.4" /></span>
+              <span v-if="it.available && open.open" class="mi-add d-flex align-items-center justify-content-center flex-shrink-0 rounded-circle"><Icon name="plus" :size="18" :stroke="2.4" /></span>
             </button>
           </div>
         </div>
@@ -110,30 +110,8 @@ const hasOptions = (it) => (it.option_groups || []).length > 0
   font-weight: 700;
 }
 .menu-item {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  text-align: left;
-  border: 1px solid var(--line);
-  background: var(--paper);
-  border-radius: 18px;
   padding: 12px 12px 12px 14px;
-  cursor: pointer;
   color: inherit;
-}
-.menu-item:disabled {
-  cursor: default;
-}
-.menu-item.soldout {
-  opacity: 0.55;
-}
-.mi-text {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
 }
 .mi-text strong {
   font-size: 14.5px;
@@ -146,25 +124,14 @@ const hasOptions = (it) => (it.option_groups || []).length > 0
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.mi-meta {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 4px;
-}
 .mi-meta b {
   font-size: 14px;
-  margin-right: 2px;
 }
 .mi-add {
   width: 34px;
   height: 34px;
-  border-radius: 50%;
   background: var(--brand);
   color: #fff;
-  display: grid;
-  place-items: center;
-  flex: none;
   box-shadow: 0 4px 10px rgba(229, 81, 45, 0.35);
 }
 </style>

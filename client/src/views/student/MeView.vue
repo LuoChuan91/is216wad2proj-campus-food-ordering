@@ -24,11 +24,11 @@ const stats = computed(() => ({ orders: orders.ordersOf(me.value.id).length, ear
   <div class="me-tab scroll">
     <div class="row justify-content-center mx-0">
     <div class="col-12 col-md-8 col-lg-6 px-0">
-    <div class="me-card"><Avatar :name="me.name" :size="64" tone="brand" /><h2>{{ me.name }}</h2><p>{{ me.email }}</p><span class="tag ok"><Icon name="shield" :size="12" />Verified SMU student</span></div>
+    <div class="me-card text-center"><Avatar :name="me.name" :size="64" tone="brand" /><h2>{{ me.name }}</h2><p>{{ me.email }}</p><span class="tag ok"><Icon name="shield" :size="12" />Verified SMU student</span></div>
     <div class="panel me-stats row gx-2 mx-0"><div class="col-4"><b>{{ stats.orders }}</b><small>orders</small></div><div class="col-4"><b>{{ stats.earn.weekCount }}</b><small>deliveries this week</small></div><div class="col-4"><b>{{ money(stats.earn.week) }}</b><small>earned this week</small></div></div>
     <div class="panel me-list">
-      <label class="me-row form-switch"><span><strong>Delivery jobs</strong><small>Get notified when someone nearby wants food delivered</small></span><input class="form-check-input" type="checkbox" role="switch" :checked="courierOn" @change="orders.setAvailable($event.target.checked)"></label>
-      <button type="button" class="me-row" @click="sessionStore.signOut()"><span><strong>Sign out</strong><small>Switch to another account</small></span><Icon name="logout" :size="18" /></button>
+      <label class="me-row form-switch d-flex align-items-center justify-content-between gap-3 w-100"><span><strong class="d-block">Delivery jobs</strong><small class="d-block">Get notified when someone nearby wants food delivered</small></span><input class="form-check-input" type="checkbox" role="switch" :checked="courierOn" @change="orders.setAvailable($event.target.checked)"></label>
+      <button type="button" class="me-row d-flex align-items-center justify-content-between gap-3 w-100 text-start" @click="sessionStore.signOut()"><span><strong class="d-block">Sign out</strong><small class="d-block">Switch to another account</small></span><Icon name="logout" :size="18" /></button>
     </div>
     </div>
     </div>
@@ -39,7 +39,6 @@ const stats = computed(() => ({ orders: orders.ordersOf(me.value.id).length, ear
 /* Me tab: profile card, stats and the switch list (moved from the global
    stylesheet). The .me-tab padding + .panel stay global (shared). */
 .me-card {
-  text-align: center;
   padding: 20px 10px;
 }
 .me-card h2 {
@@ -72,15 +71,9 @@ const stats = computed(() => ({ orders: orders.ordersOf(me.value.id).length, ear
   padding: 4px 14px;
 }
 .me-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  width: 100%;
   padding: 12px 0;
   border: 0;
   background: none;
-  text-align: left;
   color: var(--ink);
   cursor: pointer;
   font-size: 14px;
@@ -88,11 +81,7 @@ const stats = computed(() => ({ orders: orders.ordersOf(me.value.id).length, ear
 .me-row + .me-row {
   border-top: 1px solid var(--line);
 }
-.me-row strong {
-  display: block;
-}
 .me-row small {
-  display: block;
   color: var(--muted);
   font-weight: 500;
   font-size: 12px;

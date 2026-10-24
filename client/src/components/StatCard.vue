@@ -16,7 +16,7 @@ defineProps({
 </script>
 
 <template>
-  <div class="m-stat" :class="{ cap }" :title="title || undefined">
+  <div class="m-stat d-flex flex-column align-items-start align-items-md-end" :class="{ cap }" :title="title || undefined">
     <small>{{ label }}</small>
     <b><slot>{{ value }}</slot></b>
   </div>

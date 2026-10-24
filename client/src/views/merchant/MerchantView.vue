@@ -107,9 +107,9 @@ onBeforeUnmount(() => {
     </nav>
     <div v-if="!store" class="m-main"><p class="col-empty">This account doesn't run any stores yet. An admin links stores to merchant accounts.</p></div>
     <div v-else class="m-main">
-      <header class="m-top">
+      <header class="m-top d-flex align-items-center flex-wrap gap-3">
         <Mono :store="store" :size="36" />
-        <div class="m-title">
+        <div class="m-title d-flex flex-column flex-grow-1 overflow-hidden">
           <select v-if="stores.length > 1" class="form-select form-select-sm m-store" aria-label="Store" :value="store.id" @change="ui.setMerchantStore($event.target.value)">
             <option v-for="x in stores" :key="x.s.id" :value="x.s.id">{{ x.s.name }}{{ x.waiting ? ' (' + x.waiting + ' waiting)' : '' }}</option>
           </select>

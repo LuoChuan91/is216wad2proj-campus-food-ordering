@@ -74,42 +74,42 @@ const results = computed(() => {
   <div class="explore">
     <MapView />
     <div class="explore-top">
-      <div class="hello"><Avatar :name="me.name" :size="36" tone="brand" /><div><small>{{ greeting }}</small><strong>{{ first(me.name) }}</strong></div><span class="brand-pill"><AppMark :size="18" />{{ cfg.appName }}</span></div>
-      <label class="search"><Icon name="search" :size="16" /><input type="search" placeholder="Search dishes or stores" aria-label="Search dishes or stores" :value="u.search" @input="ui.setSearch($event.target.value)">
+      <div class="hello d-flex align-items-center gap-2 mb-2"><Avatar :name="me.name" :size="36" tone="brand" /><div><small>{{ greeting }}</small><strong>{{ first(me.name) }}</strong></div><span class="brand-pill ms-auto d-inline-flex align-items-center gap-2"><AppMark :size="18" />{{ cfg.appName }}</span></div>
+      <label class="search d-flex align-items-center gap-2"><Icon name="search" :size="16" /><input type="search" placeholder="Search dishes or stores" aria-label="Search dishes or stores" :value="u.search" @input="ui.setSearch($event.target.value)">
         <button v-if="u.search" type="button" class="icon-btn sm" aria-label="Clear search" @click="ui.setSearch('')"><Icon name="close" :size="12" /></button></label>
     </div>
     <Transition name="sheet" mode="out-in">
       <VenueSheet v-if="u.sheet === 'venue' && catalog.venue(u.venueId)" :key="u.venueId" />
       <div v-else-if="results" key="results" class="peek results col-md-8 col-lg-6 mx-auto">
         <div class="grab"></div>
-        <div class="peek-head"><strong>Results for “{{ u.search.trim() }}”</strong></div>
+        <div class="peek-head d-flex justify-content-between align-items-center"><strong>Results for “{{ u.search.trim() }}”</strong></div>
         <div class="results-list scroll">
           <p v-if="!results.stores.length && !results.dishes.length" class="empty-note">Nothing matches. Try "noodles", "kopi" or "bento".</p>
-          <button v-for="x in results.stores" :key="x.s.id" class="venue-row" :class="{ unavailable: !x.available }" :disabled="!x.available" @click="ui.openStore(x.s.id)">
+          <button v-for="x in results.stores" :key="x.s.id" class="venue-row d-flex align-items-center gap-3 w-100 text-start" :class="{ unavailable: !x.available }" :disabled="!x.available" @click="ui.openStore(x.s.id)">
             <Mono :store="x.s" :size="36" />
-            <span class="venue-main"><strong>{{ x.s.name }}</strong><small>{{ x.s.cuisine }} · {{ shortName(x.v.name) }}</small></span>
+            <span class="venue-main d-flex flex-column flex-grow-1 overflow-hidden"><strong>{{ x.s.name }}</strong><small class="d-inline-flex align-items-center gap-1">{{ x.s.cuisine }} · {{ shortName(x.v.name) }}</small></span>
             <span v-if="!x.available" class="tag muted">Unavailable</span>
             <span v-else class="tag" :class="x.open ? 'ok' : 'muted'">{{ x.open ? 'Open' : 'Closed' }}</span>
           </button>
           <h4 v-if="results.dishes.length" class="sec">Dishes</h4>
-          <button v-for="x in results.dishes" :key="x.m.id" class="venue-row" :disabled="!x.ok" @click="ui.openStoreItem(x.s.id, x.m.id)">
-            <span class="venue-ic"><Icon name="bag" :size="16" /></span>
-            <span class="venue-main"><strong>{{ x.m.name }}</strong><small>{{ x.s.name }} · {{ shortName(x.v.name) }}</small></span>
+          <button v-for="x in results.dishes" :key="x.m.id" class="venue-row d-flex align-items-center gap-3 w-100 text-start" :disabled="!x.ok" @click="ui.openStoreItem(x.s.id, x.m.id)">
+            <span class="venue-ic d-flex align-items-center justify-content-center flex-shrink-0"><Icon name="bag" :size="16" /></span>
+            <span class="venue-main d-flex flex-column flex-grow-1 overflow-hidden"><strong>{{ x.m.name }}</strong><small class="d-inline-flex align-items-center gap-1">{{ x.s.name }} · {{ shortName(x.v.name) }}</small></span>
             <b v-if="x.ok" class="price">{{ money(x.m.price) }}</b><span v-else class="tag muted">{{ x.m.available ? 'Closed' : 'Sold out' }}</span>
           </button>
         </div>
       </div>
       <div v-else key="peek" class="peek col-md-8 col-lg-6 mx-auto">
         <div class="grab"></div>
-        <div class="peek-head"><strong>Near you</strong>
-          <button type="button" class="where" :title="u.locateError || 'Use my real location'" @click="ui.locate()"><Icon :name="u.locating ? 'clock' : 'locate'" :size="13" />{{ u.locating ? 'Locating…' : ui.place().label }}</button></div>
+        <div class="peek-head d-flex justify-content-between align-items-center"><strong>Near you</strong>
+          <button type="button" class="where d-inline-flex align-items-center gap-1" :title="u.locateError || 'Use my real location'" @click="ui.locate()"><Icon :name="u.locating ? 'clock' : 'locate'" :size="13" />{{ u.locating ? 'Locating…' : ui.place().label }}</button></div>
         <p v-if="u.locateError" class="locate-err">{{ u.locateError }}</p>
-        <button v-for="x in near.slice(0, 4)" :key="x.v.id" class="venue-row" @click="ui.openVenue(x.v.id)">
-          <span class="venue-ic"><Icon name="store" :size="18" /></span>
-          <span class="venue-main"><strong>{{ shortName(x.v.name) }}</strong><small><Icon name="walk" :size="12" />{{ x.walk.minutes }} min · {{ openCount(x.stores) }} of {{ x.stores.length }} open</small></span>
+        <button v-for="x in near.slice(0, 4)" :key="x.v.id" class="venue-row d-flex align-items-center gap-3 w-100 text-start" @click="ui.openVenue(x.v.id)">
+          <span class="venue-ic d-flex align-items-center justify-content-center flex-shrink-0"><Icon name="store" :size="18" /></span>
+          <span class="venue-main d-flex flex-column flex-grow-1 overflow-hidden"><strong>{{ shortName(x.v.name) }}</strong><small class="d-inline-flex align-items-center gap-1"><Icon name="walk" :size="12" />{{ x.walk.minutes }} min · {{ openCount(x.stores) }} of {{ x.stores.length }} open</small></span>
           <WaitChip v-if="bestWait(x.stores) !== null" :minutes="bestWait(x.stores)" prefix="from" />
         </button>
-        <button type="button" class="see-all" @click="ui.setTab('stores')">See all {{ catalog.db.stores.length }} stores<Icon name="chevR" :size="14" /></button>
+        <button type="button" class="see-all d-flex align-items-center justify-content-center gap-1 w-100" @click="ui.setTab('stores')">See all {{ catalog.db.stores.length }} stores<Icon name="chevR" :size="14" /></button>
       </div>
     </Transition>
   </div>
@@ -132,12 +132,6 @@ const results = computed(() => {
     rgba(243, 244, 248, 0)
   );
 }
-.hello {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
-}
 .hello small {
   display: block;
   color: var(--muted);
@@ -149,10 +143,6 @@ const results = computed(() => {
   line-height: 1.15;
 }
 .brand-pill {
-  margin-left: auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
   font-weight: 800;
   color: var(--brand);
   background: var(--paper);
@@ -162,11 +152,6 @@ const results = computed(() => {
 }
 /* "See all stores" at the bottom of the Near you list */
 .see-all {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  width: 100%;
   margin-top: 2px;
   border: 0;
   background: none;

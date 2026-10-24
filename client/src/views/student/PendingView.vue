@@ -22,8 +22,8 @@ const first = (name) => name.split(' ')[0]
     <p v-if="waiting">We check that every account belongs to an SMU student. You'll get a notification as soon as an admin approves yours.</p>
     <p v-else>Contact the campus dining office if you think this is a mistake.</p>
     <div class="pending-card">
-      <div class="pc-status" :class="waiting ? 'warn' : 'late'"><i></i>{{ waiting ? 'Waiting for approval' : me.status === 'removed' ? 'Account removed' : 'Account blocked' }}</div>
-      <dl><div><dt>Email</dt><dd>{{ me.email }}</dd></div></dl>
+      <div class="pc-status d-flex align-items-center gap-2 fw-bold mb-2" :class="waiting ? 'warn' : 'late'"><i></i>{{ waiting ? 'Waiting for approval' : me.status === 'removed' ? 'Account removed' : 'Account blocked' }}</div>
+      <dl class="d-grid gap-1 m-0"><div class="d-flex justify-content-between gap-2"><dt>Email</dt><dd>{{ me.email }}</dd></div></dl>
     </div>
     </div>
     </div>
