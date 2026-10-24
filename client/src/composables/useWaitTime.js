@@ -33,7 +33,8 @@ import defaultSupabase from '@/common/supabase.js'
  */
 export function useWaitTime(storeId, orderId = null, options = {}) {
   const {
-    strategy = 'serial',
+    // TODO strategy and station
+    strategy = 'scheduled',
     stations = 2,
     pollMs = 60000,
     supabaseClient = defaultSupabase,

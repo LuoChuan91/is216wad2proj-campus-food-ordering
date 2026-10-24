@@ -44,7 +44,8 @@ function startEngine(storeId, orderId, rec, supabase) {
   async function load() {
     try {
       const { orderItems, cookingDetails, ahead } = await fetchQueue(storeId, orderId || null)
-      const result = estimateWaitTime(orderItems, cookingDetails, { stations: cfg.kitchenSlots ?? 2 })
+      // TODO kicken slot and strategy to fix
+      const result = estimateWaitTime(orderItems, cookingDetails, { stations: cfg.kitchenSlots ?? 2, strategy: 'scheduled' })
       if (rec.destroyed) return
       state.seconds = result.seconds
       state.ahead = Number(ahead) || 0

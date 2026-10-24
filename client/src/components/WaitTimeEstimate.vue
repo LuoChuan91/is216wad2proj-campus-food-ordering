@@ -12,7 +12,7 @@ const props = defineProps({
   orderId: { type: String, default: null },
   strategy: {
     type: String,
-    default: 'serial',
+    default: 'scheduled',
     validator: (v) => WAIT_TIME_STRATEGIES.includes(v),
   },
   stations: { type: Number, default: 2 },

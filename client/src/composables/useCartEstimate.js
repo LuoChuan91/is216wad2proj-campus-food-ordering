@@ -22,6 +22,7 @@ export function useCartEstimate(storeId, cartLines, options = {}) {
     api = defaultApi,
     supabaseClient = defaultSupabase,
     stations = cfg.kitchenSlots ?? 2,
+    strategy = 'scheduled',
     now = () => Date.now(),
   } = options
 
@@ -65,7 +66,8 @@ export function useCartEstimate(storeId, cartLines, options = {}) {
         preparing_at: ms(o.preparing_at) || ms(o.created_at) || now(),
         items: (o.order_items || []).map((oi) => ({ menu_item_id: oi.menu_item_id, qty: oi.qty })),
       }))
-      const r = estimateNewOrderWait(queueOrders, cartList, cookingDetails, { stations, now: now() })
+      // TODO strategy and stations
+      const r = estimateNewOrderWait(queueOrders, cartList, cookingDetails, { stations, now: now(), strategy })
       seconds.value = r.seconds
       ahead.value = r.ahead
       ready.value = true
