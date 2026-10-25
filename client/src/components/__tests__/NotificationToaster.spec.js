@@ -13,15 +13,15 @@ describe('NotificationToaster', () => {
     vi.useRealTimers()
   })
 
-  it('renders a toast for a toast-status notification, bottom-left container', async () => {
+  it('renders a toast for a toast-status notification, bottom-right container', async () => {
     const store = useNotificationsStore()
     const wrapper = mount(NotificationToaster)
     store.receive({ kind: 'order', status: 'ready', order_id: 'o1' })
     await flushPromises()
 
-    expect(wrapper.find('.toast-container.bottom-0.start-0').exists()).toBe(true)
-    expect(wrapper.text()).toContain('Order ready')
-    expect(wrapper.findAll('.toast')).toHaveLength(1)
+    expect(wrapper.find('.toast-container.bottom-0.end-0').exists()).toBe(true)
+    expect(wrapper.text()).toContain('Your food is ready')
+    expect(wrapper.findAll('.toast-card')).toHaveLength(1)
   })
 
   it('stacks multiple toasts', async () => {
@@ -30,7 +30,7 @@ describe('NotificationToaster', () => {
     store.receive({ kind: 'order', status: 'ready' })
     store.receive({ kind: 'delivery', status: 'accepted' })
     await flushPromises()
-    expect(wrapper.findAll('.toast')).toHaveLength(2)
+    expect(wrapper.findAll('.toast-card')).toHaveLength(2)
   })
 
   it('auto-dismisses after the duration', async () => {
@@ -38,11 +38,11 @@ describe('NotificationToaster', () => {
     const wrapper = mount(NotificationToaster, { props: { duration: 3000 } })
     store.receive({ kind: 'order', status: 'ready' })
     await flushPromises()
-    expect(wrapper.findAll('.toast')).toHaveLength(1)
+    expect(wrapper.findAll('.toast-card')).toHaveLength(1)
 
     vi.advanceTimersByTime(3000)
     await flushPromises()
-    expect(wrapper.findAll('.toast')).toHaveLength(0)
+    expect(wrapper.findAll('.toast-card')).toHaveLength(0)
     // still kept in history
     expect(store.items).toHaveLength(1)
   })
@@ -52,7 +52,7 @@ describe('NotificationToaster', () => {
     const wrapper = mount(NotificationToaster)
     store.receive({ kind: 'order', status: 'completed' })
     await flushPromises()
-    await wrapper.find('.btn-close').trigger('click')
-    expect(wrapper.findAll('.toast')).toHaveLength(0)
+    await wrapper.find('.toast-x').trigger('click')
+    expect(wrapper.findAll('.toast-card')).toHaveLength(0)
   })
 })

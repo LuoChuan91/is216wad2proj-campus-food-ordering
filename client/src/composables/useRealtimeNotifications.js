@@ -28,11 +28,15 @@ export function useRealtimeNotifications(options = {}) {
       }
     }
     channel = null
+    notifications.setRealtimeConnected(false)
   }
 
   function subscribe(id) {
     teardown()
-    if (!id || !supabase || typeof supabase.channel !== 'function') return
+    if (!id || !supabase || typeof supabase.channel !== 'function') {
+      notifications.setRealtimeConnected(false)
+      return
+    }
     try {
       channel = supabase
         .channel(`user:${id}`)
@@ -41,10 +45,15 @@ export function useRealtimeNotifications(options = {}) {
           const payload = message?.payload ?? message
           notifications.receive(payload)
         })
-        .subscribe()
+        .subscribe((status) => {
+          // Tell the poll-diff fallback whether realtime is live, so it knows
+          // whether to suppress or mirror status/delivery notifications.
+          notifications.setRealtimeConnected(status === 'SUBSCRIBED')
+        })
     } catch (e) {
       console.warn('[notifications] subscribe failed:', e)
       channel = null
+      notifications.setRealtimeConnected(false)
     }
   }
 

@@ -33,13 +33,15 @@ import defaultSupabase from '@/common/supabase.js'
  */
 export function useWaitTime(storeId, orderId = null, options = {}) {
   const {
-    strategy = 'serial',
+    // TODO strategy and station
+    strategy = 'scheduled',
     stations = 2,
     pollMs = 60000,
     supabaseClient = defaultSupabase,
   } = options
 
   const seconds = ref(0)
+  const ahead = ref(0)
   const loading = ref(true)
   const error = ref(null)
   const stale = ref(false)
@@ -53,13 +55,14 @@ export function useWaitTime(storeId, orderId = null, options = {}) {
 
   async function load() {
     try {
-      const { orderItems, cookingDetails } = await fetchQueue(toValue(storeId), toValue(orderId))
+      const { orderItems, cookingDetails, ahead: aheadCount } = await fetchQueue(toValue(storeId), toValue(orderId))
       const result = estimateWaitTime(orderItems, cookingDetails, {
         strategy: toValue(strategy),
         stations: toValue(stations),
       })
       if (destroyed) return
       seconds.value = result.seconds
+      ahead.value = Number(aheadCount) || 0
       hasEstimate.value = true
       error.value = null
       stale.value = false
@@ -162,5 +165,5 @@ export function useWaitTime(storeId, orderId = null, options = {}) {
     }
   )
 
-  return { seconds, loading, error, stale, liveConnected, refresh }
+  return { seconds, ahead, loading, error, stale, liveConnected, refresh }
 }

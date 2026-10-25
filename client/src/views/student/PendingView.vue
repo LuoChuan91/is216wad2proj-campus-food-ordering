@@ -1,0 +1,31 @@
+<script setup>
+// Shown to students whose account isn't active (waiting for an admin, or blocked).
+//
+// Migrated from portals/student/PendingScreen.vue. Rendered by StudentLayout when
+// the signed-in student's status isn't 'active'. Behaviour unchanged.
+import { computed } from 'vue'
+import { useOrdersStore } from '@/stores/orders.js'
+
+const orders = useOrdersStore()
+const me = computed(() => orders.me())
+const waiting = computed(() => me.value.status === 'inactive')
+const first = (name) => name.split(' ')[0]
+</script>
+
+<template>
+  <div class="pending">
+    <div class="row justify-content-center mx-0">
+    <div class="col-12 col-md-8 col-lg-6 px-0">
+    <AppMark :size="64" />
+    <h2 v-if="waiting">Hi {{ first(me.name) }}, you're almost in</h2>
+    <h2 v-else>We couldn't verify your account</h2>
+    <p v-if="waiting">We check that every account belongs to an SMU student. You'll get a notification as soon as an admin approves yours.</p>
+    <p v-else>Contact the campus dining office if you think this is a mistake.</p>
+    <div class="pending-card">
+      <div class="pc-status d-flex align-items-center gap-2 fw-bold mb-2" :class="waiting ? 'warn' : 'late'"><i></i>{{ waiting ? 'Waiting for approval' : me.status === 'removed' ? 'Account removed' : 'Account blocked' }}</div>
+      <dl class="d-grid gap-1 m-0"><div class="d-flex justify-content-between gap-2"><dt>Email</dt><dd>{{ me.email }}</dd></div></dl>
+    </div>
+    </div>
+    </div>
+  </div>
+</template>

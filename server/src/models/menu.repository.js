@@ -24,14 +24,43 @@ exports.findItemWithOptions = async (itemId) => {
   return { ...item, store_id: menu_category ? menu_category.store_id : null };
 };
 
-exports.itemsCookingDetails = async (item_ids) => {
-  // retrieve orders from a store that is created earlier then requested order
-  // retrieve all if requested order is null
-  const { data, error } = await supabase
-    .from("menu_items")
-    .select('id,cook_time_sec,max_at_once')
-    .in("id", item_ids)
+// Every dish still on a menu (not archived), with its store_id, its category name and its
+// option groups. Pass storeId to get one store's menu only.
+// Returns [{ ...menu item, store_id, category, option_groups: [{ ..., options: [...] }] }]
+exports.findAll = async ({ storeId } = {}) => {
+  let query = supabase
+    .from('menu_items')
+    .select('*, menu_category!inner(store_id, name), option_groups(*, options(*))')
+    .eq('is_archived', false)
+    .order('name');
+  if (storeId) query = query.eq('menu_category.store_id', storeId);
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return data.map(({ menu_category, ...item }) => ({ ...item, store_id: menu_category.store_id, category: menu_category.name }));
 };
+
+// What the wait-time engine needs for every dish: how long one batch takes and how many fit in a batch.
+// Returns [{ id, store_id, cook_time_sec, max_at_once, available }]
+exports.findCookDetails = async () => {
+  const { data, error } = await supabase
+    .from('menu_items')
+    .select('id, cook_time_sec, max_at_once, available, menu_category!inner(store_id)')
+    .eq('is_archived', false)
+    .order('name');
+
+  if (error) throw error;
+  return data.map(({ menu_category, ...item }) => ({ ...item, store_id: menu_category.store_id }));
+};
+
+// Change a dish, e.g. { available: false } when it sells out. Returns the saved row, or null.
+exports.updateItem = async (itemId, changes) => {
+  const { data, error } = await supabase.from('menu_items').update(changes).eq('id', itemId).select().maybeSingle();
+
+  if (error) throw error;
+  return data;
+};
+
 // The names of the given options, e.g. to show what a student picked on an order.
 // order_items.selected_options only stores option ids, so the merchant screen needs this.
 // Returns [{ id, name }], one per id that exists.
@@ -39,6 +68,19 @@ exports.findOptionNames = async (optionIds) => {
   if (optionIds.length === 0) return [];
 
   const { data, error } = await supabase.from('options').select('id, name').in('id', optionIds);
+
+  if (error) throw error;
+  return data;
+};
+
+// Angel: cooking details (cook time, max at once) for the given dishes
+exports.itemsCookingDetails = async (item_ids) => {
+  // retrieve orders from a store that is created earlier then requested order
+  // retrieve all if requested order is null
+  const { data, error } = await supabase
+    .from("menu_items")
+    .select('id,cook_time_sec,max_at_once')
+    .in("id", item_ids);
 
   if (error) throw error;
   return data;

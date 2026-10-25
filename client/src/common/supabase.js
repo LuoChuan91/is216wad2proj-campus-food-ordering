@@ -17,12 +17,19 @@ import { createClient } from '@supabase/supabase-js'
 const url = import.meta.env.VITE_SUPABASE_URL
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-if (!url || !anonKey) {
-  throw new Error(
-    'Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY.'
+// Supabase is OPTIONAL. When the env vars are missing we export `null` instead of
+// throwing, so the app still runs (the realtime composables treat a null/channel-
+// less client as "poll only"). This keeps the core app usable without a
+// client/.env, and lets realtime light up once the keys are provided.
+let supabase = null
+if (url && anonKey) {
+  supabase = createClient(url, anonKey)
+} else {
+  console.warn(
+    '[supabase] VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY not set — realtime disabled, falling back to polling.'
   )
 }
 
-export const supabase = createClient(url, anonKey)
+export { supabase }
 
 export default supabase

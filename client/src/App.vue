@@ -1,68 +1,98 @@
 <script setup>
-import { onMounted } from 'vue'
-import { RouterView } from 'vue-router'
-import { useAuthStore } from '@/stores/auth.js'
+// The website shell. vue-router renders the page (sign-in at '/', or a portal
+// layout for /student, /merchant, /admin). This component keeps the chrome that
+// sits around every screen: the boot (loading / can't-reach-server) states, the
+// role class on the outer <div>, the top bar (only when signed in), the toaster,
+// and the realtime bridges (unchanged — they must still mount here so "Try again"
+// can re-run startApp() without re-subscribing).
+import { computed } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useRoute } from 'vue-router'
+import { useSessionStore } from '@/stores/session.js'
+import { useOrdersStore } from '@/stores/orders.js'
+import { useUiStore } from '@/stores/ui.js'
+import { startApp, refresh } from './composables/useAppBootstrap.js'
+import { startRealtimeAuthBridge } from '@/composables/realtimeAuthBridge.js'
 import { useRealtimeNotifications } from '@/composables/useRealtimeNotifications.js'
-import NotificationToaster from '@/components/NotificationToaster.vue'
-import NotificationBell from '@/components/NotificationBell.vue'
+import { useLiveSync } from '@/composables/useLiveSync.js'
+import { useOpenDeliveriesLive } from '@/composables/useOpenDeliveries.js'
 
-// Learn who the current user is, then subscribe to their realtime
-// notification channel. The composable follows the auth store's userId.
-const auth = useAuthStore()
+import TopNav from './components/TopNav.vue'
+import NotificationToaster from './components/NotificationToaster.vue'
+
+const session = useSessionStore() // browser tab dont share session
+const orders = useOrdersStore()
+const ui = useUiStore()
+const { loaded, loadError, courierOn } = storeToRefs(ui)
+
+const me = computed(() => orders.me())
+const route = useRoute()
+// The top bar shows on portal screens, not on the sign-in page or before load.
+const showChrome = computed(() => !!me.value && route.name !== 'signin')
+
+// realtime: feed auth store the signed-in id, then subscribe to user:<id>.
+startRealtimeAuthBridge()
 useRealtimeNotifications()
 
-onMounted(() => {
-  auth.init()
+// Liveness coordinator: Supabase realtime drives refreshes of the signed-in
+// user's data, with polling as a fallback (fast when realtime is down, a long
+// safety-net while it's connected)..
+useLiveSync(() => session.session.userId, refresh)
+
+useOpenDeliveriesLive({
+  enabled: courierOn,
+  fetchDeliveries: async () => {
+    // When a broadcast is received, trigger the global refresh 
+    // to fetch the new jobs and populate orders.db.jobs
+    await refresh() 
+  }
 })
 </script>
 
 <template>
-  <header class="d-flex justify-content-end align-items-center p-2 border-bottom">
-    <NotificationBell />
-  </header>
-
-  <RouterView />
-
-  <!-- Global, app-wide stacked toasts (bottom-left). -->
-  <NotificationToaster />
-</template>
-// The page shell: the top bar, then the screen for the address (see router.js).
-// One screen shows at a time.
-import { ref, onMounted, onUnmounted } from 'vue'
-import { route } from './router'
-import { DEMO } from './demo'
-import { dateLabel, clockTime, initials } from './utils/format'
-import StoreList from './views/StoreList.vue'
-import StorePage from './views/StorePage.vue'
-import ItemSheet from './views/ItemSheet.vue'
-import CheckoutPage from './views/CheckoutPage.vue'
-import PaySheet from './views/PaySheet.vue'
-
-// The clock in the top bar
-const now = ref(Date.now())
-let timer
-onMounted(() => { timer = setInterval(() => { now.value = Date.now() }, 15000) })
-onUnmounted(() => clearInterval(timer))
-</script>
-
-<template>
-  <nav class="navbar navbar-dark bg-navy sticky-top">
-    <div class="container-fluid">
-      <span class="navbar-brand fw-bold">
-        <span class="text-brand">●</span> Campus Delights
-        <span class="badge rounded-pill text-bg-light ms-1 fw-normal">Student</span>
-      </span>
-      <div class="d-flex align-items-center gap-3 text-white">
-        <span class="small text-white-50 d-none d-sm-inline">🕒 {{ dateLabel(now) }}, {{ clockTime(now) }}</span>
-        <span class="avatar">{{ initials(DEMO.studentName) }}</span>
-        <span class="d-none d-md-inline">{{ DEMO.studentName }}</span>
+  <div class="site" :class="'as-' + (me ? me.role : 'guest')">
+    <div v-if="loadError" class="boot boot-error">
+      <div>
+        <AppMark :size="48" />
+        <h2>Can't reach the server</h2>
+        <button class="btn btn-primary" @click="startApp()">Try again</button>
       </div>
     </div>
-  </nav>
-
-  <ItemSheet v-if="route.sheet === 'item'" :key="route.itemId" :item-id="route.itemId" />
-  <PaySheet v-else-if="route.sheet === 'pay'" />
-  <StorePage v-else-if="route.page === 'store'" :key="route.storeId" :store-id="route.storeId" />
-  <CheckoutPage v-else-if="route.page === 'checkout'" />
-  <StoreList v-else />
+    <div v-else-if="!loaded" class="boot">Loading…</div>
+    <template v-else>
+      <TopNav v-if="showChrome" />
+      <main v-if="showChrome" class="portal"><RouterView /></main>
+      <RouterView v-else />
+    </template>
+    <NotificationToaster />
+  </div>
 </template>
+
+<style scoped>
+/* Can't-reach-server boot screen. */
+.boot-error {
+  text-align: center;
+  padding: 24px;
+}
+.boot-error h2 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  margin: 14px 0 6px;
+  color: var(--ink);
+}
+.boot-error p {
+  max-width: 420px;
+  margin: 0 auto 14px;
+}
+.boot-error :deep(.appmark) {
+  margin: 0 auto;
+}
+.boot-error :deep(.btn-primary) {
+  --bs-btn-bg: var(--brand);
+  --bs-btn-border-color: var(--brand);
+  --bs-btn-hover-bg: var(--brand-600);
+  --bs-btn-hover-border-color: var(--brand-600);
+  font-weight: 700;
+  border-radius: 12px;
+}
+</style>

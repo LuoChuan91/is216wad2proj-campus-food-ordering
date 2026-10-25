@@ -37,6 +37,7 @@ function makeFakeClient() {
 const QUEUE = {
   orderItems: [{ menu_item_id: 'burger', qty: 2 }],
   cookingDetails: [{ id: 'burger', cook_time_sec: 60, max_at_once: 2 }],
+  ahead: 1,
 }
 
 // Mount a host that exposes the composable's return for assertions.
@@ -67,6 +68,7 @@ describe('useWaitTime', () => {
     await flushPromises()
     expect(fetchQueue).toHaveBeenCalledWith('store-1', null)
     expect(get().seconds.value).toBe(60) // 2 burgers, batch 2 -> 1 batch * 60
+    expect(get().ahead.value).toBe(1) // one order in the queue
     expect(get().loading.value).toBe(false)
     expect(get().liveConnected.value).toBe(true)
     expect(client.channel).toHaveBeenCalledWith('store:store-1')
@@ -79,11 +81,13 @@ describe('useWaitTime', () => {
     fetchQueue.mockResolvedValue({
       orderItems: [{ menu_item_id: 'burger', qty: 6 }], // 3 batches * 60 = 180
       cookingDetails: QUEUE.cookingDetails,
+      ahead: 3,
     })
     state.handler({ event: 'queue_change', payload: {} })
     vi.advanceTimersByTime(300)
     await flushPromises()
     expect(get().seconds.value).toBe(180)
+    expect(get().ahead.value).toBe(3)
   })
 
   it('keeps last estimate and marks stale when a refetch fails', async () => {
