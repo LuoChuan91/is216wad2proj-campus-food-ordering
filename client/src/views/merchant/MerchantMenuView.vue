@@ -27,7 +27,7 @@ const menu = computed(() => catalog.menuOf(store.value.id).map((m) => ({ m, grou
       <div v-for="x in menu" :key="x.m.id" class="col-12 col-md-6">
         <div class="mrow h-100">
           <div><strong>{{ x.m.name }}</strong><small>{{ money(x.m.price) }} · {{ x.m.category }} · {{ x.groups ? x.groups + (x.groups === 1 ? ' option group' : ' option groups') : 'no options' }} · {{ Math.max(1, Math.round(x.m.cook_time_sec / 60)) }} min, {{ x.m.max_at_once }} at once</small></div>
-          <label class="form-switch"><input class="form-check-input" type="checkbox" role="switch" :checked="x.m.available" :disabled="busy[x.m.id]" @change="orders.setItemAvailable(x.m.id, $event.target.checked)"><span>{{ x.m.available ? 'Available' : 'Sold out' }}</span></label>
+          <label class="form-check form-switch mb-0 small fw-bold text-nowrap"><input class="form-check-input" type="checkbox" role="switch" :checked="x.m.available" :disabled="busy[x.m.id]" @change="orders.setItemAvailable(x.m.id, $event.target.checked)"><span class="form-check-label">{{ x.m.available ? 'Available' : 'Sold out' }}</span></label>
         </div>
       </div>
     </div>

@@ -977,26 +977,6 @@ h4 .count {
   padding: 18px 14px 16px;
 }
 
-/* deliver tab (component-specific rules moved to DeliverView.vue;
-   .avail/.form-switch stay here as they are shared) */
-.avail,
-.form-switch {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 700;
-  font-size: 12.5px;
-  white-space: nowrap;
-  padding-left: 0;
-}
-.form-switch .form-check-input {
-  margin: 0;
-  width: 2.4em;
-  height: 1.35em;
-  cursor: pointer;
-  float: none;
-}
-
 /* ---------- merchant and admin portals ---------- */
 .merchant,
 .admin {
@@ -1276,13 +1256,6 @@ h4 .count {
 @media (max-width: 900px) {
   .si-wrap {
     padding-top: 32px;
-  }
-  .si-group h3 small {
-    display: none;
-  }
-  .si-points,
-  .si-note {
-    display: none;
   }
   .si-lead {
     margin-bottom: 0;

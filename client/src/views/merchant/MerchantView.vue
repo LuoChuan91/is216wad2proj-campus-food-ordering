@@ -116,7 +116,7 @@ onBeforeUnmount(() => {
           <strong v-else>{{ store.name }}</strong>
           <small>{{ venue ? shortName(venue.name) : '' }} · {{ store.unit_no }} · {{ open.label }}</small>
         </div>
-        <label class="form-switch m-open"><input class="form-check-input" type="checkbox" role="switch" :checked="store.is_open" :disabled="busy[store.id]" @change="ordersStore.setStoreOpen(store.id, $event.target.checked)"><span>{{ store.is_open ? 'Taking orders' : 'Paused' }}</span></label>
+        <label class="form-check form-switch mb-0 small fw-bold text-nowrap"><input class="form-check-input" type="checkbox" role="switch" :checked="store.is_open" :disabled="busy[store.id]" @change="ordersStore.setStoreOpen(store.id, $event.target.checked)"><span class="form-check-label">{{ store.is_open ? 'Taking orders' : 'Paused' }}</span></label>
         <StatCard cap label="Cooks at once" :value="kitchenSlots" title="Set on the server (KITCHEN_SLOTS); mirrored in the client config" />
         <StatCard label="Done today" :value="doneToday" />
         <StatCard label="Updates" :value="liveConnected ? 'Live' : 'Polling'" :title="liveConnected ? 'Realtime is connected' : 'Polling for updates'" />

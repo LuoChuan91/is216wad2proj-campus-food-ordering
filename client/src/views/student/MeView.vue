@@ -28,7 +28,7 @@ const stats = computed(() => ({ orders: orders.ordersOf(me.value.id).length, ear
     <div class="me-card text-center"><Avatar :name="me.name" :size="64" tone="brand" /><h2>{{ me.name }}</h2><p>{{ me.email }}</p><StatusTag tone="ok"><Icon name="shield" :size="12" />Verified SMU student</StatusTag></div>
     <div class="panel me-stats row gx-2 mx-0"><div class="col-4"><b>{{ stats.orders }}</b><small>orders</small></div><div class="col-4"><b>{{ stats.earn.weekCount }}</b><small>deliveries this week</small></div><div class="col-4"><b>{{ money(stats.earn.week) }}</b><small>earned this week</small></div></div>
     <div class="panel me-list">
-      <label class="me-row form-switch d-flex align-items-center justify-content-between gap-3 w-100"><span><strong class="d-block">Delivery jobs</strong><small class="d-block">Get notified when someone nearby wants food delivered</small></span><input class="form-check-input" type="checkbox" role="switch" :checked="courierOn" @change="orders.setAvailable($event.target.checked)"></label>
+      <label class="me-row form-switch d-flex align-items-center justify-content-between gap-3 w-100 ps-0"><span><strong class="d-block">Delivery jobs</strong><small class="d-block">Get notified when someone nearby wants food delivered</small></span><input class="form-check-input ms-0 mt-0 flex-shrink-0" type="checkbox" role="switch" :checked="courierOn" @change="orders.setAvailable($event.target.checked)"></label>
       <button type="button" class="me-row d-flex align-items-center justify-content-between gap-3 w-100 text-start" @click="sessionStore.signOut()"><span><strong class="d-block">Sign out</strong><small class="d-block">Switch to another account</small></span><Icon name="logout" :size="18" /></button>
     </div>
     </div>
@@ -86,6 +86,5 @@ const stats = computed(() => ({ orders: orders.ordersOf(me.value.id).length, ear
   color: var(--muted);
   font-weight: 500;
   font-size: 12px;
-  white-space: normal;
 }
 </style>

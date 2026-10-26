@@ -78,8 +78,8 @@ onBeforeUnmount(() => {
         <h2 class="tab-title">Deliver &amp; earn</h2>
         <p class="mt-1 mb-0">Pick up food on your way and keep the delivery fee.</p>
       </div>
-      <label class="avail form-switch"><input class="form-check-input" type="checkbox" role="switch" :checked="on"
-          @change="orders.setAvailable($event.target.checked)"><span>{{ on ? 'Available' : 'Offline' }}</span></label>
+      <label class="form-check form-switch mb-0 small fw-bold text-nowrap"><input class="form-check-input" type="checkbox" role="switch" :checked="on"
+          @change="orders.setAvailable($event.target.checked)"><span class="form-check-label">{{ on ? 'Available' : 'Offline' }}</span></label>
     </header>
     <div class="panel earn row gx-2 mx-0">
       <div class="col-6 d-flex flex-column"><small>Today</small><b>{{ money(earn.today) }}</b><span>{{ plural(earn.todayCount, 'delivery', 'deliveries')
@@ -183,7 +183,7 @@ onBeforeUnmount(() => {
 
 <style scoped>
 /* Deliver tab (moved from the global prototype stylesheet).
-   Shared bits kept global: .deliver padding, .avail/.form-switch, .meter*,
+   Shared bits kept global: .deliver padding, .meter*,
    .panel, .sec, .count, .empty/.empty-note. */
 .dl-head p {
   color: var(--ink-2);
