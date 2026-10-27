@@ -11,6 +11,7 @@ import { useCatalogStore } from '@/stores/catalog.js'
 import { useSessionStore } from '@/stores/session.js'
 import * as E from '@/utils/engine.js'
 import { config as cfg } from '@/config/index.js'
+import AuthPanel from '@/components/AuthPanel.vue'
 
 const ui = useUiStore()
 const catalog = useCatalogStore()
@@ -62,22 +63,11 @@ const groups = computed(() => {
           <li class="d-flex align-items-center gap-3"><span class="d-flex align-items-center justify-content-center flex-shrink-0"><Icon name="clock" :size="18" /></span>Honest ready times, worked out from each kitchen's queue</li>
           <li class="d-flex align-items-center gap-3"><span class="d-flex align-items-center justify-content-center flex-shrink-0"><Icon name="bike" :size="18" /></span>Peer delivery by verified SMU students</li>
         </ul>
-        <div class="si-note d-none d-lg-flex align-items-start gap-2"><Icon name="sparkle" :size="18" /><div><strong>Sign-in is simulated for now.</strong> Pick any account from our database. Payments are simulated too. Open a second tab and sign in as someone else to watch an order move between them live.</div></div>
       </section>
       <div class="col-12 col-md-10 col-lg-6 col-xl-5">
       <section class="si-card">
         <h2>Sign in</h2>
-        <p class="si-sub">Pick an account.</p>
-        <div v-for="g in groups" :key="g.title" class="si-group">
-          <h3 class="d-flex justify-content-between align-items-baseline gap-2">{{ g.title }} <small class="d-none d-lg-inline text-end">{{ g.note }}</small></h3>
-          <button v-for="x in g.people" :key="x.p.id" type="button" class="si-acct d-flex align-items-center gap-3 w-100 text-start mb-2" @click="session.signIn(x.p.id)">
-            <Avatar :name="x.p.name" :size="38" :tone="x.p.role === 'student' ? 'brand' : 'navy'" />
-            <span class="si-who d-flex flex-column flex-grow-1 overflow-hidden"><strong>{{ x.p.name }}</strong><small class="text-truncate">{{ x.blurb }}</small></span>
-            <StatusTag v-if="x.badge" :tone="x.badge.tone">{{ x.badge.text }}</StatusTag>
-            <Icon name="chevR" :size="16" class="si-go" />
-          </button>
-          <button v-if="g.more" type="button" class="si-toggle d-inline-flex align-items-center gap-2 mb-1" @click="showAll = true"><Icon name="plus" :size="16" />Show {{ g.more }} more students</button>
-        </div>
+        <AuthPanel />
       </section>
       </div>
       </div>
