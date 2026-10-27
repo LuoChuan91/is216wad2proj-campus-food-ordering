@@ -16,11 +16,11 @@
 //   const entry = acquireStoreWait(storeId)   // ref-count++, starts the engine
 //   entry.seconds / entry.ahead / entry.liveConnected (reactive)
 //   releaseStoreWait(storeId)                  // ref-count--, stops when it hits 0
-import { reactive } from 'vue'
+import { reactive, watch as watchSettings } from 'vue'
 import { estimateWaitTime } from '@/utils/waitTime.js'
 import { fetchQueue } from '@/utils/waitTimeApi.js'
 import defaultSupabase from '@/common/supabase.js'
-import { config as cfg } from '@/config/index.js'
+import { waitSettings } from '@/utils/waitSettings.js'
 
 const POLL_MS = 60000
 const DEBOUNCE_MS = 300
@@ -40,15 +40,20 @@ function makeEntryState() {
 function startEngine(storeId, orderId, rec, supabase) {
   const { state } = rec
   let hasData = false
+  let lastQueue = null
+
+  function compute() {
+    if (!lastQueue) return
+    state.seconds = estimateWaitTime(lastQueue.orderItems, lastQueue.cookingDetails, waitSettings(storeId)).seconds
+  }
 
   async function load() {
     try {
-      const { orderItems, cookingDetails, ahead } = await fetchQueue(storeId, orderId || null)
-      // TODO kicken slot and strategy to fix
-      const result = estimateWaitTime(orderItems, cookingDetails, { stations: cfg.kitchenSlots ?? 2, strategy: 'scheduled' })
+      const queue = await fetchQueue(storeId, orderId || null)
       if (rec.destroyed) return
-      state.seconds = result.seconds
-      state.ahead = Number(ahead) || 0
+      lastQueue = queue
+      compute()
+      state.ahead = Number(queue.ahead) || 0
       state.loading = false
       state.stale = false
       hasData = true
@@ -59,6 +64,9 @@ function startEngine(storeId, orderId, rec, supabase) {
     }
   }
   rec.load = load
+  rec.stopSettings = watchSettings(() => JSON.stringify(waitSettings(storeId)), () => {
+    if (!rec.destroyed) compute()
+  })
 
   function scheduleRefetch() {
     if (rec.refetchTimer) clearTimeout(rec.refetchTimer)
@@ -102,6 +110,7 @@ function startEngine(storeId, orderId, rec, supabase) {
 
 function teardownEngine(rec, supabase) {
   rec.destroyed = true
+  if (rec.stopSettings) rec.stopSettings()
   if (rec.refetchTimer) clearTimeout(rec.refetchTimer)
   if (rec.pollTimer) clearInterval(rec.pollTimer)
   if (rec.channel && supabase?.removeChannel) {

@@ -1,10 +1,18 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '@/common/supabase.js'
 import * as auth from '@/services/authService.js'
+import { api } from '@/services/api.js'
+import { useSessionStore } from '@/stores/session.js'
+import { useCatalogStore } from '@/stores/catalog.js'
+import { HOME } from '@/router/nav.js'
 
 const router = useRouter()
+const session = useSessionStore()
+const catalog = useCatalogStore()
+const me = computed(() => catalog.user(session.session.userId))
+const invited = computed(() => !!me.value && me.value.password_set === false)
 const password = ref('')
 const confirm = ref('')
 const error = ref('')
@@ -43,6 +51,12 @@ async function save() {
   busy.value = true
   try {
     await auth.setNewPassword(password.value)
+    if (invited.value) {
+      const saved = await api.markPasswordSet(me.value.id)
+      Object.assign(me.value, saved)
+      router.push(HOME[me.value.role] || '/')
+      return
+    }
     done.value = true
   } catch (e) {
     error.value = e.message
@@ -54,7 +68,8 @@ async function save() {
 
 <template>
   <div class="container py-5" style="max-width: 420px">
-    <h1 class="h3 mb-3">Set new password</h1>
+    <h1 class="h3 mb-3">{{ invited ? 'Choose your password' : 'Set new password' }}</h1>
+    <p v-if="invited" class="text-body-secondary">Welcome, {{ me.name }}. Your account was set up with a temporary password. Choose your own to continue.</p>
 
     <div v-if="!ready && !done" class="alert alert-warning">
       This reset link is invalid or has expired.
@@ -63,7 +78,8 @@ async function save() {
 
     <div v-else-if="done" class="alert alert-success">
       Password saved.
-      <button class="btn btn-sm btn-primary ms-2" @click="router.push('/login')">Go to sign in</button>
+      <button v-if="me" class="btn btn-sm btn-primary ms-2" @click="router.push(HOME[me.role] || '/')">Continue</button>
+      <button v-else class="btn btn-sm btn-primary ms-2" @click="router.push('/login')">Go to sign in</button>
     </div>
 
     <form v-else @submit.prevent="save">
@@ -80,5 +96,6 @@ async function save() {
         {{ busy ? 'Saving...' : 'Save password' }}
       </button>
     </form>
+    <button v-if="invited" type="button" class="btn btn-link w-100 mt-2" @click="auth.signOut(); session.signOut()">Sign out</button>
   </div>
 </template>

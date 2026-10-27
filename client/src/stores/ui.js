@@ -423,7 +423,7 @@ export const useUiStore = defineStore("ui", () => {
   /* merchant */
   function setMerchantTab(tab) {
     ui.staff.merchantTab = tab;
-    go(tab === "menu" ? "/merchant/menu" : "/merchant");
+    go(tab === "orders" ? "/merchant" : "/merchant/" + tab);
   }
   function setMerchantStore(storeId) {
     ui.staff.storeId = storeId;

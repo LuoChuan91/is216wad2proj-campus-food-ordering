@@ -12,10 +12,22 @@ exports.getMenuItem = async (req, res) => {
   res.json(item);
 };
 
-// PATCH /api/menu/:id  { "available": false }
+// POST /api/menu  { store_id, name, price, category, cook_time_sec, max_at_once, ... }
+exports.createMenuItem = async (req, res) => {
+  const item = await service.createMenuItem(req.body, req.get('x-user-id'));
+  res.status(201).json(item);
+};
+
+// PATCH /api/menu/:id  { "available": false }, { "price": 6.5 }, ...
 exports.patchMenuItem = async (req, res) => {
-  const item = await service.updateMenuItem(req.params.id, req.body);
+  const item = await service.updateMenuItem(req.params.id, req.body, req.get('x-user-id'));
   res.json(item);
+};
+
+// DELETE /api/menu/:id
+exports.deleteMenuItem = async (req, res) => {
+  const result = await service.deleteMenuItem(req.params.id, req.get('x-user-id'));
+  res.json(result);
 };
 
 // Angel: cooking details used by the wait-time estimate

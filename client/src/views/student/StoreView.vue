@@ -59,15 +59,19 @@ const hasOptions = (it) => (it.option_groups || []).length > 0
       <p v-if="store.description" class="store-desc">{{ store.description }}</p>
       <template v-for="[cat, items] in cats" :key="cat">
         <h4 class="menu-cat">{{ cat }}</h4>
-        <div class="row g-2">
+        <div class="row g-3">
           <div v-for="it in items" :key="it.id" class="col-12 col-md-6 col-lg-4">
-            <button class="menu-item d-flex align-items-center gap-3 w-100 h-100 text-start bg-white border rounded-4" :class="{ 'opacity-50': !it.available }" :disabled="!it.available || !open.open" @click="ui.openItem(it.id)">
-              <span class="mi-text d-flex flex-column flex-grow-1 overflow-hidden">
-                <strong>{{ it.name }}</strong>
-                <small v-if="it.description">{{ it.description }}</small>
-                <span class="mi-meta d-flex align-items-center gap-2 mt-1"><b>{{ money(it.price) }}</b><StatusTag v-if="hasOptions(it)">Customisable</StatusTag><StatusTag v-if="!it.available" tone="muted">Sold out</StatusTag></span>
+            <button class="menu-item card w-100 h-100 text-start p-0" :class="{ 'sold-out': !it.available }" :disabled="!it.available || !open.open" @click="ui.openItem(it.id)">
+              <img v-if="it.image_url" :src="it.image_url" class="card-img-top" :alt="it.name">
+              <span v-else class="card-img-top img-placeholder d-flex align-items-center justify-content-center text-body-secondary"><i class="bi bi-image fs-2" aria-hidden="true"></i></span>
+              <span class="card-body d-flex flex-column w-100">
+                <strong class="card-title mb-1">{{ it.name }}</strong>
+                <small v-if="it.description" class="card-text mi-desc mb-2">{{ it.description }}</small>
+                <span class="d-flex align-items-end justify-content-between gap-2 mt-auto">
+                  <span class="d-flex align-items-center flex-wrap gap-2"><b class="mi-price">{{ money(it.price) }}</b><StatusTag v-if="hasOptions(it)">Customisable</StatusTag><StatusTag v-if="!it.available" tone="muted">Sold out</StatusTag></span>
+                  <span v-if="it.available && open.open" class="mi-add d-flex align-items-center justify-content-center flex-shrink-0 rounded-circle"><Icon name="plus" :size="18" :stroke="2.4" /></span>
+                </span>
               </span>
-              <span v-if="it.available && open.open" class="mi-add d-flex align-items-center justify-content-center flex-shrink-0 rounded-circle"><Icon name="plus" :size="18" :stroke="2.4" /></span>
             </button>
           </div>
         </div>
@@ -110,13 +114,29 @@ const hasOptions = (it) => (it.option_groups || []).length > 0
   font-weight: 700;
 }
 .menu-item {
-  padding: 12px 12px 12px 14px;
   color: inherit;
+  border-radius: 14px;
+  overflow: hidden;
+  transition: box-shadow 0.15s;
 }
-.mi-text strong {
-  font-size: 14.5px;
+.menu-item:not(:disabled):hover {
+  box-shadow: 0 6px 18px rgba(24, 27, 36, 0.1);
 }
-.mi-text small {
+.menu-item:disabled {
+  opacity: 1;
+}
+.card-img-top {
+  height: 150px;
+  width: 100%;
+  object-fit: cover;
+}
+.img-placeholder {
+  background: var(--canvas);
+}
+.card-title {
+  font-size: 15px;
+}
+.mi-desc {
   color: var(--muted);
   font-size: 12.5px;
   display: -webkit-box;
@@ -124,8 +144,14 @@ const hasOptions = (it) => (it.option_groups || []).length > 0
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.mi-meta b {
-  font-size: 14px;
+.mi-price {
+  font-size: 15px;
+}
+.sold-out {
+  opacity: 0.55;
+}
+.sold-out .card-img-top {
+  filter: grayscale(1);
 }
 .mi-add {
   width: 34px;

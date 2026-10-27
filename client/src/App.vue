@@ -28,7 +28,7 @@ const { loaded, loadError, courierOn } = storeToRefs(ui)
 const me = computed(() => orders.me())
 const route = useRoute()
 // The top bar shows on portal screens, not on the sign-in page or before load.
-const showChrome = computed(() => !!me.value && route.name !== 'signin')
+const showChrome = computed(() => !!me.value && route.name !== 'signin' && route.name !== 'reset-password')
 
 // realtime: feed auth store the signed-in id, then subscribe to user:<id>.
 startRealtimeAuthBridge()

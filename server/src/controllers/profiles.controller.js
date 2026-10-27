@@ -16,3 +16,9 @@ exports.patchProfile = async (req, res) => {
   const profile = await service.updateStatus(req.params.id, req.body);
   res.json(profile);
 };
+
+// PATCH /api/profiles/:id/password-set  (sent by the invited user after choosing a password)
+exports.markPasswordSet = async (req, res) => {
+  const profile = await service.markPasswordSet(req.params.id, req.get('x-user-id'));
+  res.json(profile);
+};

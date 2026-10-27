@@ -28,6 +28,7 @@ const CheckoutPage = () => import('@/views/student/CheckoutView.vue')
 const TrackPage = () => import('@/views/student/TrackView.vue')
 const MerchantOrdersView = () => import('@/views/merchant/MerchantOrdersView.vue')
 const MerchantMenuView = () => import('@/views/merchant/MerchantMenuView.vue')
+const MerchantStoreView = () => import('@/views/merchant/MerchantStoreView.vue')
 const AdminApprovalsView = () => import('@/views/admin/AdminApprovalsView.vue')
 const AdminVenuesView = () => import('@/views/admin/AdminVenuesView.vue')
 const AdminStoresView = () => import('@/views/admin/AdminStoresView.vue')
@@ -71,6 +72,7 @@ const routes = [
     children: [
       { path: '', name: 'merchant-orders', component: MerchantOrdersView, meta: { role: 'merchant', merchantTab: 'orders' } },
       { path: 'menu', name: 'merchant-menu', component: MerchantMenuView, meta: { role: 'merchant', merchantTab: 'menu' } },
+      { path: 'store', name: 'merchant-store', component: MerchantStoreView, meta: { role: 'merchant', merchantTab: 'store' } },
     ],
   },
 
@@ -122,6 +124,9 @@ router.beforeEach((to) => {
 
   // Signed in and heading to sign-in: bounce to the role home.
   if (to.name === 'signin') return HOME[me.role] || '/'
+
+  // Invited accounts must choose their own password before anything else.
+  if (me.password_set === false && to.name !== 'reset-password') return '/reset-password'
 
   // Not-found is always allowed for a signed-in user.
   if (to.name === 'not-found') return true

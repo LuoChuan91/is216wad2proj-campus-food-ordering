@@ -17,13 +17,14 @@ import { ref, computed, watch, onMounted, onBeforeUnmount, toValue } from 'vue'
 import { estimateWaitTime } from '@/utils/waitTime.js'
 import { fetchQueue } from '@/utils/waitTimeApi.js'
 import defaultSupabase from '@/common/supabase.js'
+import { waitSettings } from '@/utils/waitSettings.js'
 
 /**
  * @param {import('vue').MaybeRefOrGetter<string>} storeId
  * @param {import('vue').MaybeRefOrGetter<string|null>} [orderId]
  * @param {{
- *   strategy?: import('vue').MaybeRefOrGetter<string>,
- *   stations?: import('vue').MaybeRefOrGetter<number>,
+ *   strategy?: import('vue').MaybeRefOrGetter<string|null>,
+ *   stations?: import('vue').MaybeRefOrGetter<number|null>,
  *   pollMs?: number,
  *   supabaseClient?: object,
  * }} [options]
@@ -33,9 +34,8 @@ import defaultSupabase from '@/common/supabase.js'
  */
 export function useWaitTime(storeId, orderId = null, options = {}) {
   const {
-    // TODO strategy and station
-    strategy = 'scheduled',
-    stations = 2,
+    strategy = null,
+    stations = null,
     pollMs = 60000,
     supabaseClient = defaultSupabase,
   } = options
@@ -52,16 +52,25 @@ export function useWaitTime(storeId, orderId = null, options = {}) {
   let pollTimer = null
   let refetchTimer = null
   let destroyed = false
+  let lastQueue = null
+
+  function settings() {
+    const saved = waitSettings(toValue(storeId))
+    return { strategy: toValue(strategy) ?? saved.strategy, stations: toValue(stations) ?? saved.stations }
+  }
+
+  function compute() {
+    if (!lastQueue) return
+    seconds.value = estimateWaitTime(lastQueue.orderItems, lastQueue.cookingDetails, settings()).seconds
+  }
 
   async function load() {
     try {
-      const { orderItems, cookingDetails, ahead: aheadCount } = await fetchQueue(toValue(storeId), toValue(orderId))
-      const result = estimateWaitTime(orderItems, cookingDetails, {
-        strategy: toValue(strategy),
-        stations: toValue(stations),
-      })
+      const queue = await fetchQueue(toValue(storeId), toValue(orderId))
+      const { ahead: aheadCount } = queue
       if (destroyed) return
-      seconds.value = result.seconds
+      lastQueue = queue
+      compute()
       ahead.value = Number(aheadCount) || 0
       hasEstimate.value = true
       error.value = null
@@ -152,10 +161,15 @@ export function useWaitTime(storeId, orderId = null, options = {}) {
     teardownChannel()
   })
 
+  watch(() => JSON.stringify(settings()), () => {
+    if (!destroyed) compute()
+  })
+
   // Re-wire when the store or order being watched changes.
   watch(
     () => [toValue(storeId), toValue(orderId)],
     () => {
+      lastQueue = null
       loading.value = true
       hasEstimate.value = false
       error.value = null
