@@ -1,53 +1,12 @@
 <script setup>
-// Sign-in page. Sign-in is simulated for now: pick an account from the database.
-// Supabase Auth (SMU email + password) replaces this later.
-//
-// Migrated from components/SignIn.vue. Rendered by the '/' route. Behaviour unchanged.
-import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui.js'
-import StatusTag from '@/components/StatusTag.vue'
-import { useCatalogStore } from '@/stores/catalog.js'
-import { useSessionStore } from '@/stores/session.js'
 import * as E from '@/utils/engine.js'
 import { config as cfg } from '@/config/index.js'
+import AuthPanel from '@/components/AuthPanel.vue'
 
 const ui = useUiStore()
-const catalog = useCatalogStore()
-const session = useSessionStore()
 const { now } = storeToRefs(ui)
-
-const showAll = ref(false)
-const ORDER = { active: 0, inactive: 1, blocked: 2, removed: 3 }
-
-function blurb(p) {
-  if (p.role === 'merchant') {
-    const st = catalog.storesOf(p.id)
-    if (!st.length) return p.email
-    const v = catalog.venue(st[0].venue_id)
-    return st.length === 1 ? `${st[0].name} · ${v ? v.name : ''}` : `${st.length} stores: ${st.map((s) => s.name).join(', ')}`
-  }
-  if (p.role === 'admin') return 'Campus dining office'
-  return p.email
-}
-function badge(p) {
-  if (p.status === 'inactive') return { text: 'Waiting for approval', tone: 'warn' }
-  if (p.status === 'blocked') return { text: 'Blocked', tone: 'muted' }
-  if (p.status === 'removed') return { text: 'Removed', tone: 'muted' }
-  return null
-}
-
-const groups = computed(() => {
-  const students = catalog.db.profiles.filter((p) => p.role === 'student')
-    .sort((a, b) => ORDER[a.status] - ORDER[b.status] || a.name.localeCompare(b.name))
-  const shown = showAll.value ? students : students.filter((p, i) => p.status === 'active' || i < 4)
-  const pick = (role) => catalog.db.profiles.filter((p) => p.role === role)
-  return [
-    { title: 'Students', note: 'Order food, track it live, deliver for others', people: shown, more: students.length - shown.length },
-    { title: 'Merchants', note: 'Run the kitchen order board and menu', people: pick('merchant'), more: 0 },
-    { title: 'Admin', note: 'Approve students, add venues', people: pick('admin'), more: 0 },
-  ].map((g) => ({ ...g, people: g.people.map((p) => ({ p, blurb: blurb(p), badge: badge(p) })) }))
-})
 </script>
 
 <template>
@@ -62,22 +21,11 @@ const groups = computed(() => {
           <li class="d-flex align-items-center gap-3"><span class="d-flex align-items-center justify-content-center flex-shrink-0"><Icon name="clock" :size="18" /></span>Honest ready times, worked out from each kitchen's queue</li>
           <li class="d-flex align-items-center gap-3"><span class="d-flex align-items-center justify-content-center flex-shrink-0"><Icon name="bike" :size="18" /></span>Peer delivery by verified SMU students</li>
         </ul>
-        <div class="si-note d-none d-lg-flex align-items-start gap-2"><Icon name="sparkle" :size="18" /><div><strong>Sign-in is simulated for now.</strong> Pick any account from our database. Payments are simulated too. Open a second tab and sign in as someone else to watch an order move between them live.</div></div>
       </section>
       <div class="col-12 col-md-10 col-lg-6 col-xl-5">
       <section class="si-card">
         <h2>Sign in</h2>
-        <p class="si-sub">Pick an account.</p>
-        <div v-for="g in groups" :key="g.title" class="si-group">
-          <h3 class="d-flex justify-content-between align-items-baseline gap-2">{{ g.title }} <small class="d-none d-lg-inline text-end">{{ g.note }}</small></h3>
-          <button v-for="x in g.people" :key="x.p.id" type="button" class="si-acct d-flex align-items-center gap-3 w-100 text-start mb-2" @click="session.signIn(x.p.id)">
-            <Avatar :name="x.p.name" :size="38" :tone="x.p.role === 'student' ? 'brand' : 'navy'" />
-            <span class="si-who d-flex flex-column flex-grow-1 overflow-hidden"><strong>{{ x.p.name }}</strong><small class="text-truncate">{{ x.blurb }}</small></span>
-            <StatusTag v-if="x.badge" :tone="x.badge.tone">{{ x.badge.text }}</StatusTag>
-            <Icon name="chevR" :size="16" class="si-go" />
-          </button>
-          <button v-if="g.more" type="button" class="si-toggle d-inline-flex align-items-center gap-2 mb-1" @click="showAll = true"><Icon name="plus" :size="16" />Show {{ g.more }} more students</button>
-        </div>
+        <AuthPanel />
       </section>
       </div>
       </div>
@@ -158,22 +106,6 @@ const groups = computed(() => {
   background: var(--brand-soft);
   color: var(--brand);
 }
-.si-note {
-  max-width: 470px;
-  color: var(--ink-2);
-  font-size: 13.5px;
-  line-height: 1.5;
-  background: var(--warn-soft);
-  border-radius: 14px;
-  padding: 12px 14px;
-}
-.si-note .ic {
-  color: var(--warn);
-  margin-top: 2px;
-}
-.si-note strong {
-  color: var(--ink);
-}
 .si-card {
   background: var(--paper);
   border-radius: 24px;
@@ -188,63 +120,6 @@ const groups = computed(() => {
   font-weight: 800;
   margin: 0;
   letter-spacing: -0.01em;
-}
-.si-sub {
-  color: var(--muted);
-  margin: 2px 0 12px;
-}
-.si-group {
-  margin-top: 14px;
-}
-.si-group h3 {
-  font-size: 12px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--ink-2);
-  margin: 0 4px 6px;
-}
-.si-group h3 small {
-  text-transform: none;
-  letter-spacing: 0;
-  font-weight: 600;
-  color: var(--muted);
-  font-size: 12px;
-}
-.si-acct {
-  border: 1px solid var(--line);
-  background: var(--paper);
-  border-radius: 16px;
-  padding: 10px 12px;
-  color: var(--ink);
-  transition:
-    border-color 0.15s,
-    background 0.15s;
-}
-.si-acct:hover {
-  border-color: #f0b3a3;
-  background: #fffaf8;
-}
-.si-acct:focus-visible {
-  outline: 3px solid rgba(229, 81, 45, 0.45);
-  outline-offset: 1px;
-}
-.si-who strong {
-  font-size: 14.5px;
-}
-.si-who small {
-  color: var(--muted);
-  font-size: 12.5px;
-}
-.si-go {
-  color: var(--muted);
-}
-.si-toggle {
-  border: 0;
-  background: none;
-  color: var(--brand-600);
-  font-weight: 700;
-  padding: 4px;
 }
 .si-foot {
   padding: 10px 24px 22px;
