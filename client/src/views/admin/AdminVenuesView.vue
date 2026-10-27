@@ -56,12 +56,12 @@ const venues = computed(() => catalog.db.venues.map((v) => ({ v, stores: catalog
   margin-bottom: 6px;
 }
 .av-form label {
-  font-size: 12px;
+  font-size: var(--fs-caption);
   font-weight: 700;
   color: var(--ink-2);
 }
 .av-ll {
-  font-size: 12px;
+  font-size: var(--fs-caption);
   color: var(--ink-2);
   font-family: var(--font-mono);
   background: var(--paper);
@@ -71,18 +71,18 @@ const venues = computed(() => catalog.db.venues.map((v) => ({ v, stores: catalog
 }
 .av-err {
   color: var(--late);
-  font-size: 12px;
+  font-size: var(--fs-caption);
   margin: 0;
 }
 .av-row {
   padding: 6px 4px;
 }
 .av-row strong {
-  font-size: 13px;
+  font-size: var(--fs-desc);
 }
 .av-row small {
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--fs-micro);
   font-family: var(--font-mono);
 }
 </style>

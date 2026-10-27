@@ -16,6 +16,7 @@ import WaitTimeEstimate from '@/components/WaitTimeEstimate.vue'
 import StoreHero from '@/components/StoreHero.vue'
 import StatusTag from '@/components/StatusTag.vue'
 import CartBar from '@/components/CartBar.vue'
+import MenuItemCard from '@/components/MenuItemCard.vue'
 
 const route = useRoute()
 const ui = useUiStore()
@@ -24,7 +25,6 @@ const { ui: uiState } = storeToRefs(ui)
 
 const u = computed(() => uiState.value.student)
 const storeId = computed(() => route.params.storeId)
-const money = E.money
 const store = computed(() => catalog.store(storeId.value))
 const venue = computed(() => (store.value ? catalog.venue(store.value.venue_id) : null))
 const open = computed(() => ui.open(store.value))
@@ -37,7 +37,6 @@ const cats = computed(() => {
 const cartHere = computed(() => u.value.cart.storeId === store.value.id && u.value.cart.lines.length > 0)
 const cartCount = computed(() => u.value.cart.lines.reduce((s, l) => s + l.qty, 0))
 const cartTotal = computed(() => u.value.cart.lines.reduce((s, l) => s + l.unit_price * l.qty, 0))
-const hasOptions = (it) => (it.option_groups || []).length > 0
 </script>
 
 <template>
@@ -61,18 +60,7 @@ const hasOptions = (it) => (it.option_groups || []).length > 0
         <h4 class="menu-cat">{{ cat }}</h4>
         <div class="row g-3">
           <div v-for="it in items" :key="it.id" class="col-12 col-md-6 col-lg-4">
-            <button class="menu-item card w-100 h-100 text-start p-0" :class="{ 'sold-out': !it.available }" :disabled="!it.available || !open.open" @click="ui.openItem(it.id)">
-              <img v-if="it.image_url" :src="it.image_url" class="card-img-top" :alt="it.name">
-              <span v-else class="card-img-top img-placeholder d-flex align-items-center justify-content-center text-body-secondary"><i class="bi bi-image fs-2" aria-hidden="true"></i></span>
-              <span class="card-body d-flex flex-column w-100">
-                <strong class="card-title mb-1">{{ it.name }}</strong>
-                <small v-if="it.description" class="card-text mi-desc mb-2">{{ it.description }}</small>
-                <span class="d-flex align-items-end justify-content-between gap-2 mt-auto">
-                  <span class="d-flex align-items-center flex-wrap gap-2"><b class="mi-price">{{ money(it.price) }}</b><StatusTag v-if="hasOptions(it)">Customisable</StatusTag><StatusTag v-if="!it.available" tone="muted">Sold out</StatusTag></span>
-                  <span v-if="it.available && open.open" class="mi-add d-flex align-items-center justify-content-center flex-shrink-0 rounded-circle"><Icon name="plus" :size="18" :stroke="2.4" /></span>
-                </span>
-              </span>
-            </button>
+            <MenuItemCard :item="it" :can-add="open.open" @open="ui.openItem" />
           </div>
         </div>
       </template>
@@ -95,7 +83,7 @@ const hasOptions = (it) => (it.option_groups || []).length > 0
 }
 .store-desc {
   color: var(--ink-2);
-  font-size: 13px;
+  font-size: var(--fs-desc);
   margin: 8px 2px 0;
 }
 .menu {
@@ -106,58 +94,11 @@ const hasOptions = (it) => (it.option_groups || []).length > 0
   padding-bottom: 84px;
 }
 .menu-cat {
-  font-size: 13px;
+  font-size: var(--fs-desc);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--muted);
   margin: 14px 2px 8px;
   font-weight: 700;
-}
-.menu-item {
-  color: inherit;
-  border-radius: 14px;
-  overflow: hidden;
-  transition: box-shadow 0.15s;
-}
-.menu-item:not(:disabled):hover {
-  box-shadow: 0 6px 18px rgba(24, 27, 36, 0.1);
-}
-.menu-item:disabled {
-  opacity: 1;
-}
-.card-img-top {
-  height: 150px;
-  width: 100%;
-  object-fit: cover;
-}
-.img-placeholder {
-  background: var(--canvas);
-}
-.card-title {
-  font-size: 15px;
-}
-.mi-desc {
-  color: var(--muted);
-  font-size: 12.5px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.mi-price {
-  font-size: 15px;
-}
-.sold-out {
-  opacity: 0.55;
-}
-.sold-out .card-img-top {
-  filter: grayscale(1);
-}
-.mi-add {
-  width: 34px;
-  height: 34px;
-  background: var(--brand);
-  color: #fff;
-  box-shadow: 0 4px 10px rgba(229, 81, 45, 0.35);
 }
 </style>

@@ -5,7 +5,7 @@ import { useUiStore } from '@/stores/ui.js'
 import { useCatalogStore } from '@/stores/catalog.js'
 import { useOrdersStore } from '@/stores/orders.js'
 import { useMerchantStore } from '@/stores/merchant.js'
-import * as E from '@/utils/engine.js'
+import MenuItemAdminCard from '@/portals/merchant/MenuItemAdminCard.vue'
 
 const URL_RE = /^https?:\/\/\S+$/
 
@@ -14,12 +14,10 @@ const catalog = useCatalogStore()
 const orders = useOrdersStore()
 const merchant = useMerchantStore()
 const { busy } = storeToRefs(ui)
-const money = E.money
 const store = inject('merchantStore')
 const menu = computed(() => catalog.menuOf(store.value.id)
   .slice()
-  .sort((a, b) => (a.category || '').localeCompare(b.category || '') || a.name.localeCompare(b.name))
-  .map((m) => ({ m, groups: (m.option_groups || []).length })))
+  .sort((a, b) => (a.category || '').localeCompare(b.category || '') || a.name.localeCompare(b.name)))
 const categories = computed(() => [...new Set(catalog.menuOf(store.value.id).map((m) => m.category).filter(Boolean))].sort())
 
 const editing = ref(null)
@@ -27,7 +25,6 @@ const draft = reactive({})
 const tried = ref(false)
 const saving = ref(false)
 const formError = ref('')
-const confirmId = ref(null)
 const removing = ref(null)
 
 function openForm(item = null) {
@@ -99,7 +96,6 @@ async function remove(item) {
     ui.notify("That didn't work", err.message, 'warn')
   } finally {
     removing.value = null
-    confirmId.value = null
   }
 }
 </script>
@@ -112,34 +108,15 @@ async function remove(item) {
     </div>
     <p v-if="!menu.length" class="col-empty">No items yet. Add your first dish.</p>
     <div class="row g-3">
-      <div v-for="x in menu" :key="x.m.id" class="col-12 col-md-6 col-lg-4">
-        <section class="card h-100" :class="{ 'sold-out': !x.m.available }">
-          <img v-if="x.m.image_url" :src="x.m.image_url" class="card-img-top" :alt="x.m.name">
-          <div v-else class="card-img-top img-placeholder d-flex align-items-center justify-content-center text-body-secondary">
-            <i class="bi bi-image fs-2" aria-hidden="true"></i>
-          </div>
-          <div class="card-body d-flex flex-column">
-            <div class="d-flex justify-content-between align-items-start gap-2">
-              <h5 class="card-title mb-1">{{ x.m.name }}</h5>
-              <span class="fw-bold text-nowrap">{{ money(x.m.price) }}</span>
-            </div>
-            <span class="badge rounded-pill text-bg-light align-self-start mb-2">{{ x.m.category }}</span>
-            <p v-if="x.m.description" class="card-text small mb-2">{{ x.m.description }}</p>
-            <p class="card-text small text-body-secondary mt-auto mb-0">{{ x.groups ? x.groups + (x.groups === 1 ? ' option group' : ' option groups') : 'No options' }} · {{ Math.max(1, Math.round(x.m.cook_time_sec / 60)) }} min, batch of {{ x.m.max_at_once }}</p>
-          </div>
-          <div class="card-footer bg-transparent">
-            <div v-if="confirmId === x.m.id" class="d-flex align-items-center gap-2">
-              <span class="small fw-bold me-auto">Remove this item?</span>
-              <button type="button" class="btn btn-sm btn-danger" :disabled="removing === x.m.id" @click="remove(x.m)">Remove</button>
-              <button type="button" class="btn btn-sm btn-outline-secondary" @click="confirmId = null">Cancel</button>
-            </div>
-            <div v-else class="d-flex align-items-center gap-2">
-              <label class="form-check form-switch mb-0 small fw-bold text-nowrap me-auto"><input class="form-check-input" type="checkbox" role="switch" :checked="x.m.available" :disabled="busy[x.m.id]" @change="orders.setItemAvailable(x.m.id, $event.target.checked)"><span class="form-check-label">{{ x.m.available ? 'Available' : 'Sold out' }}</span></label>
-              <button type="button" class="btn btn-sm btn-primary" :aria-label="'Edit ' + x.m.name" @click="openForm(x.m)"><i class="bi bi-pencil" aria-hidden="true"></i> Edit</button>
-              <button type="button" class="btn btn-sm btn-outline-danger" :aria-label="'Remove ' + x.m.name" @click="confirmId = x.m.id"><i class="bi bi-trash" aria-hidden="true"></i></button>
-            </div>
-          </div>
-        </section>
+      <div v-for="it in menu" :key="it.id" class="col-12 col-md-6 col-lg-4">
+        <MenuItemAdminCard
+          :item="it"
+          :busy="!!busy[it.id]"
+          :removing="removing === it.id"
+          @toggle-available="orders.setItemAvailable(it.id, $event)"
+          @edit="openForm"
+          @remove="remove"
+        />
       </div>
     </div>
 
@@ -220,23 +197,10 @@ async function remove(item) {
 .m-hint {
   color: var(--muted);
 }
-.card {
-  border-radius: 14px;
-  overflow: hidden;
-}
-.card-img-top {
-  height: 160px;
-  object-fit: cover;
-}
-.img-placeholder {
-  background: var(--canvas);
-}
-.card-title {
-  font-size: 16px;
-  font-weight: 800;
-}
-.sold-out .card-img-top {
-  filter: grayscale(1);
-  opacity: 0.6;
+@media (max-width: 720px) {
+  .m-menu {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
 }
 </style>

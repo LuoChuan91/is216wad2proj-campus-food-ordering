@@ -114,7 +114,7 @@ async function save() {
                 </div>
                 <div class="col-12">
                   <img v-if="previewUrl" :src="previewUrl" alt="Store image preview" class="preview img-fluid rounded-3 border w-100">
-                  <div v-else class="preview rounded-3 border bg-body-tertiary d-flex align-items-center justify-content-center text-body-secondary"><i class="bi bi-image fs-2" aria-hidden="true"></i></div>
+                  <div v-else class="preview rounded-3 border bg-body-tertiary d-flex align-items-center justify-content-center text-body-secondary"><i class="bi bi-image type-display" aria-hidden="true"></i></div>
                 </div>
               </div>
             </div>

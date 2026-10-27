@@ -148,7 +148,7 @@ async function submit() {
   background: none;
   padding: 8px 10px;
   font-weight: 700;
-  font-size: 14px;
+  font-size: var(--fs-body);
   color: var(--muted);
   border-bottom: 3px solid transparent;
   margin-bottom: -1px;
@@ -165,12 +165,12 @@ async function submit() {
 .auth-form label {
   display: grid;
   gap: 4px;
-  font-size: 13px;
+  font-size: var(--fs-desc);
   font-weight: 700;
   color: var(--ink-2);
 }
 .auth-form .form-control {
-  font-size: 14.5px;
+  font-size: var(--fs-body);
   border-radius: 12px;
   padding: 9px 12px;
 }
@@ -201,7 +201,7 @@ async function submit() {
   padding: 6px 0 0;
   color: var(--brand-600);
   font-weight: 700;
-  font-size: 13px;
+  font-size: var(--fs-desc);
   cursor: pointer;
 }
 </style>

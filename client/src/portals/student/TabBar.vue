@@ -40,3 +40,31 @@ const jobs = computed(() => (courierOn.value ? orders.openJobs().length : 0))
     </button>
   </nav>
 </template>
+
+<style scoped>
+.tabbar {
+  z-index: 15;
+  height: 64px;
+  padding: 6px 8px 8px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  background: var(--paper);
+  border-top: 1px solid var(--line);
+}
+.tab {
+  border: 0;
+  background: none;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  color: var(--muted);
+  font-size: var(--fs-micro);
+  font-weight: 700;
+  cursor: pointer;
+}
+.tab.on {
+  color: var(--brand);
+}
+</style>

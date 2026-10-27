@@ -29,3 +29,67 @@ const first = (name) => name.split(' ')[0]
     </div>
   </div>
 </template>
+
+<style scoped>
+.pending {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  padding: 72px 28px 24px;
+  text-align: center;
+  background: linear-gradient(180deg, #fff 0%, var(--canvas) 100%);
+}
+.pending .appmark {
+  margin: 0 auto 18px;
+}
+.pending h2 {
+  font-size: var(--fs-title);
+  font-weight: 800;
+  margin: 0 0 10px;
+  text-wrap: balance;
+}
+.pending p {
+  color: var(--ink-2);
+  font-size: var(--fs-body);
+  margin: 0 0 24px;
+}
+.pending-card {
+  text-align: left;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 16px;
+}
+.pc-status i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #e5a019;
+  box-shadow: 0 0 0 0 rgba(229, 160, 25, 0.5);
+  animation: ping 1.6s infinite;
+}
+.pc-status.late i {
+  background: var(--late);
+  animation: none;
+}
+@keyframes ping {
+  0% {
+    box-shadow: 0 0 0 0 rgba(229, 160, 25, 0.55);
+  }
+  80%,
+  100% {
+    box-shadow: 0 0 0 10px rgba(229, 160, 25, 0);
+  }
+}
+.pending-card dl {
+  font-size: var(--fs-desc);
+}
+.pending-card dt {
+  color: var(--muted);
+  font-weight: 600;
+}
+.pending-card dd {
+  margin: 0;
+  font-weight: 600;
+}
+</style>

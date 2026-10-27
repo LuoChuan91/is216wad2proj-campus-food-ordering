@@ -1,11 +1,4 @@
 <script setup>
-// One row in the student's orders list, with the human status label.
-//
-// Extracted from views/student/OrdersView.vue. The label logic is the same the
-// prototype used: completed -> Delivered/Collected (depending on delivery and
-// whether it fell back to pickup), ready+picked_up -> On the way, otherwise a map
-// of the raw status. The row's subtitle differs between active ("#code · N items ·
-// price") and earlier ("<since> · price"), so the caller passes `variant`.
 import { computed } from 'vue'
 import * as E from '@/utils/engine.js'
 import Mono from '@/components/icons/Mono.vue'
@@ -72,6 +65,6 @@ const label = computed(() => orderStatusLabel(props.order))
 
 .or-main small {
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--fs-caption);
 }
 </style>

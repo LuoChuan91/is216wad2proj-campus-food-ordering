@@ -68,13 +68,13 @@ const photo = computed(() => {
 }
 .store-hero h2 {
   color: #fff;
-  font-size: 22px;
+  font-size: var(--fs-title);
   font-weight: 800;
   margin: 0;
 }
 .store-hero p {
   margin: 2px 0 0;
   opacity: 0.88;
-  font-size: 13px;
+  font-size: var(--fs-desc);
 }
 </style>

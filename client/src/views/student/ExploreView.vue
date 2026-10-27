@@ -117,9 +117,10 @@ const results = computed(() => {
 </template>
 
 <style scoped>
-/* Explore header (moved from the global stylesheet). The map, map-note,
-   leaflet-*, search, peek/vsheet and venue-row stay global — they are shared
-   with the venue sheet / stores list / admin map, or are Leaflet-owned DOM. */
+/* Explore header, "Near you" peek sheet and search results (moved from the
+   global stylesheet). The map, map-note, leaflet-*, search and vsheet stay
+   global — they are shared with the venue sheet / stores list / admin map, or
+   are Leaflet-owned DOM. */
 .explore-top {
   position: absolute;
   z-index: 5;
@@ -136,11 +137,11 @@ const results = computed(() => {
 .hello small {
   display: block;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--fs-caption);
   line-height: 1.1;
 }
 .hello strong {
-  font-size: 18px;
+  font-size: var(--fs-heading);
   line-height: 1.15;
 }
 .brand-pill {
@@ -160,10 +161,91 @@ const results = computed(() => {
   border-radius: 12px;
   color: var(--brand-600);
   font-weight: 700;
-  font-size: 13px;
+  font-size: var(--fs-desc);
   cursor: pointer;
 }
 .see-all:hover {
   background: var(--canvas);
+}
+.peek {
+  position: absolute;
+  z-index: 6;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--paper);
+  border-radius: 24px 24px 0 0;
+  box-shadow: 0 -10px 30px rgba(20, 24, 40, 0.12);
+  display: flex;
+  flex-direction: column;
+  padding: 0 12px 10px;
+}
+.peek.results {
+  max-height: 62%;
+}
+.peek-head {
+  padding: 2px 6px 6px;
+}
+.peek-head strong {
+  font-size: var(--fs-subheading);
+}
+.where {
+  color: var(--muted);
+  font-size: var(--fs-desc);
+  font-weight: 600;
+  border: 0;
+  background: none;
+  border-radius: 999px;
+  padding: 3px 8px;
+  cursor: pointer;
+}
+.where:hover {
+  background: var(--canvas);
+  color: var(--ink);
+}
+.locate-err {
+  margin: -2px 6px 6px;
+  font-size: var(--fs-caption);
+  color: var(--late);
+}
+.results-list {
+  padding-bottom: 6px;
+}
+.results-list .sec {
+  margin: 10px 6px 4px;
+}
+.venue-row {
+  color: inherit;
+  border: 0;
+  background: none;
+  padding: 9px 6px;
+  border-radius: 14px;
+}
+.venue-row:hover {
+  background: var(--canvas);
+}
+.venue-row:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.venue-row:disabled:hover {
+  background: none;
+}
+.venue-row .price {
+  font-size: var(--fs-desc);
+}
+.venue-ic {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+.venue-main strong {
+  font-size: var(--fs-body);
+}
+.venue-main small {
+  color: var(--muted);
+  font-size: var(--fs-desc);
 }
 </style>

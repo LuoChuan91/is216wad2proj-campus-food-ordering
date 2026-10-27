@@ -63,3 +63,69 @@ const blocked = (g, o) => !o.available || (g.type === 'multi' && !isOn(o) && v.v
     </footer>
   </div>
 </template>
+
+<style scoped>
+.opt-group {
+  margin-bottom: 14px;
+}
+.opt-group header strong {
+  font-size: var(--fs-subheading);
+}
+.opt-list {
+  display: grid;
+  gap: 6px;
+}
+.opt-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.opt {
+  border: 1.5px solid var(--line);
+  background: var(--paper);
+  border-radius: 12px;
+  padding: 8px 10px;
+  font-size: var(--fs-desc);
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+  min-height: 40px;
+}
+.opt.on {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+.opt.blocked {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.opt-mark {
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  border: 1.5px solid #c2c7d3;
+  color: #fff;
+}
+.opt.radio .opt-mark {
+  border-radius: 50%;
+}
+.opt.on .opt-mark {
+  background: var(--brand);
+  border-color: var(--brand);
+}
+.opt-name {
+  line-height: 1.2;
+}
+.opt-price {
+  color: var(--muted);
+  font-size: var(--fs-caption);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.opt.on .opt-price {
+  color: var(--brand-600);
+}
+</style>

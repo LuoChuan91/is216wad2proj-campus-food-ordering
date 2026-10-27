@@ -101,7 +101,7 @@ const drops = computed(() => {
 }
 .co-store small {
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--fs-caption);
 }
 .co-lines {
   padding: 6px 12px;
@@ -118,11 +118,11 @@ const drops = computed(() => {
 }
 .co-est small {
   color: var(--muted);
-  font-size: 12.5px;
+  font-size: var(--fs-desc);
 }
 .co-sum {
   padding: 10px 14px;
-  font-size: 13.5px;
+  font-size: var(--fs-desc);
   font-variant-numeric: tabular-nums;
 }
 .co-sum .disc {
@@ -131,7 +131,7 @@ const drops = computed(() => {
 }
 .co-sum .total {
   border-top: 1px dashed var(--line);
-  font-size: 16px;
+  font-size: var(--fs-subheading);
   font-weight: 800;
 }
 .pay-bar {

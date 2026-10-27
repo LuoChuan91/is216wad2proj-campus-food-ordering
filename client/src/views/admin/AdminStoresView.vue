@@ -57,7 +57,7 @@ onBeforeUnmount(() => { for (const id of waitStores) releaseStoreWait(id); waitS
 }
 .adm-table th {
   text-align: left;
-  font-size: 11px;
+  font-size: var(--fs-micro);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--muted);

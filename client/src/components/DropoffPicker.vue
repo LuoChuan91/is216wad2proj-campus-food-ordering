@@ -66,7 +66,7 @@ const shownDrops = computed(() => {
 .co-search {
   margin-bottom: 6px;
   border-radius: 10px;
-  font-size: 13px;
+  font-size: var(--fs-desc);
 }
 /* Fixed-height scroll so a long list of drop-off points never pushes the page;
    it scrolls inside this box instead. */
@@ -78,11 +78,11 @@ const shownDrops = computed(() => {
 .drop-empty {
   margin: 8px 2px;
   color: var(--muted);
-  font-size: 12.5px;
+  font-size: var(--fs-desc);
 }
 .drop {
   padding: 9px 4px;
-  font-size: 13.5px;
+  font-size: var(--fs-desc);
   font-weight: 600;
   cursor: pointer;
 }
@@ -96,12 +96,12 @@ const shownDrops = computed(() => {
 .co-note {
   margin-top: 8px;
   border-radius: 10px;
-  font-size: 13px;
+  font-size: var(--fs-desc);
 }
 .hint {
   margin: 8px 0 0;
   color: var(--ink-2);
-  font-size: 12px;
+  font-size: var(--fs-caption);
   background: var(--canvas);
   border-radius: 12px;
   padding: 8px 10px;

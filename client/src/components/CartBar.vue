@@ -37,7 +37,7 @@ const money = E.money
   color: #fff;
   padding: 14px 16px;
   font-weight: 700;
-  font-size: 15px;
+  font-size: var(--fs-subheading);
   cursor: pointer;
   box-shadow: 0 10px 24px rgba(20, 24, 40, 0.3);
 }
@@ -48,7 +48,7 @@ const money = E.money
   background: var(--brand);
   display: grid;
   place-items: center;
-  font-size: 13px;
+  font-size: var(--fs-desc);
 }
 .cart-bar b {
   margin-left: auto;

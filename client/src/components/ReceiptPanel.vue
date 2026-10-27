@@ -60,6 +60,6 @@ const money = E.money
 .rc-ref {
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--fs-micro);
 }
 </style>

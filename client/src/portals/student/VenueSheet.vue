@@ -3,10 +3,8 @@
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui.js'
-import StatusTag from '@/components/StatusTag.vue'
 import { useCatalogStore } from '@/stores/catalog.js'
-import * as E from '@/utils/engine.js'
-import WaitTimeEstimate from '@/components/WaitTimeEstimate.vue'
+import StoreCard from '@/components/StoreCard.vue'
 
 const ui = useUiStore()
 const catalog = useCatalogStore()
@@ -35,23 +33,9 @@ const stores = computed(() => catalog.storesAt(venue.value.id).map((s) => ({ s, 
     </div>
     <div class="vsheet-list scroll d-grid gap-2">
       <p v-if="!stores.length" class="empty-note">No stores here yet.</p>
-      <button v-for="x in stores" :key="x.s.id" class="store-card d-flex align-items-center gap-3 w-100 p-2 text-start bg-white border rounded-4"
-        :class="{ 'opacity-75': x.available && !x.open.open, 'opacity-50': !x.available }"
-        :disabled="!x.available" @click="ui.openStore(x.s.id)">
-        <Mono :store="x.s" :size="46" />
-        <span class="d-flex flex-column flex-grow-1 overflow-hidden">
-          <strong>{{ x.s.name }}</strong>
-          <small class="text-body-secondary">{{ x.s.cuisine }} · {{ x.s.unit_no }}</small>
-          <span class="d-flex flex-wrap gap-1 mt-1">
-            <StatusTag v-if="!x.available" tone="muted">Unavailable</StatusTag>
-            <StatusTag v-else :tone="x.open.open ? 'ok' : 'muted'">{{ x.open.open ? 'Open' : 'Closed' }}</StatusTag>
-            <StatusTag v-if="x.s.discount_type" tone="brand">{{ E.discountShort(x.s) }}</StatusTag>
-          </span>
-        </span>
-        <span v-if="x.available && x.open.open" class="flex-shrink-0">
-          <WaitTimeEstimate :store-id="x.s.id" />
-        </span>
-      </button>
+      <StoreCard v-for="x in stores" :key="x.s.id" :store="x.s" :open="x.open.open" :available="x.available">
+        <small class="text-body-secondary">{{ x.s.cuisine }} · {{ x.s.unit_no }}</small>
+      </StoreCard>
     </div>
   </div>
 </template>

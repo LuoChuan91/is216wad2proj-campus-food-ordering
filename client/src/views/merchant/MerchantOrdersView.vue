@@ -117,7 +117,7 @@ const cols = computed(() => [
   padding: 8px;
 }
 .kcol h5 {
-  font-size: 12.5px;
+  font-size: var(--fs-desc);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   margin: 2px 4px 8px;

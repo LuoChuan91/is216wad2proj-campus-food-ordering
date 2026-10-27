@@ -72,11 +72,11 @@ const fresh = props.o.status === 'paid' && now.value - props.o.created_at < 20e3
   }
 }
 .ocode {
-  font-size: 15px;
+  font-size: var(--fs-subheading);
   font-variant-numeric: tabular-nums;
 }
 .waited {
-  font-size: 11px;
+  font-size: var(--fs-micro);
   font-weight: 800;
 }
 .waited i {
@@ -98,29 +98,29 @@ const fresh = props.o.status === 'paid' && now.value - props.o.created_at < 20e3
   font-weight: 700;
 }
 .olines {
-  font-size: 12.5px;
+  font-size: var(--fs-desc);
 }
 .olines small {
   color: var(--muted);
-  font-size: 11.5px;
+  font-size: var(--fs-caption);
 }
 .fb {
   background: var(--warn-soft);
   color: #7a4c06;
   font-weight: 700;
-  font-size: 11.5px;
+  font-size: var(--fs-caption);
   border-radius: 8px;
   padding: 4px 8px;
 }
 .est {
   color: var(--ink-2);
-  font-size: 11.5px;
+  font-size: var(--fs-caption);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 .courier.warn,
 .courier.ok {
-  font-size: 11.5px;
+  font-size: var(--fs-caption);
   font-weight: 700;
   padding: 0;
   border: 0;

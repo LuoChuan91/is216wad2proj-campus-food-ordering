@@ -54,9 +54,20 @@ defineProps({
   opacity: 0.85;
 }
 .adm-who strong {
-  font-size: 14.5px;
+  font-size: var(--fs-body);
 }
 .adm-who small {
   color: var(--muted);
+}
+@media (max-width: 720px) {
+  .adm-row {
+    flex-wrap: wrap;
+  }
+  .adm-who {
+    flex-basis: calc(100% - 60px);
+  }
+  .adm-actions {
+    margin-left: auto;
+  }
 }
 </style>

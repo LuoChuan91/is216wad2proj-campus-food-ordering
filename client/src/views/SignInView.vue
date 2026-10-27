@@ -67,7 +67,7 @@ const { now } = storeToRefs(ui)
 }
 .si-brand h1 {
   font-family: var(--font-display);
-  font-size: 46px;
+  font-size: var(--fs-hero);
   font-weight: 800;
   letter-spacing: -0.02em;
   line-height: 1;
@@ -76,12 +76,12 @@ const { now } = storeToRefs(ui)
 }
 .si-brand p {
   margin: 0;
-  font-size: 16px;
+  font-size: var(--fs-subheading);
   font-weight: 600;
   color: #dfe4f7;
 }
 .si-lead {
-  font-size: 17px;
+  font-size: var(--fs-heading);
   line-height: 1.55;
   color: #dfe4f7;
   max-width: 470px;
@@ -97,7 +97,7 @@ const { now } = storeToRefs(ui)
   border-radius: 16px;
   padding: 12px 14px;
   font-weight: 600;
-  font-size: 14.5px;
+  font-size: var(--fs-body);
 }
 .si-points li > span {
   width: 36px;
@@ -116,7 +116,7 @@ const { now } = storeToRefs(ui)
 }
 .si-card h2 {
   font-family: var(--font-display);
-  font-size: 28px;
+  font-size: var(--fs-display);
   font-weight: 800;
   margin: 0;
   letter-spacing: -0.01em;
@@ -124,6 +124,27 @@ const { now } = storeToRefs(ui)
 .si-foot {
   padding: 10px 24px 22px;
   color: var(--muted);
-  font-size: 12.5px;
+  font-size: var(--fs-desc);
+}
+@media (max-width: 900px) {
+  .si-wrap {
+    padding-top: 32px;
+  }
+  .si-lead {
+    margin-bottom: 0;
+    font-size: var(--fs-subheading);
+  }
+  .si-brand {
+    margin-bottom: 14px;
+  }
+}
+@media (max-width: 400px) {
+  .si-wrap {
+    padding: 24px 12px 12px;
+  }
+  .si-card {
+    padding: 20px 14px 16px;
+    border-radius: 20px;
+  }
 }
 </style>

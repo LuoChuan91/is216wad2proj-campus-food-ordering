@@ -7,12 +7,10 @@
 import { computed, watch, onBeforeUnmount } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui.js'
-import StatusTag from '@/components/StatusTag.vue'
 import { useCatalogStore } from '@/stores/catalog.js'
-import * as E from '@/utils/engine.js'
 import { shortName } from '@/utils/landmarks.js'
 import { acquireStoreWait, releaseStoreWait, peekStoreWait } from '@/composables/storeWaitCache.js'
-import WaitTimeEstimate from '@/components/WaitTimeEstimate.vue'
+import StoreCard from '@/components/StoreCard.vue'
 
 const ui = useUiStore()
 const catalog = useCatalogStore()
@@ -101,20 +99,10 @@ const openCount = computed(() => rows.value.filter((r) => r.open.open).length)
     </div>
     <div class="row g-2">
       <div v-for="r in shown" :key="r.s.id" class="col-12 col-md-6 col-lg-4">
-      <button class="store-card d-flex align-items-center gap-3 w-100 h-100 p-2 text-start bg-white border rounded-4" :class="{ 'opacity-75': r.available && !r.open.open, 'opacity-50': !r.available }" :disabled="!r.available" @click="ui.openStore(r.s.id)">
-        <Mono :store="r.s" :size="46" />
-        <span class="d-flex flex-column flex-grow-1 overflow-hidden">
-          <strong>{{ r.s.name }}</strong>
-          <small class="text-body-secondary">{{ r.s.cuisine }}</small>
-          <small v-if="r.v" class="d-inline-flex align-items-center gap-1 text-body-secondary"><Icon name="walk" :size="12" />{{ r.walk.minutes }} min · {{ shortName(r.v.name) }}</small>
-          <span class="d-flex flex-wrap gap-1 mt-1">
-            <StatusTag v-if="!r.available" tone="muted">Unavailable</StatusTag>
-            <StatusTag v-else :tone="r.open.open ? 'ok' : 'muted'">{{ r.open.open ? 'Open' : 'Closed' }}</StatusTag>
-            <StatusTag v-if="r.s.discount_type" tone="brand">{{ E.discountShort(r.s) }}</StatusTag>
-          </span>
-        </span>
-        <span v-if="r.available && r.open.open" class="flex-shrink-0"><WaitTimeEstimate :store-id="r.s.id" /></span>
-      </button>
+      <StoreCard class="h-100" :store="r.s" :open="r.open.open" :available="r.available">
+        <small class="text-body-secondary">{{ r.s.cuisine }}</small>
+        <small v-if="r.v" class="d-inline-flex align-items-center gap-1 text-body-secondary"><Icon name="walk" :size="12" />{{ r.walk.minutes }} min · {{ shortName(r.v.name) }}</small>
+      </StoreCard>
       </div>
       <p v-if="!shown.length" class="empty-note col-12">No stores match. Try another filter.</p>
     </div>
@@ -124,11 +112,10 @@ const openCount = computed(() => rows.value.filter((r) => r.open.open).length)
 
 <style scoped>
 /* Stores list: filter chips + sort row (moved from the global stylesheet).
-   Kept global (shared): .stores-tab padding, .tab-title, .search, and the
-   .store-card hover rule (also used by the venue sheet). */
+   Kept global (shared): .stores-tab padding, .tab-title, .search. */
 .tab-sub {
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--fs-desc);
   margin: 2px 0 12px;
 }
 .stores-tab .search {
@@ -152,7 +139,7 @@ const openCount = computed(() => rows.value.filter((r) => r.open.open).length)
   color: var(--ink-2);
   cursor: pointer;
   padding: 5px 12px;
-  font-size: 12.5px;
+  font-size: var(--fs-desc);
 }
 .chip.filter:hover {
   border-color: #cfd4e0;
@@ -168,7 +155,7 @@ const openCount = computed(() => rows.value.filter((r) => r.open.open).length)
   justify-content: space-between;
   gap: 10px;
   margin: 2px 2px 10px;
-  font-size: 12.5px;
+  font-size: var(--fs-desc);
   font-weight: 700;
   color: var(--muted);
 }
@@ -180,7 +167,7 @@ const openCount = computed(() => rows.value.filter((r) => r.open.open).length)
 }
 .sort-row .form-select {
   width: auto;
-  font-size: 12.5px;
+  font-size: var(--fs-desc);
   font-weight: 700;
   border-radius: 10px;
   padding-top: 3px;

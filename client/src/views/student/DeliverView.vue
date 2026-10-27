@@ -187,7 +187,7 @@ onBeforeUnmount(() => {
    .panel, .sec, .count, .empty/.empty-note. */
 .dl-head p {
   color: var(--ink-2);
-  font-size: 13px;
+  font-size: var(--fs-desc);
 }
 
 .earn {
@@ -202,33 +202,33 @@ onBeforeUnmount(() => {
 }
 
 .earn b {
-  font-size: 26px;
+  font-size: var(--fs-display);
   font-weight: 800;
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
 }
 
 .earn span {
-  font-size: 12px;
+  font-size: var(--fs-caption);
   opacity: 0.8;
 }
 
 .job-route strong {
-  font-size: 14px;
+  font-size: var(--fs-body);
 }
 
 .job-route small {
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--fs-caption);
 }
 
 .fee {
-  font-size: 17px;
+  font-size: var(--fs-heading);
   color: var(--ok);
 }
 
 .job-timer small {
-  font-size: 12px;
+  font-size: var(--fs-caption);
   font-weight: 700;
   color: var(--ink-2);
   font-variant-numeric: tabular-nums;
@@ -245,7 +245,7 @@ onBeforeUnmount(() => {
 
 .mini-steps li {
   text-align: center;
-  font-size: 11.5px;
+  font-size: var(--fs-caption);
   font-weight: 700;
   color: var(--muted);
   padding: 5px 0;
@@ -264,7 +264,7 @@ onBeforeUnmount(() => {
 }
 
 .aj-line {
-  font-size: 12.5px;
+  font-size: var(--fs-desc);
   font-weight: 600;
   color: var(--ink-2);
 }

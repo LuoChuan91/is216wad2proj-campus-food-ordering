@@ -92,7 +92,7 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
 
 .tn-brand b {
   font-family: var(--font-display);
-  font-size: 21px;
+  font-size: var(--fs-title);
   font-weight: 800;
   letter-spacing: -0.01em;
   white-space: nowrap;
@@ -101,7 +101,7 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
 }
 
 .tn-portal {
-  font-size: 12px;
+  font-size: var(--fs-caption);
   font-weight: 700;
   padding: 2px 9px;
   border-radius: 999px;
@@ -113,7 +113,7 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 13px;
+  font-size: var(--fs-desc);
   font-weight: 600;
   color: #cfd6f1;
   font-variant-numeric: tabular-nums;
@@ -124,7 +124,7 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: var(--fs-caption);
   font-weight: 700;
   color: #ffd8cc;
 }
@@ -163,7 +163,7 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
 .tn-acct {
   padding: 4px 8px 4px 4px;
   font-weight: 700;
-  font-size: 14px;
+  font-size: var(--fs-body);
 }
 
 .tn-acct :deep(.avatar.av-navy) {
@@ -193,7 +193,7 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
   border-radius: 9px;
   background: var(--brand);
   color: #fff;
-  font-size: 11px;
+  font-size: var(--fs-micro);
   display: grid;
   place-items: center;
   box-shadow: 0 0 0 2px var(--navy);
@@ -210,11 +210,11 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
     0 18px 50px rgba(20, 24, 40, 0.28),
     0 0 0 1px rgba(20, 24, 40, 0.06);
   padding: 8px;
-  font-size: 13.5px;
+  font-size: var(--fs-desc);
 }
 
 .tn-drop h6 {
-  font-size: 12px;
+  font-size: var(--fs-caption);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--muted);
@@ -261,18 +261,18 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
 
 .tn-note strong {
   display: block;
-  font-size: 13.5px;
+  font-size: var(--fs-desc);
 }
 
 .tn-note span {
   display: block;
   color: var(--ink-2);
-  font-size: 12.5px;
+  font-size: var(--fs-desc);
 }
 
 .tn-note small {
   color: var(--muted);
-  font-size: 11.5px;
+  font-size: var(--fs-caption);
 }
 
 .tn-me {
@@ -283,7 +283,7 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
 
 .tn-me strong {
   display: block;
-  font-size: 15px;
+  font-size: var(--fs-subheading);
 }
 
 .tn-me small {
@@ -317,7 +317,7 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
   display: block;
   color: var(--muted);
   font-weight: 500;
-  font-size: 12px;
+  font-size: var(--fs-caption);
 }
 
 .tn-item:hover {
@@ -331,5 +331,22 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
 
 .tn-item.danger :deep(.ic) {
   color: var(--late);
+}
+@media (max-width: 720px) {
+  .topnav {
+    gap: 6px;
+    padding: 0 6px 0 12px;
+  }
+  .tn-clock {
+    font-size: var(--fs-caption);
+  }
+  .tn-brand b {
+    font-size: var(--fs-heading);
+  }
+}
+@media (max-width: 400px) {
+  .tn-clock {
+    display: none;
+  }
 }
 </style>

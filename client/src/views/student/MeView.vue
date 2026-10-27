@@ -43,7 +43,7 @@ const stats = computed(() => ({ orders: orders.ordersOf(me.value.id).length, ear
   padding: 20px 10px;
 }
 .me-card h2 {
-  font-size: 21px;
+  font-size: var(--fs-title);
   font-weight: 800;
   margin: 12px 0 2px;
 }
@@ -59,11 +59,11 @@ const stats = computed(() => ({ orders: orders.ordersOf(me.value.id).length, ear
 }
 .me-stats b {
   display: block;
-  font-size: 18px;
+  font-size: var(--fs-heading);
 }
 .me-stats small {
   color: var(--muted);
-  font-size: 11.5px;
+  font-size: var(--fs-caption);
 }
 .me-tab .panel + .panel {
   margin-top: 10px;
@@ -77,7 +77,7 @@ const stats = computed(() => ({ orders: orders.ordersOf(me.value.id).length, ear
   background: none;
   color: var(--ink);
   cursor: pointer;
-  font-size: 14px;
+  font-size: var(--fs-body);
 }
 .me-row + .me-row {
   border-top: 1px solid var(--line);
@@ -85,6 +85,6 @@ const stats = computed(() => ({ orders: orders.ordersOf(me.value.id).length, ear
 .me-row small {
   color: var(--muted);
   font-weight: 500;
-  font-size: 12px;
+  font-size: var(--fs-caption);
 }
 </style>

@@ -50,6 +50,6 @@ defineEmits(['change'])
 .seg-opt small {
   color: var(--muted);
   font-weight: 600;
-  font-size: 12px;
+  font-size: var(--fs-caption);
 }
 </style>

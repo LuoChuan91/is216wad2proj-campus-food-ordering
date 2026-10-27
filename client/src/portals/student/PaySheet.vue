@@ -59,7 +59,7 @@ const code = computed(() => (result.value ? String(result.value.id).slice(0, 4).
   font-weight: 600;
 }
 .pay-amount b {
-  font-size: 34px;
+  font-size: var(--fs-display);
   font-weight: 800;
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
@@ -86,7 +86,7 @@ const code = computed(() => (result.value ? String(result.value.id).slice(0, 4).
   border-radius: 12px;
   background: var(--late-soft);
   color: var(--late);
-  font-size: 13px;
+  font-size: var(--fs-desc);
   font-weight: 600;
 }
 .pay-done {
@@ -112,7 +112,7 @@ const code = computed(() => (result.value ? String(result.value.id).slice(0, 4).
   }
 }
 .pay-done h3 {
-  font-size: 21px;
+  font-size: var(--fs-title);
   font-weight: 800;
   margin: 0 0 4px;
 }
@@ -125,7 +125,7 @@ const code = computed(() => (result.value ? String(result.value.id).slice(0, 4).
   background: var(--canvas);
   border-radius: 14px;
   padding: 10px 14px;
-  font-size: 13px;
+  font-size: var(--fs-desc);
 }
 .ref dt {
   color: var(--muted);

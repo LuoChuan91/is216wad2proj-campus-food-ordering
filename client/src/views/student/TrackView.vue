@@ -197,11 +197,11 @@ const courierLine = computed(() => {
 
 .bar-title small {
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--fs-caption);
 }
 
 .live {
-  font-size: 11.5px;
+  font-size: var(--fs-caption);
   font-weight: 800;
   color: var(--ok);
   background: var(--ok-soft);
@@ -229,7 +229,7 @@ const courierLine = computed(() => {
   color: #6b4105;
   border-radius: 14px;
   padding: 10px 12px;
-  font-size: 12.5px;
+  font-size: var(--fs-desc);
 }
 
 .status-card {
@@ -260,12 +260,12 @@ const courierLine = computed(() => {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-weight: 800;
-  font-size: 11.5px;
+  font-size: var(--fs-caption);
   opacity: 0.85;
 }
 
 .status-big {
-  font-size: 27px;
+  font-size: var(--fs-display);
   font-weight: 800;
   letter-spacing: -0.02em;
   margin: 2px 0 2px;
@@ -274,12 +274,12 @@ const courierLine = computed(() => {
 
 .status-card p {
   margin: 0;
-  font-size: 13.5px;
+  font-size: var(--fs-desc);
   opacity: 0.95;
 }
 
 .why span {
-  font-size: 11.5px;
+  font-size: var(--fs-caption);
   font-weight: 700;
   background: rgba(255, 255, 255, 0.18);
   border-radius: 999px;
@@ -292,12 +292,12 @@ const courierLine = computed(() => {
 
 .c-head strong {
   display: block;
-  font-size: 14px;
+  font-size: var(--fs-body);
 }
 
 .c-head small {
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--fs-caption);
 }
 
 .c-ic {
@@ -317,7 +317,7 @@ const courierLine = computed(() => {
 
 .c-drop {
   border-top: 1px solid var(--line);
-  font-size: 12.5px;
+  font-size: var(--fs-desc);
   font-weight: 600;
   color: var(--ink-2);
 }
@@ -329,7 +329,7 @@ const courierLine = computed(() => {
 .steps li {
   position: relative;
   padding: 6px 0 6px 2px;
-  font-size: 13.5px;
+  font-size: var(--fs-desc);
   color: var(--muted);
 }
 
@@ -380,7 +380,7 @@ const courierLine = computed(() => {
 
 .steps time {
   margin-left: auto;
-  font-size: 12px;
+  font-size: var(--fs-caption);
   color: var(--muted);
   font-variant-numeric: tabular-nums;
   font-weight: 600;
