@@ -1,7 +1,7 @@
 // Account data. The ONLY file that queries profiles.
 const supabase = require('../common/supabase');
 
-const COLUMNS = 'id, role, name, email, status';
+const COLUMNS = 'id, role, name, email, status, password_set';
 
 // Everyone, or only one role ('student', 'merchant' or 'admin'), sorted by name
 exports.findAll = async ({ role } = {}) => {

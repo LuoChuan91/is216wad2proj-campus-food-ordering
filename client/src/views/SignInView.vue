@@ -10,6 +10,7 @@ import { useCatalogStore } from '@/stores/catalog.js'
 import { useSessionStore } from '@/stores/session.js'
 import * as E from '@/utils/engine.js'
 import { config as cfg } from '@/config/index.js'
+import AuthPanel from '@/components/AuthPanel.vue'
 
 const ui = useUiStore()
 const catalog = useCatalogStore()
@@ -60,21 +61,10 @@ const groups = computed(() => {
           <li><span><Icon name="clock" :size="18" /></span>Honest ready times, worked out from each kitchen's queue</li>
           <li><span><Icon name="bike" :size="18" /></span>Peer delivery by verified SMU students</li>
         </ul>
-        <div class="si-note"><Icon name="sparkle" :size="18" /><div><strong>Sign-in is simulated for now.</strong> Pick any account from our database. Payments are simulated too. Open a second tab and sign in as someone else to watch an order move between them live.</div></div>
       </section>
       <section class="si-card">
         <h2>Sign in</h2>
-        <p class="si-sub">Pick an account.</p>
-        <div v-for="g in groups" :key="g.title" class="si-group">
-          <h3>{{ g.title }} <small>{{ g.note }}</small></h3>
-          <button v-for="x in g.people" :key="x.p.id" type="button" class="si-acct" @click="session.signIn(x.p.id)">
-            <Avatar :name="x.p.name" :size="38" :tone="x.p.role === 'student' ? 'brand' : 'navy'" />
-            <span class="si-who"><strong>{{ x.p.name }}</strong><small>{{ x.blurb }}</small></span>
-            <span v-if="x.badge" class="tag" :class="x.badge.tone">{{ x.badge.text }}</span>
-            <Icon name="chevR" :size="16" class="si-go" />
-          </button>
-          <button v-if="g.more" type="button" class="si-toggle" @click="showAll = true"><Icon name="plus" :size="16" />Show {{ g.more }} more students</button>
-        </div>
+        <AuthPanel />
       </section>
     </div>
     <footer class="si-foot">
@@ -358,4 +348,27 @@ const groups = computed(() => {
 .si-group .si-toggle {
   margin: 0 0 4px;
 }
+
+
+
+.si-or {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 18px 0 4px;
+}
+.si-or::before,
+.si-or::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+
 </style>
