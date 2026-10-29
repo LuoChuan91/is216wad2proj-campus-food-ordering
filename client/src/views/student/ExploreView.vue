@@ -5,7 +5,7 @@
 // persistent KeepAlive tab layer (so the Leaflet map survives navigation). The
 // venue sheet it shows is driven by S.ui.student (a UI-store overlay, not a route),
 // kept in sync with #/student/venue/:venueId by router/sync.js.
-import { computed, watch, onBeforeUnmount } from 'vue'
+import { computed, watch, onBeforeUnmount, onMounted, ref, reactive, nextTick } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui.js'
 import StatusTag from '@/components/StatusTag.vue'
@@ -33,6 +33,122 @@ const near = computed(() => catalog.db.venues
   .filter((x) => x.stores.length)
   .sort((a, b) => a.walk.minutes - b.walk.minutes || a.walk.meters - b.walk.meters))
 const greeting = computed(() => { const h = E.parts(now.value).h; return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening' })
+
+/* ---------- Draggable bottom sheet (Google Maps / Apple Maps pattern) ----------
+   Three snap points: peek, half, full. Drag the handle to move it. Tap the map
+   and it drops back to peek. The list inside scrolls on its own, so a long list
+   never swallows the map. Works with mouse (laptop) and touch (phone). */
+const rootEl = ref(null)
+const listEl = ref(null)
+const headEl = ref(null)
+const grabEl = ref(null)
+const viewportH = ref(700)
+const viewportW = ref(900)
+const contentH = ref(0)
+const chromeH = ref(60)
+// Laptop screens are taller, so show more of the list there.
+const wide = computed(() => viewportW.value >= 768)
+const peekH = computed(() => Math.round(Math.max(wide.value ? 260 : 200, viewportH.value * (wide.value ? 0.32 : 0.28))))
+const collapsedH = computed(() => (wide.value ? 48 : 38))
+// Never taller than 72% of the screen, so the greeting + search bar stay visible.
+const maxH = computed(() => Math.round(viewportH.value * 0.72))
+// Fit the content: a short list gets a short sheet, a long one scrolls at the cap.
+const fullH = computed(() => Math.min(maxH.value, Math.max(peekH.value, contentH.value || Math.round(viewportH.value * 0.5))))
+// Hidden (thin bar) -> peek -> half -> full. The peek is taller on laptops,
+// so more rows are visible before you drag.
+const snaps = computed(() => {
+  const p = peekH.value
+  const f = Math.max(fullH.value, p)
+  return [collapsedH.value, p, Math.round((p + f) / 2), f]
+})
+const midIndex = 2
+const snapIndex = ref(1)
+function measureContent() {
+  const el = listEl.value
+  if (!el) return
+  const chrome = (grabEl.value ? grabEl.value.offsetHeight : 22) + (headEl.value ? headEl.value.offsetHeight : 28) + 10
+  chromeH.value = chrome
+  contentH.value = el.scrollHeight + chrome
+}
+const drag = reactive({ active: false, startY: 0, startOff: 0, off: 0 })
+const offsetOf = (height) => fullH.value - height
+const sheetOffset = computed(() => (drag.active ? drag.off : offsetOf(snaps.value[snapIndex.value])))
+// How much of the sheet is on screen right now. The list gets exactly this much
+// (minus the header), so it scrolls at EVERY snap, including peek.
+const visibleH = computed(() => fullH.value - sheetOffset.value)
+const listStyle = computed(() => ({ maxHeight: Math.max(80, visibleH.value - chromeH.value) + 'px' }))
+
+// The sheet's height is fixed at the tallest snap; only `transform` moves. Animating
+// transform runs on the GPU (smooth); animating height re-lays-out every frame (choppy).
+const sheetStyle = computed(() => ({
+  height: fullH.value + 'px',
+  transform: `translateY(${sheetOffset.value}px)`,
+  transition: drag.active ? 'none' : 'transform .34s cubic-bezier(.22,.8,.24,1)',
+}))
+
+function measure() {
+  if (rootEl.value) {
+    viewportH.value = rootEl.value.clientHeight
+    viewportW.value = rootEl.value.clientWidth
+  } else {
+    viewportH.value = window.innerHeight
+    viewportW.value = window.innerWidth
+  }
+}
+onMounted(() => {
+  measure()
+  snapIndex.value = 1 // start at peek on both
+  nextTick(measureContent)
+  window.addEventListener('resize', () => { measure(); measureContent() })
+})
+// Re-measure when the list changes (search results, venues loading) or its element mounts.
+watch([listEl, () => u.value.search, () => near.value.length], () => nextTick(measureContent))
+
+function onGrabDown(e) {
+  drag.active = true
+  drag.startY = e.clientY
+  drag.startOff = sheetOffset.value
+  drag.off = drag.startOff
+  e.currentTarget.setPointerCapture?.(e.pointerId)
+}
+function onGrabMove(e) {
+  if (!drag.active) return
+  const maxOff = offsetOf(snaps.value[0]) // can't drag below peek
+  drag.off = Math.min(maxOff, Math.max(0, drag.startOff + (e.clientY - drag.startY)))
+}
+function onGrabUp() {
+  if (!drag.active) return
+  drag.active = false
+  lastSheetDrag = Date.now()
+  const o = drag.off
+  let best = 0
+  snaps.value.forEach((h, i) => { if (Math.abs(offsetOf(h) - o) < Math.abs(offsetOf(snaps.value[best]) - o)) best = i })
+  snapIndex.value = best
+}
+
+// A finger that moves is dragging, not tapping. Without this, releasing after a
+// drag counts as a click on whatever row (or map pin) is under the finger.
+const press = reactive({ x: 0, y: 0, moved: false })
+let lastSheetDrag = 0
+function onSheetDown(e) { press.x = e.clientX; press.y = e.clientY; press.moved = false }
+function onSheetMove(e) { if (Math.hypot(e.clientX - press.x, e.clientY - press.y) > 8) press.moved = true }
+function onSheetClickCapture(e) {
+  if (press.moved) { e.stopPropagation(); e.preventDefault(); press.moved = false }
+}
+
+// Tapping the map: close an open venue sheet, otherwise hide the list completely.
+function onMapClick() {
+  if (Date.now() - lastSheetDrag < 350) return // this was the end of a sheet drag, not a tap
+  if (u.value.sheet) ui.closeSheet()
+  else snapIndex.value = 0
+}
+// Panning / zooming the map hides the list (handle only), like Google Maps.
+function onMapInteract() {
+  if (Date.now() - lastSheetDrag < 350) return
+  if (!u.value.sheet) snapIndex.value = 0
+}
+// Searching opens the sheet to the middle so results are visible.
+watch(() => u.value.search, (q) => { snapIndex.value = q.trim() ? midIndex : 1 })
 
 // Live "best wait" per venue from the single frontend engine (store:<id>): the
 // lowest wait among its open stores, in minutes (derived from the engine seconds).
@@ -72,19 +188,19 @@ const results = computed(() => {
 </script>
 
 <template>
-  <div class="explore">
-    <MapView />
+  <div class="explore" ref="rootEl">
+    <MapView @map-click="onMapClick" @map-interact="onMapInteract" />
     <div class="explore-top">
       <div class="hello d-flex align-items-center gap-2 mb-2"><Avatar :name="me.name" :size="36" tone="brand" /><div><small>{{ greeting }}</small><strong>{{ first(me.name) }}</strong></div><span class="brand-pill ms-auto d-inline-flex align-items-center gap-2"><AppMark :size="18" />{{ cfg.appName }}</span></div>
       <label class="search d-flex align-items-center gap-2"><Icon name="search" :size="16" /><input type="search" placeholder="Search dishes or stores" aria-label="Search dishes or stores" :value="u.search" @input="ui.setSearch($event.target.value)">
         <button v-if="u.search" type="button" class="icon-btn sm" aria-label="Clear search" @click="ui.setSearch('')"><Icon name="close" :size="12" /></button></label>
     </div>
-    <Transition name="sheet" mode="out-in">
-      <VenueSheet v-if="u.sheet === 'venue' && catalog.venue(u.venueId)" :key="u.venueId" />
-      <div v-else-if="results" key="results" class="peek results col-md-8 col-lg-6 mx-auto">
-        <div class="grab"></div>
-        <div class="peek-head d-flex justify-content-between align-items-center"><strong>Results for “{{ u.search.trim() }}”</strong></div>
-        <div class="results-list scroll">
+    <VenueSheet v-if="u.sheet === 'venue' && catalog.venue(u.venueId)" :key="u.venueId" />
+      <div v-else-if="results" key="results" class="peek results col-md-8 col-lg-6 mx-auto" :class="{ 'is-collapsed': snapIndex === 0 }" :style="sheetStyle"
+        @pointerdown="onSheetDown" @pointermove="onSheetMove" @click.capture="onSheetClickCapture">
+        <div class="sheet-grab" ref="grabEl" @pointerdown="onGrabDown" @pointermove="onGrabMove" @pointerup="onGrabUp" @pointercancel="onGrabUp"><span class="grab"></span></div>
+        <div class="peek-head d-flex justify-content-between align-items-center" ref="headEl"><strong>Results for “{{ u.search.trim() }}”</strong></div>
+        <div class="results-list scroll sheet-scroll" ref="listEl" :style="listStyle">
           <p v-if="!results.stores.length && !results.dishes.length" class="empty-note">Nothing matches. Try "noodles", "kopi" or "bento".</p>
           <button v-for="x in results.stores" :key="x.s.id" class="venue-row d-flex align-items-center gap-3 w-100 text-start" :class="{ unavailable: !x.available }" :disabled="!x.available" @click="ui.openStore(x.s.id)">
             <Mono :store="x.s" :size="36" />
@@ -100,19 +216,21 @@ const results = computed(() => {
           </button>
         </div>
       </div>
-      <div v-else key="peek" class="peek col-md-8 col-lg-6 mx-auto">
-        <div class="grab"></div>
-        <div class="peek-head d-flex justify-content-between align-items-center"><strong>Near you</strong>
+      <div v-else key="peek" class="peek col-md-8 col-lg-6 mx-auto" :class="{ 'is-collapsed': snapIndex === 0 }" :style="sheetStyle"
+        @pointerdown="onSheetDown" @pointermove="onSheetMove" @click.capture="onSheetClickCapture">
+        <div class="sheet-grab" ref="grabEl" @pointerdown="onGrabDown" @pointermove="onGrabMove" @pointerup="onGrabUp" @pointercancel="onGrabUp"><span class="grab"></span></div>
+        <div class="peek-head d-flex justify-content-between align-items-center" ref="headEl"><strong>Near you</strong>
           <button type="button" class="where d-inline-flex align-items-center gap-1" :title="u.locateError || 'Use my real location'" @click="ui.locate()"><Icon :name="u.locating ? 'clock' : 'locate'" :size="13" />{{ u.locating ? 'Locating…' : ui.place().label }}</button></div>
         <p v-if="u.locateError" class="locate-err">{{ u.locateError }}</p>
-        <button v-for="x in near.slice(0, 4)" :key="x.v.id" class="venue-row d-flex align-items-center gap-3 w-100 text-start" @click="ui.openVenue(x.v.id)">
-          <span class="venue-ic d-flex align-items-center justify-content-center flex-shrink-0"><Icon name="store" :size="18" /></span>
-          <span class="venue-main d-flex flex-column flex-grow-1 overflow-hidden"><strong>{{ shortName(x.v.name) }}</strong><small class="d-inline-flex align-items-center gap-1"><Icon name="walk" :size="12" />{{ x.walk.minutes }} min · {{ openCount(x.stores) }} of {{ x.stores.length }} open</small></span>
-          <WaitChip v-if="bestWait(x.stores) !== null" :minutes="bestWait(x.stores)" prefix="from" />
-        </button>
-        <button type="button" class="see-all d-flex align-items-center justify-content-center gap-1 w-100" @click="ui.setTab('stores')">See all {{ catalog.db.stores.length }} stores<Icon name="chevR" :size="14" /></button>
+        <div class="near-list sheet-scroll" ref="listEl" :style="listStyle">
+          <button v-for="x in near" :key="x.v.id" class="venue-row d-flex align-items-center gap-3 w-100 text-start" @click="ui.openVenue(x.v.id)">
+            <span class="venue-ic d-flex align-items-center justify-content-center flex-shrink-0"><Icon name="store" :size="18" /></span>
+            <span class="venue-main d-flex flex-column flex-grow-1 overflow-hidden"><strong>{{ shortName(x.v.name) }}</strong><small class="d-inline-flex align-items-center gap-1"><Icon name="walk" :size="12" />{{ x.walk.minutes }} min · {{ openCount(x.stores) }} of {{ x.stores.length }} open</small></span>
+            <WaitChip v-if="bestWait(x.stores) !== null" :minutes="bestWait(x.stores)" prefix="from" />
+          </button>
+          <button type="button" class="see-all d-flex align-items-center justify-content-center gap-1 w-100" @click="ui.setTab('stores')">See all {{ catalog.db.stores.length }} stores<Icon name="chevR" :size="14" /></button>
+        </div>
       </div>
-    </Transition>
   </div>
 </template>
 
@@ -123,7 +241,7 @@ const results = computed(() => {
    are Leaflet-owned DOM. */
 .explore-top {
   position: absolute;
-  z-index: 5;
+  z-index: 2;
   top: 0;
   left: 0;
   right: 0;
@@ -169,19 +287,75 @@ const results = computed(() => {
 }
 .peek {
   position: absolute;
-  z-index: 6;
+  z-index: 8;
   left: 0;
   right: 0;
   bottom: 0;
+  max-height: 92%;
+  overflow: hidden;
   background: var(--paper);
   border-radius: 24px 24px 0 0;
   box-shadow: 0 -10px 30px rgba(20, 24, 40, 0.12);
   display: flex;
   flex-direction: column;
   padding: 0 12px 10px;
+  will-change: transform;
+  backface-visibility: hidden;
 }
+/* Laptop: centred sheet instead of a full-width white slab */
+@media (min-width: 768px) {
+  .peek {
+    max-width: 720px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+/* Height is set inline by the drag logic, so the old fixed cap is dropped */
 .peek.results {
-  max-height: 62%;
+  max-height: none;
+}
+/* Collapsed: only the handle reacts (nothing inside can be clicked by accident).
+   The content stays visible, so it slides into view as you drag up. */
+.peek.is-collapsed {
+  pointer-events: none;
+}
+.peek.is-collapsed .sheet-grab {
+  pointer-events: auto;
+}
+/* Drag handle. Only this small centred area starts a drag, so clicking the
+   header or the list never grabs (and therefore never moves) the sheet. */
+.sheet-grab {
+  position: relative;
+  z-index: 2;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  width: fit-content;
+  margin: 0 auto;
+  padding: 9px 24px 5px;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+}
+.sheet-grab:active {
+  cursor: grabbing;
+}
+.sheet-grab .grab {
+  margin: 0;
+}
+/* Only this part scrolls, so a long list can never cover the map */
+.sheet-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+.near-list {
+  padding-bottom: 4px;
 }
 .peek-head {
   padding: 2px 6px 6px;

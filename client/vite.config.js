@@ -2,13 +2,14 @@ import { fileURLToPath, URL } from 'node:url'
 
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import vueDevTools from 'vite-plugin-vue-devtools'
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
     vue(),
-    vueDevTools(),
+    // Vue DevTools overlay disabled: its floating launcher sat over the bottom
+    // sheet's drag handle. Re-enable locally if you want it back.
+    // vueDevTools(),
   ],
   resolve: {
     alias: {
