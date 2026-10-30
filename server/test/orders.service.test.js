@@ -15,6 +15,9 @@ const menuRepository = require('../src/models/menu.repository');
 const storesRepository = require('../src/models/stores.repository');
 const profilesRepository = require('../src/models/profiles.repository');
 const venuesRepository = require('../src/models/venues.repository');
+// The delivery fee is a single source of truth (server/src/common/config.js).
+// Read it here so this test stays correct whenever the fee changes.
+const { DELIVERY_FEE } = require('../src/common/config');
 
 /* ---------- fake data (shaped like the real tables) ---------- */
 
@@ -278,13 +281,13 @@ test('400 when the account is not a student', async () => {
 
 /* ---------- peer delivery ---------- */
 
-test('delivery: adds the $1.50 fee after the discount and opens a 10-minute job', async () => {
+test('delivery: adds the delivery fee after the discount and opens a 10-minute job', async () => {
   const before = Date.now();
   await service.placeOrder({ ...validBody(), type: 'delivery', destination_id: 'drop-1', note: '  at the front desk ' });
 
   assert.equal(saved.order.type, 'delivery');
-  near(saved.order.delivery_fee, 1.5, 'delivery_fee');
-  near(saved.payment.amount, 11.7 + 1.5, 'amount paid (the discount is for the food only)');
+  near(saved.order.delivery_fee, DELIVERY_FEE, 'delivery_fee');
+  near(saved.payment.amount, 11.7 + DELIVERY_FEE, 'amount paid (the discount is for the food only)');
 
   assert.ok(saved.delivery, 'a delivery row should be saved');
   assert.equal(saved.delivery.status, 'open');
