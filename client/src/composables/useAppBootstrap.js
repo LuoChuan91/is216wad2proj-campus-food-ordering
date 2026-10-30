@@ -84,7 +84,7 @@ function announceChanges() {
       }
       // order paid -> preparing: the "cooking" line (realtime fires on paid).
       if (p.status === 'paid' && o.status === 'preparing') {
-        ui.notifyView(buildNotification({ kind: 'order', status: 'paid', order_id: o.id }, ctx()))
+        ui.notifyView(buildNotification({ kind: 'order', status: 'paid', order_id: o.id }, ctx()), { kind: 'order', status: 'paid', order_id: o.id })
       }
       if (p.status !== 'ready' && o.status === 'ready') {
         ui.notifyView(buildNotification({ kind: 'order', status: 'ready', order_id: o.id }, ctx()), { kind: 'order', status: 'ready', order_id: o.id })

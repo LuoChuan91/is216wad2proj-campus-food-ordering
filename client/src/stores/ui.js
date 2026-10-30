@@ -24,7 +24,6 @@ export const DEFAULT_PLACE = {
 };
 
 let lineSeq = 0;
-let mirrorSeq = 0;
 
 // The app's poll-notification tones -> the Bootstrap variants the notifications
 // store / toaster use.
@@ -94,17 +93,16 @@ export const useUiStore = defineStore("ui", () => {
   function pushView(view, meta, toast) {
     try {
       const store = useNotificationsStore();
-      if (meta && meta.kind && store.realtimeConnected) return;
-      const item = {
-        id: `b${Date.now()}_${mirrorSeq++}`,
+      // One surface, one de-dup gate: the store collapses an event that the
+      // realtime channel also delivers (matched by kind/status/order via meta),
+      // so we no longer special-case realtimeConnected here.
+      store.pushLocal({
         title: view.title,
         body: view.body,
         variant: view.variant || "secondary",
-        at: new Date().toISOString(),
-        read: false,
-      };
-      store.items.unshift(item);
-      if (toast) store.toasts.push(item);
+        toast,
+        meta,
+      });
     } catch (err) {
       // Pinia not ready yet (very early start-up): skip rather than break the app.
       console.warn("[notify] skipped:", err.message);
