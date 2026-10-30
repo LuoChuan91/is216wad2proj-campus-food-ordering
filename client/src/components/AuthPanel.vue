@@ -15,6 +15,7 @@ const email = ref('')
 const password = ref('')
 const confirm = ref('')
 const error = ref('')
+const errorKey = ref(0) // changing this replays the shake animation
 const notice = ref('')
 const busy = ref(false)
 
@@ -24,12 +25,17 @@ const tabs = [
   { key: 'forgot', label: 'Forgot password' },
 ]
 const buttonLabels = { login: 'Sign in', signup: 'Create account', forgot: 'Send reset link' }
-const buttonText = computed(() => (busy.value ? 'Please wait...' : buttonLabels[mode.value]))
+const buttonText = computed(() => (busy.value ? 'Please wait' : buttonLabels[mode.value]))
 
 function switchTo(m) {
   mode.value = m
   error.value = ''
   notice.value = ''
+}
+
+function fail(message) {
+  error.value = message
+  errorKey.value++
 }
 
 async function login() {
@@ -78,7 +84,7 @@ async function submit() {
   try {
     await handlers[mode.value]()
   } catch (e) {
-    error.value = e.message === 'Invalid login credentials' ? 'Email or password is wrong.' : e.message
+    fail(e.message === 'Invalid login credentials' ? 'Email or password is wrong.' : e.message)
   } finally {
     busy.value = false
   }
@@ -92,40 +98,65 @@ async function submit() {
         v-for="t in tabs"
         :key="t.key"
         type="button"
+        role="tab"
         class="auth-tab"
         :class="{ on: mode === t.key }"
+        :aria-selected="mode === t.key"
         @click="switchTo(t.key)"
       >
         {{ t.label }}
       </button>
     </div>
 
-    <div v-if="notice" class="alert alert-success py-2 small">{{ notice }}</div>
-    <div v-if="error" class="alert alert-danger py-2 small">{{ error }}</div>
+    <div v-if="notice" class="auth-alert ok" role="status">
+      <Icon name="sparkle" :size="16" />
+      <span>{{ notice }}</span>
+    </div>
+    <div v-if="error" :key="errorKey" class="auth-alert bad" role="alert">
+      {{ error }}
+    </div>
 
-    <form class="auth-form" @submit.prevent="submit">
-      <label v-if="mode === 'signup'">
-        Full name
-        <input v-model="name" class="form-control" required />
-      </label>
+    <Transition name="swap" mode="out-in">
+      <form :key="mode" class="auth-form" @submit.prevent="submit">
+        <label v-if="mode === 'signup'">
+          <span>Full name</span>
+          <input v-model="name" class="auth-input" autocomplete="name" required />
+        </label>
 
-      <label>
-        SMU email
-        <input v-model="email" type="email" class="form-control" required />
-      </label>
+        <label>
+          <span>SMU email</span>
+          <input
+            v-model="email"
+            type="email"
+            class="auth-input"
+            autocomplete="email"
+            placeholder="you@smu.edu.sg"
+            required
+          />
+        </label>
 
-      <label v-if="mode !== 'forgot'">
-        Password
-        <input v-model="password" type="password" class="form-control" required />
-      </label>
+        <label v-if="mode !== 'forgot'">
+          <span>Password</span>
+          <input
+            v-model="password"
+            type="password"
+            class="auth-input"
+            :autocomplete="mode === 'login' ? 'current-password' : 'new-password'"
+            required
+          />
+        </label>
 
-      <label v-if="mode === 'signup'">
-        Confirm password
-        <input v-model="confirm" type="password" class="form-control" required />
-      </label>
+        <label v-if="mode === 'signup'">
+          <span>Confirm password</span>
+          <input v-model="confirm" type="password" class="auth-input" autocomplete="new-password" required />
+        </label>
 
-      <button class="auth-submit" :disabled="busy">{{ buttonText }}</button>
-    </form>
+        <button class="auth-submit" :disabled="busy">
+          <span v-if="busy" class="auth-spin" aria-hidden="true"></span>
+          {{ buttonText }}
+        </button>
+      </form>
+    </Transition>
 
     <button v-if="mode === 'login'" type="button" class="auth-link" @click="switchTo('forgot')">
       Forgot password?
@@ -135,32 +166,80 @@ async function submit() {
 
 <style scoped>
 .auth-panel {
-  margin-bottom: 8px;
+  margin-top: 4px;
 }
+
+/* Tabs with an animated underline */
 .auth-tabs {
   display: flex;
   gap: 4px;
   border-bottom: 1px solid var(--line);
-  margin-bottom: 14px;
+  margin-bottom: 18px;
 }
 .auth-tab {
+  position: relative;
   border: 0;
   background: none;
-  padding: 8px 10px;
+  padding: 10px 12px;
   font-weight: 700;
   font-size: var(--fs-body);
   color: var(--muted);
-  border-bottom: 3px solid transparent;
-  margin-bottom: -1px;
   cursor: pointer;
+  transition: color 0.2s ease;
+}
+.auth-tab:hover {
+  color: var(--ink-2);
 }
 .auth-tab.on {
   color: var(--ink);
-  border-bottom-color: var(--brand);
 }
+.auth-tab::after {
+  content: '';
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: -1px;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: linear-gradient(90deg, var(--brand), #ffb347);
+  transform: scaleX(0);
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.auth-tab.on::after {
+  transform: scaleX(1);
+}
+.auth-tab:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* Alerts */
+.auth-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13.5px;
+  line-height: 1.4;
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  animation: alert-in 0.3s ease both;
+}
+.auth-alert.ok {
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+.auth-alert.bad {
+  background: var(--late-soft);
+  color: var(--late);
+  animation: alert-in 0.3s ease both, shake 0.45s 0.25s ease;
+}
+
+/* Form fields */
 .auth-form {
   display: grid;
-  gap: 10px;
+  gap: 12px;
 }
 .auth-form label {
   display: grid;
@@ -168,40 +247,144 @@ async function submit() {
   font-size: var(--fs-desc);
   font-weight: 700;
   color: var(--ink-2);
+  transition: color 0.2s ease;
 }
-.auth-form .form-control {
-  font-size: var(--fs-body);
+.auth-form label:focus-within {
+  color: var(--brand-600);
+}
+.auth-input {
+  width: 100%;
+  border: 1.5px solid var(--line);
   border-radius: 12px;
-  padding: 9px 12px;
+  padding: 11px 14px;
+  font-size: 14.5px;
+  color: var(--ink);
+  background: #fbfcfe;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
-.auth-form .form-control:focus {
-  border-color: #f2a48f;
-  box-shadow: 0 0 0 0.2rem rgba(229, 81, 45, 0.18);
+.auth-input::placeholder {
+  color: #aab0bf;
 }
+.auth-input:hover {
+  border-color: #cfd4e2;
+}
+.auth-input:focus {
+  outline: none;
+  border-color: var(--brand);
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(229, 81, 45, 0.16);
+}
+
+/* Submit button */
 .auth-submit {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
   border: 0;
   border-radius: 12px;
-  padding: 11px;
-  font-weight: 700;
+  padding: 12px;
+  margin-top: 6px;
+  font-weight: 800;
+  font-size: 15px;
   color: #fff;
-  background: var(--brand);
+  background: linear-gradient(135deg, var(--brand), #ff7a4d);
+  box-shadow: 0 10px 22px rgba(229, 81, 45, 0.32);
   cursor: pointer;
-  margin-top: 4px;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+/* A light sheen that sweeps across on hover */
+.auth-submit::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -60%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.6s ease;
 }
 .auth-submit:hover:not(:disabled) {
-  background: var(--brand-600);
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(229, 81, 45, 0.4);
+}
+.auth-submit:hover:not(:disabled)::after {
+  left: 120%;
+}
+.auth-submit:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
 }
 .auth-submit:disabled {
-  opacity: 0.7;
+  opacity: 0.75;
   cursor: wait;
 }
+.auth-spin {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  animation: spin 0.7s linear infinite;
+}
+
 .auth-link {
+  display: block;
+  margin: 12px auto 0;
   border: 0;
   background: none;
-  padding: 6px 0 0;
   color: var(--brand-600);
   font-weight: 700;
   font-size: var(--fs-desc);
   cursor: pointer;
+}
+.auth-link:hover {
+  text-decoration: underline;
+}
+
+/* Switching between sign in, create account and forgot password */
+.swap-enter-active,
+.swap-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.swap-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+.swap-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+@keyframes alert-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(3px); }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-alert,
+  .auth-alert.bad,
+  .auth-spin {
+    animation: none;
+  }
+  .auth-tab::after,
+  .auth-submit::after,
+  .auth-input,
+  .auth-submit {
+    transition: none;
+  }
 }
 </style>
