@@ -31,7 +31,7 @@ const steps = [
 
     <div class="si-wrap">
       <section class="si-hero">
-        <div class="si-brand anim-rise" style="--d: 0ms">
+        <div class="si-brand anim-rise order-0" style="--d: 0ms">
           <AppMark :size="56" />
           <div>
             <h1>{{ cfg.appName }}</h1>
@@ -39,19 +39,27 @@ const steps = [
           </div>
         </div>
 
-        <div class="pill anim-rise" style="--d: 40ms">
+        <div class="pill anim-rise order-1" style="--d: 40ms">
           <span class="pill-dot"></span>
           Live queue times across campus
         </div>
 
-        <h2 class="si-headline anim-rise" style="--d: 120ms">
+        <!-- Auth card: shown here (in the hero flow) only below md, directly
+             under the pill. Hidden from md up, where the aside copy is used. -->
+        <section class="si-card si-card-inline d-md-none anim-pop order-2" style="--d: 180ms">
+          <h2>Welcome back</h2>
+          <p class="si-sub">Sign in with your SMU email, or create an account.</p>
+          <AuthPanel />
+        </section>
+
+        <h2 class="si-headline anim-rise order-3" style="--d: 120ms">
           Order from SMU food stores <span class="grad">without the queue.</span>
         </h2>
-        <p class="si-lead anim-rise" style="--d: 200ms">
+        <p class="si-lead anim-rise order-4" style="--d: 200ms">
           Skip the line, or bring a classmate's lunch over between lessons and keep the delivery fee.
         </p>
 
-        <ul class="si-points">
+        <ul class="si-points order-5">
           <li
             v-for="(p, i) in perks"
             :key="p.icon"
@@ -63,7 +71,7 @@ const steps = [
           </li>
         </ul>
 
-        <div class="preview anim-rise" style="--d: 480ms">
+        <div class="preview anim-rise order-last" style="--d: 480ms">
           <div class="pv-head">
             <span>Example order</span>
             <span class="pv-live"><i></i>Live</span>
@@ -86,7 +94,8 @@ const steps = [
         </div>
       </section>
 
-      <section class="si-card anim-pop" style="--d: 180ms">
+      <!-- Auth card for md and up: lives in the right grid column. -->
+      <section class="si-card si-card-aside d-none d-md-block anim-pop" style="--d: 180ms">
         <h2>Welcome back</h2>
         <p class="si-sub">Sign in with your SMU email, or create an account.</p>
         <AuthPanel />
@@ -174,6 +183,11 @@ const steps = [
   grid-template-columns: minmax(0, 1fr) minmax(0, 460px);
   gap: 56px;
   align-items: center;
+}
+.si-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 .si-brand {
   display: flex;
@@ -424,6 +438,12 @@ const steps = [
   height: 4px;
   background: linear-gradient(90deg, var(--brand), #ffb347);
 }
+/* The mobile (inline) card sits in the hero flex column between the pill and
+   the headline. Stretch it to full width and give it breathing room. */
+.si-card-inline {
+  align-self: stretch;
+  margin: 8px 0 20px;
+}
 .si-card h2 {
   font-family: var(--font-display);
   font-size: var(--fs-display);
@@ -570,7 +590,7 @@ const steps = [
   to { background-position: -200% 0; }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 767.98px) {
   .si-wrap {
     grid-template-columns: 1fr;
     gap: 28px;
