@@ -15,6 +15,15 @@ export const config = {
   // The frontend wait-time engine uses this as its number of parallel stations.
   kitchenSlots: 2,
 
+  // ---- WAIT-TIME DEFAULTS (single source of truth) --------------------------
+  // Every store carries its own workstations / wait_strategy from the server
+  // (the DB columns). These defaults are used ONLY when a store record isn't
+  // loaded yet or a value is missing. Change them here and nowhere else.
+  wait: {
+    stations: 2, // default workstations
+    strategy: 'scheduled', // 'serial' | 'scheduled'
+  },
+
   // How often the screens ask the server for news (orders, queues, delivery jobs)
   pollMs: 4000,
   catalogPollMs: 20000, // stores, menus and venues change less often

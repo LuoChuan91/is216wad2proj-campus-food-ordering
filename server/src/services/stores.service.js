@@ -1,12 +1,26 @@
 
 const repository = require('../models/stores.repository');
 const profilesRepository = require('../models/profiles.repository');
-const { WAIT_STRATEGIES } = require('../common/config');
+const { WAIT_STRATEGIES, KITCHEN_SLOTS, DEFAULT_WAIT_STRATEGY } = require('../common/config');
 
 // The columns a PATCH may change (anything else in the body is ignored)
 const EDITABLE = ['name', 'is_open', 'description', 'open_hours', 'image_url', 'discount_type', 'discount_per', 'discount_dol', 'workstations', 'wait_strategy'];
 const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+// Guarantee every store the API returns carries valid wait-time settings, so the
+// client can read workstations/wait_strategy DIRECTLY off the record. The DB
+// columns are NOT NULL with defaults, so this normally just passes the stored
+// values through; the fallbacks (server config) only cover an unexpected
+// null/invalid row, keeping the API contract firm. Defaults live in ONE place:
+// server/src/common/config.js.
+function withWaitDefaults(store) {
+  if (!store) return store;
+  const ws = Number(store.workstations);
+  const stations = Number.isInteger(ws) && ws >= 1 && ws <= 20 ? ws : KITCHEN_SLOTS;
+  const strategy = WAIT_STRATEGIES.includes(store.wait_strategy) ? store.wait_strategy : DEFAULT_WAIT_STRATEGY;
+  return { ...store, workstations: stations, wait_strategy: strategy };
+}
 
 function httpError(status, message) {
   const err = new Error(message);
@@ -14,14 +28,15 @@ function httpError(status, message) {
   return err;
 }
 
-exports.listStores = ({ venueId }) => {
-  return repository.findAll({ venueId });
+exports.listStores = async ({ venueId }) => {
+  const stores = await repository.findAll({ venueId });
+  return (stores || []).map(withWaitDefaults);
 };
 
 exports.getStore = async (id) => {
   const store = await repository.findById(id);
   if (!store) throw httpError(404, 'Store not found');
-  return store;
+  return withWaitDefaults(store);
 };
 
 // Only the store's own merchant (or an admin) may change it
@@ -80,5 +95,6 @@ exports.updateStore = async (id, changes = {}, actorId) => {
   await exports.assertCanEdit(store, actorId);
   const allowed = Object.fromEntries(Object.entries(changes).filter(([key]) => EDITABLE.includes(key)));
   if (Object.keys(allowed).length === 0) throw httpError(400, `Nothing to change. You can change: ${EDITABLE.join(', ')}`);
-  return repository.update(id, validate(allowed));
+  const updated = await repository.update(id, validate(allowed));
+  return withWaitDefaults(updated);
 };

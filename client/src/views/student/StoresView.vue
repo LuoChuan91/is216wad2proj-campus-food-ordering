@@ -24,7 +24,7 @@ const list = computed(() => u.value.list)
 const waitStores = new Set()
 const storeWaitMins = (storeId) => {
   const entry = peekStoreWait(storeId)
-  if (!entry || entry.loading || !entry.seconds) return null
+  if (!entry || entry.loading || !entry.seconds) return 0
   return Math.max(1, Math.round(entry.seconds / 60))
 }
 function syncWaits() {

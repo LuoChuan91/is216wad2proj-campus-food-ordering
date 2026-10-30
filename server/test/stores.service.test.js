@@ -87,3 +87,32 @@ test('wait strategy must be serial or scheduled', async () => {
   assert.deepEqual(saved, { wait_strategy: 'serial' });
   await assert.rejects(service.updateStore('store-1', { wait_strategy: 'bottleneck' }, 'mer-1'), { status: 400 });
 });
+
+test('getStore guarantees wait defaults when the row is missing/invalid them', async () => {
+  // Row with no workstations/wait_strategy -> server fills the config defaults.
+  storesRepository.findById = async () => ({ id: 'store-1', name: 'Bento Bar' });
+  const store = await service.getStore('store-1');
+  assert.equal(store.workstations, 2);
+  assert.equal(store.wait_strategy, 'scheduled');
+});
+
+test('getStore keeps valid stored wait settings as-is', async () => {
+  storesRepository.findById = async () => ({ id: 'store-1', name: 'Bento Bar', workstations: 5, wait_strategy: 'serial' });
+  const store = await service.getStore('store-1');
+  assert.equal(store.workstations, 5);
+  assert.equal(store.wait_strategy, 'serial');
+});
+
+test('listStores normalises wait settings on every row', async () => {
+  storesRepository.findAll = async () => [
+    { id: 'a', workstations: 3, wait_strategy: 'serial' },
+    { id: 'b' }, // missing both -> defaults
+    { id: 'c', workstations: 999, wait_strategy: 'bogus' }, // invalid -> defaults
+  ];
+  const stores = await service.listStores({});
+  assert.deepEqual(stores.map((s) => [s.workstations, s.wait_strategy]), [
+    [3, 'serial'],
+    [2, 'scheduled'],
+    [2, 'scheduled'],
+  ]);
+});
