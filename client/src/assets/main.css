@@ -328,10 +328,10 @@ body {
   padding: 14px;
 }
 .grab {
-  width: 40px;
+  width: 44px;
   height: 5px;
   border-radius: 3px;
-  background: #d5d9e3;
+  background: #a7aebe;
   margin: 8px auto 6px;
   flex: none;
 }
@@ -488,13 +488,15 @@ h4 .count {
 .leaflet-control-attribution {
   font-size: var(--fs-micro) !important;
   background: rgba(255, 255, 255, 0.75) !important;
+  white-space: nowrap;
 }
+/* Attribution sits in the map's bottom-right corner (Leaflet's default side) */
 .explore .leaflet-bottom {
-  bottom: 268px;
+  bottom: 0;
 }
 .map-note {
   position: absolute;
-  z-index: 6;
+  z-index: 1;
   left: 14px;
   top: 116px;
   font-size: var(--fs-micro);
@@ -538,7 +540,7 @@ h4 .count {
 }
 .vsheet {
   position: absolute;
-  z-index: 6;
+  z-index: 8;
   left: 0;
   right: 0;
   bottom: 0;
