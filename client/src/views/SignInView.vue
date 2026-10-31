@@ -30,8 +30,8 @@ const steps = [
     <div class="blob blob-c" aria-hidden="true"></div>
 
     <div class="si-wrap">
-      <section class="si-hero">
-        <div class="si-brand anim-rise order-0" style="--d: 0ms">
+      <section class="si-hero text-center text-md-start mx-auto mx-md-0 align-items-center align-items-md-start">
+        <div class="si-brand anim-rise order-0 d-flex justify-content-center justify-content-md-start" style="--d: 0ms">
           <AppMark :size="56" />
           <div>
             <h1>{{ cfg.appName }}</h1>
@@ -46,7 +46,7 @@ const steps = [
 
         <!-- Auth card: shown here (in the hero flow) only below md, directly
              under the pill. Hidden from md up, where the aside copy is used. -->
-        <section class="si-card si-card-inline d-md-none anim-pop order-2" style="--d: 180ms">
+        <section class="si-card si-card-inline d-md-none anim-pop order-2 text-center text-md-start" style="--d: 180ms">
           <h2>Welcome back</h2>
           <p class="si-sub">Sign in with your SMU email, or create an account.</p>
           <AuthPanel />
@@ -103,7 +103,7 @@ const steps = [
     </div>
 
     <section class="si-steps">
-      <h3 class="anim-rise" style="--d: 500ms">How it works</h3>
+      <h3 class="anim-rise text-center text-md-start" style="--d: 500ms">How it works</h3>
       <div class="step-grid">
         <article
           v-for="(s, i) in steps"
