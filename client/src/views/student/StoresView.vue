@@ -8,10 +8,9 @@ import { computed, watch, onBeforeUnmount } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui.js'
 import { useCatalogStore } from '@/stores/catalog.js'
-import * as E from '@/utils/engine.js'
 import { shortName } from '@/utils/landmarks.js'
 import { acquireStoreWait, releaseStoreWait, peekStoreWait } from '@/composables/storeWaitCache.js'
-import WaitTimeEstimate from '@/components/WaitTimeEstimate.vue'
+import StoreCard from '@/components/StoreCard.vue'
 
 const ui = useUiStore()
 const catalog = useCatalogStore()
@@ -25,7 +24,7 @@ const list = computed(() => u.value.list)
 const waitStores = new Set()
 const storeWaitMins = (storeId) => {
   const entry = peekStoreWait(storeId)
-  if (!entry || entry.loading || !entry.seconds) return null
+  if (!entry || entry.loading || !entry.seconds) return 0
   return Math.max(1, Math.round(entry.seconds / 60))
 }
 function syncWaits() {
@@ -82,12 +81,13 @@ const openCount = computed(() => rows.value.filter((r) => r.open.open).length)
 
 <template>
   <div class="stores-tab scroll">
+    <div class="container px-0">
     <h2 class="tab-title">All stores</h2>
     <p class="tab-sub">{{ catalog.db.stores.length }} stores on campus · {{ openCount }} taking orders</p>
-    <label class="search"><Icon name="search" :size="16" /><input type="search" placeholder="Search stores, dishes or buildings" aria-label="Search stores" :value="list.search" @input="ui.setListSearch($event.target.value)">
+    <label class="search d-flex align-items-center gap-2"><Icon name="search" :size="16" /><input type="search" placeholder="Search stores, dishes or buildings" aria-label="Search stores" :value="list.search" @input="ui.setListSearch($event.target.value)">
       <button v-if="list.search" type="button" class="icon-btn sm" aria-label="Clear search" @click="ui.setListSearch('')"><Icon name="close" :size="12" /></button></label>
     <div class="filter-row scroll" role="group" aria-label="Filter stores">
-      <button v-for="c in chips" :key="c.id" type="button" class="chip filter" :class="{ on: list.filter === c.id }" :aria-pressed="list.filter === c.id" @click="ui.setListFilter(c.id)">{{ c.label }}</button>
+      <button v-for="c in chips" :key="c.id" type="button" class="chip filter d-inline-flex align-items-center rounded-pill fw-bold text-nowrap" :class="{ on: list.filter === c.id }" :aria-pressed="list.filter === c.id" @click="ui.setListFilter(c.id)">{{ c.label }}</button>
     </div>
     <div class="sort-row">
       <span>{{ shown.length }} {{ shown.length === 1 ? 'store' : 'stores' }}</span>
@@ -97,33 +97,25 @@ const openCount = computed(() => rows.value.filter((r) => r.open.open).length)
         </select>
       </label>
     </div>
-    <div class="store-list">
-      <button v-for="r in shown" :key="r.s.id" class="store-card" :class="{ closed: !r.open.open, unavailable: !r.available }" :disabled="!r.available" @click="ui.openStore(r.s.id)">
-        <Mono :store="r.s" :size="46" />
-        <span class="store-main">
-          <strong>{{ r.s.name }}</strong>
-          <small>{{ r.s.cuisine }}</small>
-          <small v-if="r.v"><Icon name="walk" :size="12" />{{ r.walk.minutes }} min · {{ shortName(r.v.name) }}</small>
-          <span class="tags">
-            <span v-if="!r.available" class="tag muted">Unavailable</span>
-            <span v-else class="tag" :class="r.open.open ? 'ok' : 'muted'">{{ r.open.open ? 'Open' : 'Closed' }}</span>
-            <span v-if="r.s.discount_type" class="tag brand">{{ E.discountShort(r.s) }}</span>
-          </span>
-        </span>
-        <span class="store-wait" v-if="r.available && r.open.open"><WaitTimeEstimate :store-id="r.s.id" /></span>
-      </button>
-      <p v-if="!shown.length" class="empty-note">No stores match. Try another filter.</p>
+    <div class="row g-2">
+      <div v-for="r in shown" :key="r.s.id" class="col-12 col-md-6 col-lg-4">
+      <StoreCard class="h-100" :store="r.s" :open="r.open.open" :available="r.available">
+        <small class="text-body-secondary">{{ r.s.cuisine }}</small>
+        <small v-if="r.v" class="d-inline-flex align-items-center gap-1 text-body-secondary"><Icon name="walk" :size="12" />{{ r.walk.minutes }} min · {{ shortName(r.v.name) }}</small>
+      </StoreCard>
+      </div>
+      <p v-if="!shown.length" class="empty-note col-12">No stores match. Try another filter.</p>
+    </div>
     </div>
   </div>
 </template>
 
 <style scoped>
 /* Stores list: filter chips + sort row (moved from the global stylesheet).
-   Kept global (shared): .stores-tab padding, .tab-title, .search, and the
-   .store-card/.store-main cards (also used by the venue sheet). */
+   Kept global (shared): .stores-tab padding, .tab-title, .search. */
 .tab-sub {
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--fs-desc);
   margin: 2px 0 12px;
 }
 .stores-tab .search {
@@ -147,7 +139,7 @@ const openCount = computed(() => rows.value.filter((r) => r.open.open).length)
   color: var(--ink-2);
   cursor: pointer;
   padding: 5px 12px;
-  font-size: 12.5px;
+  font-size: var(--fs-desc);
 }
 .chip.filter:hover {
   border-color: #cfd4e0;
@@ -163,7 +155,7 @@ const openCount = computed(() => rows.value.filter((r) => r.open.open).length)
   justify-content: space-between;
   gap: 10px;
   margin: 2px 2px 10px;
-  font-size: 12.5px;
+  font-size: var(--fs-desc);
   font-weight: 700;
   color: var(--muted);
 }
@@ -175,14 +167,10 @@ const openCount = computed(() => rows.value.filter((r) => r.open.open).length)
 }
 .sort-row .form-select {
   width: auto;
-  font-size: 12.5px;
+  font-size: var(--fs-desc);
   font-weight: 700;
   border-radius: 10px;
   padding-top: 3px;
   padding-bottom: 3px;
-}
-.store-list {
-  display: grid;
-  gap: 8px;
 }
 </style>

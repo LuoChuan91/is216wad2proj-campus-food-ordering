@@ -3,6 +3,7 @@
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui.js'
+import StatusTag from '@/components/StatusTag.vue'
 import { useCatalogStore } from '@/stores/catalog.js'
 import * as E from '@/utils/engine.js'
 import { config as cfg } from '@/config/index.js'
@@ -20,25 +21,25 @@ const code = computed(() => (result.value ? String(result.value.id).slice(0, 4).
 </script>
 
 <template>
-  <div class="sheet pay-sheet" role="dialog" aria-label="Payment">
+  <div class="sheet pay-sheet col-md-8 col-lg-6 mx-auto" role="dialog" aria-label="Payment">
     <div class="grab"></div>
     <template v-if="u.pay.state !== 'done'">
-      <div class="sheet-head"><div><h3>Payment</h3><p>Simulated for now. No real money moves; we only save a payment record.</p></div>
+      <div class="sheet-head d-flex justify-content-between align-items-start gap-2"><div><h3>Payment</h3><p>Simulated for now. No real money moves; we only save a payment record.</p></div>
         <button class="icon-btn" aria-label="Close" :disabled="u.pay.state === 'processing'" @click="ui.closeSheet()"><Icon name="close" :size="18" /></button></div>
-      <div class="pay-amount"><small>You pay {{ store ? store.name : '' }}</small><b>{{ money(t ? t.total : 0) }}</b></div>
-      <div class="pay-method"><span class="pm-ic"><Icon name="wallet" :size="20" /></span><div><strong>Campus wallet</strong><small>Sample payment method</small></div><span class="tag">Simulated</span></div>
+      <div class="pay-amount text-center"><small>You pay {{ store ? store.name : '' }}</small><b class="d-block">{{ money(t ? t.total : 0) }}</b></div>
+      <div class="pay-method d-flex align-items-center gap-3"><span class="pm-ic d-flex align-items-center justify-content-center flex-shrink-0"><Icon name="wallet" :size="20" /></span><div><strong class="d-block">Campus wallet</strong><small>Sample payment method</small></div><StatusTag class="ms-auto">Simulated</StatusTag></div>
       <p v-if="u.pay.state === 'error'" class="pay-error" role="alert">{{ u.pay.error }}</p>
-      <div class="sheet-foot">
+      <div class="sheet-foot d-flex align-items-center gap-3">
         <button class="btn btn-primary btn-lg w-100" :disabled="u.pay.state === 'processing'" @click="ui.confirmPay()">
           <span v-if="u.pay.state === 'processing'" class="spinner-border spinner-border-sm me-2" role="status"></span>{{ u.pay.state === 'processing' ? 'Processing payment' : u.pay.state === 'error' ? 'Try again' : 'Confirm payment' }}
         </button>
       </div>
     </template>
-    <div v-else class="pay-done">
-      <div class="done-check"><Icon name="check" :size="38" :stroke="3" /></div>
+    <div v-else class="pay-done text-center">
+      <div class="done-check d-flex align-items-center justify-content-center rounded-circle"><Icon name="check" :size="38" :stroke="3" /></div>
       <h3>Payment successful</h3>
       <p>{{ money(result.payment.amount) }} paid to {{ store.name }}</p>
-      <dl class="ref"><div><dt>Order</dt><dd>#{{ code }}</dd></div><div><dt>Reference</dt><dd>{{ result.payment.reference }}</dd></div></dl>
+      <dl class="ref d-grid gap-1 text-start"><div class="d-flex justify-content-between"><dt>Order</dt><dd>#{{ code }}</dd></div><div class="d-flex justify-content-between"><dt>Reference</dt><dd>{{ result.payment.reference }}</dd></div></dl>
       <button class="btn btn-primary btn-lg w-100" @click="ui.openTracking(result.id)">Track my order</button>
     </div>
   </div>
@@ -52,36 +53,25 @@ const code = computed(() => (result.value ? String(result.value.id).slice(0, 4).
   background: var(--canvas);
   border-radius: 18px;
   padding: 16px;
-  text-align: center;
 }
 .pay-amount small {
   color: var(--muted);
   font-weight: 600;
 }
 .pay-amount b {
-  display: block;
-  font-size: 34px;
+  font-size: var(--fs-display);
   font-weight: 800;
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
 }
 .pay-method {
   margin: 0 18px 14px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
   border: 1.5px solid var(--brand);
   border-radius: 16px;
   padding: 12px;
 }
-.pay-method strong {
-  display: block;
-}
 .pay-method small {
   color: var(--muted);
-}
-.pay-method .tag {
-  margin-left: auto;
 }
 .pm-ic {
   width: 38px;
@@ -89,8 +79,6 @@ const code = computed(() => (result.value ? String(result.value.id).slice(0, 4).
   border-radius: 12px;
   background: var(--brand-soft);
   color: var(--brand);
-  display: grid;
-  place-items: center;
 }
 .pay-error {
   margin: 0 18px 12px;
@@ -98,21 +86,17 @@ const code = computed(() => (result.value ? String(result.value.id).slice(0, 4).
   border-radius: 12px;
   background: var(--late-soft);
   color: var(--late);
-  font-size: 13px;
+  font-size: var(--fs-desc);
   font-weight: 600;
 }
 .pay-done {
   padding: 10px 22px 20px;
-  text-align: center;
 }
 .done-check {
   width: 76px;
   height: 76px;
-  border-radius: 50%;
   background: var(--ok);
   color: #fff;
-  display: grid;
-  place-items: center;
   margin: 6px auto 12px;
   animation: pop 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.4);
   box-shadow: 0 0 0 10px var(--ok-soft);
@@ -128,7 +112,7 @@ const code = computed(() => (result.value ? String(result.value.id).slice(0, 4).
   }
 }
 .pay-done h3 {
-  font-size: 21px;
+  font-size: var(--fs-title);
   font-weight: 800;
   margin: 0 0 4px;
 }
@@ -141,14 +125,7 @@ const code = computed(() => (result.value ? String(result.value.id).slice(0, 4).
   background: var(--canvas);
   border-radius: 14px;
   padding: 10px 14px;
-  text-align: left;
-  display: grid;
-  gap: 4px;
-  font-size: 13px;
-}
-.ref div {
-  display: flex;
-  justify-content: space-between;
+  font-size: var(--fs-desc);
 }
 .ref dt {
   color: var(--muted);

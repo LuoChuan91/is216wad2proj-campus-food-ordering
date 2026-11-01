@@ -13,7 +13,7 @@ const supabase = require('../common/supabase');
 exports.findItemWithOptions = async (itemId) => {
   const { data, error } = await supabase
     .from('menu_items')
-    .select('*, menu_category(store_id), option_groups(*, options(*))')
+    .select('*, menu_category(store_id, name), option_groups(*, options(*))')
     .eq('id', itemId)
     .maybeSingle();
 
@@ -21,7 +21,35 @@ exports.findItemWithOptions = async (itemId) => {
   if (!data) return null;
 
   const { menu_category, ...item } = data;
-  return { ...item, store_id: menu_category ? menu_category.store_id : null };
+  return { ...item, store_id: menu_category ? menu_category.store_id : null, category: menu_category ? menu_category.name : null };
+};
+
+// A store's category with this name (case-insensitive), or null
+exports.findCategory = async (storeId, name) => {
+  const { data, error } = await supabase
+    .from('menu_category')
+    .select('*')
+    .eq('store_id', storeId)
+    .ilike('name', name.replace(/[\\%_]/g, '\\$&'))
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+};
+
+exports.createCategory = async (storeId, name) => {
+  const { data, error } = await supabase.from('menu_category').insert({ store_id: storeId, name }).select().single();
+
+  if (error) throw error;
+  return data;
+};
+
+exports.createItem = async (fields) => {
+  const { data, error } = await supabase.from('menu_items').insert(fields).select('id').single();
+
+  if (error) throw error;
+  return data;
 };
 
 // Every dish still on a menu (not archived), with its store_id, its category name and its

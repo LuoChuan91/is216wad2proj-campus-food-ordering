@@ -12,10 +12,10 @@ const props = defineProps({
   orderId: { type: String, default: null },
   strategy: {
     type: String,
-    default: 'scheduled',
-    validator: (v) => WAIT_TIME_STRATEGIES.includes(v),
+    default: null,
+    validator: (v) => v === null || WAIT_TIME_STRATEGIES.includes(v),
   },
-  stations: { type: Number, default: 2 },
+  stations: { type: Number, default: null },
   pollMs: { type: Number, default: 60000 },
   supabaseClient: { type: Object, default: () => defaultSupabase },
   // When true, append "· N ahead" to the label. Default off so existing usages

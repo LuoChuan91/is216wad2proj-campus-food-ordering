@@ -22,8 +22,9 @@ const venues = computed(() => catalog.db.venues.map((v) => ({ v, stores: catalog
 
 <template>
   <div class="adm-venues">
-    <div class="av-side scroll">
-      <form class="av-form" @submit.prevent="orders.addVenue()">
+    <div class="row g-0 h-100 flex-column flex-md-row flex-nowrap">
+    <div class="av-side scroll col col-md-4 d-flex flex-column gap-2">
+      <form class="av-form d-grid gap-2" @submit.prevent="orders.addVenue()">
         <strong>Add a venue</strong>
         <label for="venue-name">Name</label>
         <input id="venue-name" class="form-control form-control-sm" placeholder="e.g. SMU Labs" :value="t.venueDraft.name" @input="ui.setVenueDraft('name', $event.target.value)">
@@ -31,9 +32,10 @@ const venues = computed(() => catalog.db.venues.map((v) => ({ v, stores: catalog
         <p v-if="t.formError" class="av-err">{{ t.formError }}</p>
         <button class="btn btn-primary btn-sm w-100" type="submit" :disabled="t.saving">{{ t.saving ? 'Adding…' : 'Add venue' }}</button>
       </form>
-      <div v-for="x in venues" :key="x.v.id" class="av-row"><Icon name="pin" :size="14" /><div><strong>{{ x.v.name }}</strong><small>{{ x.stores }} {{ x.stores === 1 ? 'store' : 'stores' }} · {{ Number(x.v.lat).toFixed(4) }}, {{ Number(x.v.lng).toFixed(4) }}</small></div></div>
+      <div v-for="x in venues" :key="x.v.id" class="av-row d-flex align-items-center gap-2"><Icon name="pin" :size="14" /><div><strong class="d-block">{{ x.v.name }}</strong><small>{{ x.stores }} {{ x.stores === 1 ? 'store' : 'stores' }} · {{ Number(x.v.lat).toFixed(4) }}, {{ Number(x.v.lng).toFixed(4) }}</small></div></div>
     </div>
-    <AdminMap />
+    <AdminMap class="col col-md-8 order-first order-md-last" />
+    </div>
   </div>
 </template>
 
@@ -42,32 +44,24 @@ const venues = computed(() => catalog.db.venues.map((v) => ({ v, stores: catalog
 .adm-venues {
   flex: 1;
   min-height: 0;
-  display: grid;
-  grid-template-columns: 290px 1fr;
 }
 .av-side {
   padding: 12px;
-  border-right: 1px solid var(--line);
   background: var(--paper);
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
 }
 .av-form {
-  display: grid;
-  gap: 6px;
   background: var(--canvas);
   border-radius: 14px;
   padding: 12px;
   margin-bottom: 6px;
 }
 .av-form label {
-  font-size: 12px;
+  font-size: var(--fs-caption);
   font-weight: 700;
   color: var(--ink-2);
 }
 .av-ll {
-  font-size: 12px;
+  font-size: var(--fs-caption);
   color: var(--ink-2);
   font-family: var(--font-mono);
   background: var(--paper);
@@ -77,22 +71,18 @@ const venues = computed(() => catalog.db.venues.map((v) => ({ v, stores: catalog
 }
 .av-err {
   color: var(--late);
-  font-size: 12px;
+  font-size: var(--fs-caption);
   margin: 0;
 }
 .av-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   padding: 6px 4px;
 }
 .av-row strong {
-  display: block;
-  font-size: 13px;
+  font-size: var(--fs-desc);
 }
 .av-row small {
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--fs-micro);
   font-family: var(--font-mono);
 }
 </style>

@@ -239,7 +239,7 @@ Not in the database yet, so the app works around them. Add the columns if you wa
 | What | Workaround now | Column to add |
 | ---- | -------------- | ------------- |
 | When an order started cooking | The server remembers it until it restarts, otherwise uses `paid_at` | `orders.preparing_at` |
-| How many dishes a kitchen cooks at once | `KITCHEN_SLOTS` in `server/src/common/config.js` (2 for every store) | `stores.max_parallel_cook` |
+| How many dishes a kitchen cooks at once, and how wait times are estimated | Until the columns exist, every store uses 2 workstations and the `scheduled` strategy | `stores.workstations`, `stores.wait_strategy` (set by the merchant on the order board) |
 | A short order number | First 4 characters of the order id, e.g. `#E287` | `orders.code` |
 | "Available for delivery jobs" | Remembered in each browser | `profiles.courier_available` |
 | Notifications (the bell and pop-ups) | Each browser compares what the server says now with a few seconds ago | a `notifications` table |

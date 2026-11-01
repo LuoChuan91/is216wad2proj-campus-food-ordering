@@ -11,7 +11,7 @@ import { ref, computed, watch, onBeforeUnmount, toValue } from 'vue'
 import { estimateNewOrderWait } from '@/utils/waitTime.js'
 import { api as defaultApi } from '@/services/api.js'
 import defaultSupabase from '@/common/supabase.js'
-import { config as cfg } from '@/config/index.js'
+import { waitSettings } from '@/utils/waitSettings.js'
 
 const POLL_MS = 60000
 const DEBOUNCE_MS = 300
@@ -21,8 +21,8 @@ export function useCartEstimate(storeId, cartLines, options = {}) {
   const {
     api = defaultApi,
     supabaseClient = defaultSupabase,
-    stations = cfg.kitchenSlots ?? 2,
-    strategy = 'scheduled',
+    stations = null,
+    strategy = null,
     now = () => Date.now(),
   } = options
 
@@ -66,8 +66,12 @@ export function useCartEstimate(storeId, cartLines, options = {}) {
         preparing_at: ms(o.preparing_at) || ms(o.created_at) || now(),
         items: (o.order_items || []).map((oi) => ({ menu_item_id: oi.menu_item_id, qty: oi.qty })),
       }))
-      // TODO strategy and stations
-      const r = estimateNewOrderWait(queueOrders, cartList, cookingDetails, { stations, now: now(), strategy })
+      const saved = waitSettings(sid)
+      const r = estimateNewOrderWait(queueOrders, cartList, cookingDetails, {
+        stations: toValue(stations) ?? saved.stations,
+        strategy: toValue(strategy) ?? saved.strategy,
+        now: now(),
+      })
       seconds.value = r.seconds
       ahead.value = r.ahead
       ready.value = true
@@ -115,9 +119,9 @@ export function useCartEstimate(storeId, cartLines, options = {}) {
 
   const estimate = computed(() => (ready.value ? { seconds: seconds.value, ahead: ahead.value, readyAt: now() + seconds.value * 1000 } : null))
 
-  // Re-run when the store or the cart contents change.
+  // Re-run when the store, the cart contents or the store's wait settings change.
   watch(
-    () => [toValue(storeId), (toValue(cartLines) || []).map((l) => `${l.menu_item_id}:${l.qty}`).join(',')],
+    () => [toValue(storeId), (toValue(cartLines) || []).map((l) => `${l.menu_item_id}:${l.qty}`).join(','), JSON.stringify(waitSettings(toValue(storeId)))],
     () => { loading.value = true; load(); subscribe() },
     { immediate: true },
   )

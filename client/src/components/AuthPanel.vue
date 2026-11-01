@@ -92,14 +92,14 @@ async function submit() {
 </script>
 
 <template>
-  <div class="auth-panel">
-    <div class="auth-tabs" role="tablist">
+  <div class="auth-panel mt-1">
+    <div class="auth-tabs d-flex gap-1 mb-3" role="tablist">
       <button
         v-for="t in tabs"
         :key="t.key"
         type="button"
         role="tab"
-        class="auth-tab"
+        class="auth-tab btn border-0 fw-bold px-3 py-2"
         :class="{ on: mode === t.key }"
         :aria-selected="mode === t.key"
         @click="switchTo(t.key)"
@@ -108,83 +108,95 @@ async function submit() {
       </button>
     </div>
 
-    <div v-if="notice" class="auth-alert ok" role="status">
+    <div
+      v-if="notice"
+      class="auth-alert ok d-flex align-items-start gap-2 rounded-3 px-3 py-2 mb-3"
+      role="status"
+    >
       <Icon name="sparkle" :size="16" />
       <span>{{ notice }}</span>
     </div>
-    <div v-if="error" :key="errorKey" class="auth-alert bad" role="alert">
+    <div
+      v-if="error"
+      :key="errorKey"
+      class="auth-alert bad rounded-3 px-3 py-2 mb-3"
+      role="alert"
+    >
       {{ error }}
     </div>
 
     <Transition name="swap" mode="out-in">
-      <form :key="mode" class="auth-form" @submit.prevent="submit">
-        <label v-if="mode === 'signup'">
+      <form :key="mode" class="auth-form d-grid gap-3" @submit.prevent="submit">
+        <label v-if="mode === 'signup'" class="d-grid gap-1">
           <span>Full name</span>
-          <input v-model="name" class="auth-input" autocomplete="name" required />
+          <input v-model="name" class="auth-input form-control" autocomplete="name" required />
         </label>
 
-        <label>
+        <label class="d-grid gap-1">
           <span>SMU email</span>
           <input
             v-model="email"
             type="email"
-            class="auth-input"
+            class="auth-input form-control"
             autocomplete="email"
             placeholder="you@smu.edu.sg"
             required
           />
         </label>
 
-        <label v-if="mode !== 'forgot'">
+        <label v-if="mode !== 'forgot'" class="d-grid gap-1">
           <span>Password</span>
           <input
             v-model="password"
             type="password"
-            class="auth-input"
+            class="auth-input form-control"
             :autocomplete="mode === 'login' ? 'current-password' : 'new-password'"
             required
           />
         </label>
 
-        <label v-if="mode === 'signup'">
+        <label v-if="mode === 'signup'" class="d-grid gap-1">
           <span>Confirm password</span>
-          <input v-model="confirm" type="password" class="auth-input" autocomplete="new-password" required />
+          <input v-model="confirm" type="password" class="auth-input form-control" autocomplete="new-password" required />
         </label>
 
-        <button class="auth-submit" :disabled="busy">
+        <button
+          class="auth-submit btn w-100 d-flex align-items-center justify-content-center gap-2"
+          :disabled="busy"
+        >
           <span v-if="busy" class="auth-spin" aria-hidden="true"></span>
           {{ buttonText }}
         </button>
       </form>
     </Transition>
 
-    <button v-if="mode === 'login'" type="button" class="auth-link" @click="switchTo('forgot')">
+    <button
+      v-if="mode === 'login'"
+      type="button"
+      class="auth-link btn border-0 d-block mx-auto mt-3 p-0 fw-bold"
+      @click="switchTo('forgot')"
+    >
       Forgot password?
     </button>
   </div>
 </template>
 
 <style scoped>
-.auth-panel {
-  margin-top: 4px;
-}
+/* Layout/spacing (margins, padding, gaps, flex, grid, widths) now come from
+   Bootstrap utility classes in the template. This block keeps only the custom
+   theming Bootstrap can't express, and the few overrides needed so Bootstrap's
+   .btn / .form-control defaults don't fight the app's look. */
 
 /* Tabs with an animated underline */
 .auth-tabs {
-  display: flex;
-  gap: 4px;
   border-bottom: 1px solid var(--line);
-  margin-bottom: 18px;
 }
 .auth-tab {
   position: relative;
-  border: 0;
   background: none;
-  padding: 10px 12px;
-  font-weight: 700;
-  font-size: 14px;
+  font-size: var(--fs-body);
   color: var(--muted);
-  cursor: pointer;
+  border-radius: 0;
   transition: color 0.2s ease;
 }
 .auth-tab:hover {
@@ -216,14 +228,8 @@ async function submit() {
 
 /* Alerts */
 .auth-alert {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
   font-size: 13.5px;
   line-height: 1.4;
-  border-radius: 12px;
-  padding: 10px 12px;
-  margin-bottom: 14px;
   animation: alert-in 0.3s ease both;
 }
 .auth-alert.ok {
@@ -236,15 +242,9 @@ async function submit() {
   animation: alert-in 0.3s ease both, shake 0.45s 0.25s ease;
 }
 
-/* Form fields */
-.auth-form {
-  display: grid;
-  gap: 12px;
-}
+/* Form field labels */
 .auth-form label {
-  display: grid;
-  gap: 6px;
-  font-size: 13px;
+  font-size: var(--fs-desc);
   font-weight: 700;
   color: var(--ink-2);
   transition: color 0.2s ease;
@@ -252,8 +252,9 @@ async function submit() {
 .auth-form label:focus-within {
   color: var(--brand-600);
 }
-.auth-input {
-  width: 100%;
+
+/* Inputs — override Bootstrap .form-control to keep the rounded, soft look */
+.auth-input.form-control {
   border: 1.5px solid var(--line);
   border-radius: 12px;
   padding: 11px 14px;
@@ -262,28 +263,23 @@ async function submit() {
   background: #fbfcfe;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
-.auth-input::placeholder {
+.auth-input.form-control::placeholder {
   color: #aab0bf;
 }
-.auth-input:hover {
+.auth-input.form-control:hover {
   border-color: #cfd4e2;
 }
-.auth-input:focus {
+.auth-input.form-control:focus {
   outline: none;
   border-color: var(--brand);
   background: #fff;
   box-shadow: 0 0 0 4px rgba(229, 81, 45, 0.16);
 }
 
-/* Submit button */
-.auth-submit {
+/* Submit button — override Bootstrap .btn with the brand gradient */
+.auth-submit.btn {
   position: relative;
   overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
   border: 0;
   border-radius: 12px;
   padding: 12px;
@@ -293,11 +289,10 @@ async function submit() {
   color: #fff;
   background: linear-gradient(135deg, var(--brand), #ff7a4d);
   box-shadow: 0 10px 22px rgba(229, 81, 45, 0.32);
-  cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.2s ease;
 }
 /* A light sheen that sweeps across on hover */
-.auth-submit::after {
+.auth-submit.btn::after {
   content: '';
   position: absolute;
   top: 0;
@@ -308,17 +303,18 @@ async function submit() {
   transform: skewX(-20deg);
   transition: left 0.6s ease;
 }
-.auth-submit:hover:not(:disabled) {
+.auth-submit.btn:hover:not(:disabled) {
+  color: #fff;
   transform: translateY(-2px);
   box-shadow: 0 14px 28px rgba(229, 81, 45, 0.4);
 }
-.auth-submit:hover:not(:disabled)::after {
+.auth-submit.btn:hover:not(:disabled)::after {
   left: 120%;
 }
-.auth-submit:active:not(:disabled) {
+.auth-submit.btn:active:not(:disabled) {
   transform: translateY(0) scale(0.98);
 }
-.auth-submit:disabled {
+.auth-submit.btn:disabled {
   opacity: 0.75;
   cursor: wait;
 }
@@ -331,17 +327,13 @@ async function submit() {
   animation: spin 0.7s linear infinite;
 }
 
-.auth-link {
-  display: block;
-  margin: 12px auto 0;
-  border: 0;
+.auth-link.btn {
   background: none;
   color: var(--brand-600);
-  font-weight: 700;
-  font-size: 13px;
-  cursor: pointer;
+  font-size: var(--fs-desc);
 }
-.auth-link:hover {
+.auth-link.btn:hover {
+  color: var(--brand-600);
   text-decoration: underline;
 }
 
@@ -381,9 +373,9 @@ async function submit() {
     animation: none;
   }
   .auth-tab::after,
-  .auth-submit::after,
-  .auth-input,
-  .auth-submit {
+  .auth-submit.btn::after,
+  .auth-input.form-control,
+  .auth-submit.btn {
     transition: none;
   }
 }

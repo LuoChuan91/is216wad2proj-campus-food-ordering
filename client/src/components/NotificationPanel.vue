@@ -21,7 +21,7 @@ function formatTime(at) {
 <template>
   <div class="notification-panel">
     <div v-if="items.length === 0" class="text-center text-muted py-4 py-md-5" data-test="empty">
-      <i class="bi bi-bell-slash fs-3 d-block mb-2" aria-hidden="true"></i>
+      <i class="bi bi-bell-slash type-display d-block mb-2" aria-hidden="true"></i>
       No notifications yet.
     </div>
 
@@ -97,24 +97,24 @@ function formatTime(at) {
 }
 
 .notif-title {
-  font-size: 13.5px;
+  font-size: var(--fs-desc);
   color: var(--ink);
 }
 
 .notif-time {
   color: var(--muted);
-  font-size: 11.5px;
+  font-size: var(--fs-caption);
   flex-shrink: 0;
 }
 
 .notif-body {
-  font-size: 12.5px;
+  font-size: var(--fs-desc);
   color: var(--ink-2);
   margin-top: 1px;
 }
 
 .notif-read {
-  font-size: 12px;
+  font-size: var(--fs-caption);
   text-decoration: none;
   color: var(--brand);
 }

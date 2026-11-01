@@ -27,3 +27,10 @@ exports.updateStatus = async (id, { status } = {}) => {
   if (profile.role !== 'student') throw httpError(400, 'Only student accounts are managed here');
   return repository.update(id, { status });
 };
+
+// An invited account has chosen its own password. Only that account can say so.
+exports.markPasswordSet = async (id, actorId) => {
+  if (!actorId || actorId !== id) throw httpError(403, 'You can only update your own account');
+  await exports.getProfile(id);
+  return repository.update(id, { password_set: true });
+};

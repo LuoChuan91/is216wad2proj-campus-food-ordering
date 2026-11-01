@@ -219,4 +219,26 @@ describe('estimateNewOrderWait (checkout probe)', () => {
     const r = estimateNewOrderWait([], [{ menu_item_id: 'unknown', qty: 2 }], COOK, { stations: 2, now: 0 })
     expect(r.seconds).toBe(0)
   })
+
+  it("honours wait_strategy='serial': ignores extra stations, cooks one line", () => {
+    // Two pasta orders ahead + a fresh pasta. With 2 stations (scheduled) they'd
+    // cook in parallel; serial forces a single line, so each 5-min order stacks.
+    const queue = [
+      { id: 'a', status: 'placed', created_at: 1, items: [{ menu_item_id: 'pasta', qty: 1 }] },
+    ]
+    const serial = estimateNewOrderWait(queue, [{ menu_item_id: 'pasta', qty: 1 }], COOK, { stations: 2, strategy: 'serial', now: 0 })
+    expect(serial.seconds).toBe(10 * MIN) // behind the 5-min order on one line
+    // Same inputs with the default scheduled strategy run in parallel -> 5 min.
+    const scheduled = estimateNewOrderWait(queue, [{ menu_item_id: 'pasta', qty: 1 }], COOK, { stations: 2, strategy: 'scheduled', now: 0 })
+    expect(scheduled.seconds).toBe(5 * MIN)
+  })
+
+  it("wait_strategy='scheduled' respects the store's workstation count", () => {
+    const queue = [
+      { id: 'a', status: 'placed', created_at: 1, items: [{ menu_item_id: 'pasta', qty: 1 }] },
+    ]
+    // 1 station: fresh order waits behind -> 10 min; 2 stations: parallel -> 5 min.
+    expect(estimateNewOrderWait(queue, [{ menu_item_id: 'pasta', qty: 1 }], COOK, { stations: 1, strategy: 'scheduled', now: 0 }).seconds).toBe(10 * MIN)
+    expect(estimateNewOrderWait(queue, [{ menu_item_id: 'pasta', qty: 1 }], COOK, { stations: 2, strategy: 'scheduled', now: 0 }).seconds).toBe(5 * MIN)
+  })
 })

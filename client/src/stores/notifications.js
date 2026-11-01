@@ -15,6 +15,23 @@ import { config as cfg } from '@/config/index.js'
 let seq = 0
 const nextId = () => `n${Date.now()}_${seq++}`
 
+// Content-based de-duplication. Both notification paths (realtime broadcast and
+// the poll-diff mirror in ui.js) funnel through the store, so collapsing by what
+// an event IS — not which path delivered it — is enough to kill duplicates.
+// A short window absorbs the start-up race (mirror fires just before realtime
+// reports "connected") and any re-delivered broadcast, while still allowing a
+// genuinely repeated event (e.g. a second order reaching the same status later)
+// through once the window lapses. The `seen` map lives inside the store so it is
+// per-instance (reset with the store / on sign-out).
+const DEDUP_WINDOW_MS = 15000
+function dupKey(n) {
+  // Status events (kind set) are identified by kind|status|order alone, so the
+  // realtime copy and the poll-diff mirror collapse even if their wording
+  // differs slightly. Plain messages (no kind) fall back to their text.
+  if (n.kind) return `k:${n.kind}|${n.status || ''}|${n.orderId ?? ''}`
+  return `t:${n.title || ''}|${n.body || ''}`
+}
+
 // Per-user sessionStorage for the notification HISTORY only, so the bell panel
 // survives a page refresh within the same tab session (toasts are transient and
 // are NOT persisted — they must not pop again after a reload).
@@ -79,12 +96,26 @@ export const useNotificationsStore = defineStore('notifications', () => {
   const toasts = ref([]) // currently visible toasts
   // The user whose history is currently loaded + persisted (per-tab session).
   let currentUserId = null
-  // Whether the Supabase realtime notification channel is currently connected.
-  // When true, the poll-diff fallback (ui.notify mirror) suppresses status/delivery
-  // events because realtime delivers them; when false, the bridge mirrors them so
-  // nothing is lost. Set by useRealtimeNotifications.
+  // Realtime connection flag, kept for observability (e.g. a "live" indicator).
+  // De-duplication no longer depends on it: the `seen` map below collapses an
+  // event regardless of which path (realtime or poll-diff mirror) delivers it.
   const realtimeConnected = ref(false)
   function setRealtimeConnected(v) { realtimeConnected.value = !!v }
+
+  // Per-instance de-dup state: key -> last-seen epoch ms. Reset by clear().
+  const seen = new Map()
+  function isDuplicate(n) {
+    const key = dupKey(n)
+    const now = Date.now()
+    const last = seen.get(key)
+    if (last !== undefined && now - last < DEDUP_WINDOW_MS) return true
+    seen.set(key, now)
+    // Prune lazily so the map can't grow unbounded over a long session.
+    if (seen.size > 200) {
+      for (const [k, t] of seen) if (now - t >= DEDUP_WINDOW_MS) seen.delete(k)
+    }
+    return false
+  }
 
   // Load this user's persisted history (called by the session store on sign-in /
   // refresh-restore). `fresh` = a brand-new sign-in: start clean AND wipe any
@@ -111,7 +142,8 @@ export const useNotificationsStore = defineStore('notifications', () => {
 
   /**
    * Handle one raw realtime payload { kind, status, order_id, at }.
-   * Returns the created notification, or null if the status is not one we show.
+   * Returns the created notification, or null if the status is not one we show
+   * (or it was de-duplicated).
    */
   function receive(payload) {
     const view = buildNotification(payload, resolveContext(payload))
@@ -129,8 +161,36 @@ export const useNotificationsStore = defineStore('notifications', () => {
       read: false,
     }
 
+    if (isDuplicate(notification)) return null
     items.value.unshift(notification)
     if (view.toast) toasts.value.push(notification)
+    return notification
+  }
+
+  /**
+   * Add a notification that originated outside the realtime channel (the
+   * poll-diff mirror in ui.js). Shares the SAME de-dup gate as receive(), so an
+   * event delivered by both paths is only ever shown once. `meta` carries the
+   * { kind, status, order_id } of realtime-owned events so the dedup key matches
+   * the realtime copy exactly. Returns the created notification, or null if it
+   * was a duplicate.
+   */
+  function pushLocal({ title, body, variant = 'secondary', toast = true, meta = null }) {
+    const notification = {
+      id: nextId(),
+      kind: meta?.kind ?? null,
+      status: meta?.status ?? null,
+      orderId: meta?.order_id ?? null,
+      title,
+      body,
+      variant,
+      at: new Date().toISOString(),
+      read: false,
+    }
+
+    if (isDuplicate(notification)) return null
+    items.value.unshift(notification)
+    if (toast) toasts.value.push(notification)
     return notification
   }
 
@@ -156,7 +216,8 @@ export const useNotificationsStore = defineStore('notifications', () => {
     currentUserId = null
     items.value = []
     toasts.value = []
+    seen.clear()
   }
 
-  return { items, toasts, realtimeConnected, setRealtimeConnected, hydrate, receive, dismissToast, markRead, markAllRead, clear }
+  return { items, toasts, realtimeConnected, setRealtimeConnected, hydrate, receive, pushLocal, dismissToast, markRead, markAllRead, clear }
 })

@@ -74,6 +74,10 @@ const STRATEGIES = {
  * @returns {{ seconds: number, perItem: Array<{menuItemId: string, qty: number, batches: number, seconds: number}>, missing: string[] }}
  */
 export function estimateWaitTime(orderItems, cookingDetails, options = {}) {
+  // Intrinsic library defaults (used only if a caller omits options). Real app
+  // callers always pass resolved { strategy, stations } from waitSettings(),
+  // whose fallback is config.wait — the single source of truth for the store
+  // default. These intrinsic defaults are deliberately the safe upper bound.
   const { strategy = 'serial', stations = 2 } = options;
   const aggregate = STRATEGIES[strategy];
   if (!aggregate) {
@@ -206,15 +210,26 @@ function scheduleKitchen(stations, orders, menuById, now) {
  * store's current queue. Returns a relative wait in whole seconds and how many
  * orders are ahead of it.
  *
+ * Both DB-stored store settings are honoured:
+ *   - `stations`  ← stores.workstations (how many batches cook in parallel)
+ *   - `strategy`  ← stores.wait_strategy
+ *       'scheduled' : batches run across `stations` parallel slots (default).
+ *       'serial'    : one serial line — every batch runs one after another,
+ *                     so the station count is forced to 1 (matching the
+ *                     'serial' behaviour of estimateWaitTime).
+ *
  * @param {Array<{id:string,status:string,created_at:number,preparing_at?:number,items:Array<{menu_item_id:string,qty:number}>}>} queueOrders
  *        the store's active orders (ms timestamps), as returned by the queue API.
  * @param {Array<{menu_item_id:string,qty:number}>} cartLines  the new cart's items.
  * @param {Array<{id:string,cook_time_sec:number,max_at_once:number}>} cookingDetails
- * @param {{ stations?: number, now?: number }} [options]
+ * @param {{ stations?: number, strategy?: 'serial'|'scheduled', now?: number }} [options]
  * @returns {{ seconds: number, ahead: number }}
  */
 export function estimateNewOrderWait(queueOrders, cartLines, cookingDetails, options = {}) {
-  const stations = Math.max(1, Math.floor(options.stations ?? 2));
+  // A serial kitchen is a single line: model it as one station so batches
+  // queue sequentially. Any other strategy uses the store's workstation count.
+  const workstations = Math.max(1, Math.floor(options.stations ?? 2));
+  const stations = options.strategy === 'serial' ? 1 : workstations;
   const now = options.now ?? Date.now();
 
   const menuById = {};

@@ -24,7 +24,6 @@ export const DEFAULT_PLACE = {
 };
 
 let lineSeq = 0;
-let mirrorSeq = 0;
 
 // The app's poll-notification tones -> the Bootstrap variants the notifications
 // store / toaster use.
@@ -71,7 +70,6 @@ export const useUiStore = defineStore("ui", () => {
   const now = ref(Date.now());
   const ui = reactive({ student: studentUi(), staff: staffUi() });
   const courierOn = ref(false);
-  const menu = ref(null); // which top-bar dropdown is open
   const mapOffline = ref(false);
   const busy = reactive({}); // { [id]: true } while a button's request is running
 
@@ -95,17 +93,16 @@ export const useUiStore = defineStore("ui", () => {
   function pushView(view, meta, toast) {
     try {
       const store = useNotificationsStore();
-      if (meta && meta.kind && store.realtimeConnected) return;
-      const item = {
-        id: `b${Date.now()}_${mirrorSeq++}`,
+      // One surface, one de-dup gate: the store collapses an event that the
+      // realtime channel also delivers (matched by kind/status/order via meta),
+      // so we no longer special-case realtimeConnected here.
+      store.pushLocal({
         title: view.title,
         body: view.body,
         variant: view.variant || "secondary",
-        at: new Date().toISOString(),
-        read: false,
-      };
-      store.items.unshift(item);
-      if (toast) store.toasts.push(item);
+        toast,
+        meta,
+      });
     } catch (err) {
       // Pinia not ready yet (very early start-up): skip rather than break the app.
       console.warn("[notify] skipped:", err.message);
@@ -138,10 +135,6 @@ export const useUiStore = defineStore("ui", () => {
 
   function tick() {
     now.value = Date.now();
-  }
-
-  function toggleMenu(name) {
-    menu.value = menu.value === name ? null : name;
   }
 
   /* ---------- place / walk helpers ---------- */
@@ -428,7 +421,7 @@ export const useUiStore = defineStore("ui", () => {
   /* merchant */
   function setMerchantTab(tab) {
     ui.staff.merchantTab = tab;
-    go(tab === "menu" ? "/merchant/menu" : "/merchant");
+    go(tab === "orders" ? "/merchant" : "/merchant/" + tab);
   }
   function setMerchantStore(storeId) {
     ui.staff.storeId = storeId;
@@ -445,8 +438,8 @@ export const useUiStore = defineStore("ui", () => {
   }
 
   return {
-    loaded, loadError, online, now, ui, courierOn, menu, mapOffline, busy,
-    notify, notifyView, run, tick, toggleMenu, place, walk, open,
+    loaded, loadError, online, now, ui, courierOn, mapOffline, busy,
+    notify, notifyView, run, tick, place, walk, open,
     setTab, setSearch, setListSearch, setListFilter, setListSort, openStoreItem, openVenue, locate,
     closeSheet, openStore, back, openItem, toggleOption, setDraftQty, addToCart, setLineQty,
     openCheckout, setFulfilment, setDropoff, setNote, openPay, confirmPay, openTracking,

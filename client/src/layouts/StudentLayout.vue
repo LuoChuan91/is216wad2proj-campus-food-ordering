@@ -46,18 +46,18 @@ const tabComponent = computed(() => TABS[u.value.tab] || ExploreView)
 
 <template>
   <div class="student-shell"><div class="student-frame">
-    <div class="app student">
+    <div class="app student d-flex flex-column">
     <PendingView v-if="me.status !== 'active'" />
     <template v-else>
       <!-- Persistent tab layer: stays mounted under a page so the map survives. -->
-      <div class="tab-layer" :class="{ covered: onPage }">
+      <div class="tab-layer position-relative flex-grow-1" :class="{ covered: onPage }">
         <KeepAlive><component :is="tabComponent" :key="u.tab" /></KeepAlive>
       </div>
       <!-- Full-page overlays (store / checkout / track) come from the router. -->
       <RouterView v-slot="{ Component }">
         <Transition name="page"><component :is="Component" /></Transition>
       </RouterView>
-      <TabBar v-if="!onPage" />
+      <TabBar v-if="!onPage" class="d-md-none" />
       <Transition name="fade"><div v-if="u.sheet === 'item' || u.sheet === 'pay'" class="backdrop" @click="ui.closeSheet()"></div></Transition>
       <Transition name="sheet"><ItemSheet v-if="u.sheet === 'item' && catalog.item(u.itemId)" /></Transition>
       <Transition name="sheet"><PaySheet v-if="u.sheet === 'pay'" /></Transition>

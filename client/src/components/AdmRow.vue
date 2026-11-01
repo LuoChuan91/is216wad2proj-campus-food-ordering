@@ -22,21 +22,21 @@ defineProps({
   tagCheck: { type: Boolean, default: false },
   // Appends " · <status>" to the email (blocked row).
   showStatus: { type: Boolean, default: false },
-  // Wrap the slotted buttons in <div class="adm-actions">. The blocked row places
+  // Wrap the slotted buttons in <div class="adm-actions d-flex gap-2">. The blocked row places
   // its single button directly, so it passes :actions="false".
   actions: { type: Boolean, default: true },
 })
 </script>
 
 <template>
-  <div class="adm-row" :class="{ done }">
+  <div class="adm-row d-flex align-items-center gap-3" :class="{ done }">
     <Avatar :name="profile.name" :size="40" :tone="tone || undefined" />
-    <div class="adm-who">
+    <div class="adm-who d-flex flex-column flex-grow-1 overflow-hidden">
       <strong>{{ profile.name }}</strong>
       <small>{{ profile.email }}<template v-if="showStatus"> · {{ profile.status }}</template></small>
     </div>
     <StatusTag v-if="tagText" :tone="tagTone"><Icon v-if="tagCheck" name="check" :size="11" />{{ tagText }}</StatusTag>
-    <div v-if="actions" class="adm-actions"><slot /></div>
+    <div v-if="actions" class="adm-actions d-flex gap-2"><slot /></div>
     <slot v-else />
   </div>
 </template>
@@ -44,9 +44,6 @@ defineProps({
 <style scoped>
 /* Admin student row (moved from the global prototype stylesheet). */
 .adm-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
   background: var(--paper);
   border: 1px solid var(--line);
   border-radius: 16px;
@@ -56,20 +53,21 @@ defineProps({
 .adm-row.done {
   opacity: 0.85;
 }
-.adm-who {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
 .adm-who strong {
-  font-size: 14.5px;
+  font-size: var(--fs-body);
 }
 .adm-who small {
   color: var(--muted);
 }
-.adm-actions {
-  display: flex;
-  gap: 6px;
+@media (max-width: 720px) {
+  .adm-row {
+    flex-wrap: wrap;
+  }
+  .adm-who {
+    flex-basis: calc(100% - 60px);
+  }
+  .adm-actions {
+    margin-left: auto;
+  }
 }
 </style>
