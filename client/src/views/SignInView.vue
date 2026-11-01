@@ -62,28 +62,6 @@ const steps = [
             {{ p.text }}
           </li>
         </ul>
-
-        <div class="preview anim-rise" style="--d: 480ms">
-          <div class="pv-head">
-            <span>Example order</span>
-            <span class="pv-live"><i></i>Live</span>
-          </div>
-          <div class="pv-row">
-            <span class="pv-ic"><Icon name="sparkle" :size="16" /></span>
-            <div class="pv-txt">
-              <strong>Chicken rice</strong>
-              <small>Sample store</small>
-            </div>
-            <span class="pv-eta">6 min</span>
-          </div>
-          <div class="pv-bar"><span></span></div>
-          <div class="pv-steps">
-            <span class="done">Paid</span>
-            <span class="done">Cooking</span>
-            <span class="now">Ready soon</span>
-            <span>Picked up</span>
-          </div>
-        </div>
       </section>
 
       <section class="si-card anim-pop" style="--d: 180ms">
@@ -296,113 +274,6 @@ const steps = [
   animation: ping 2.4s ease-out infinite;
 }
 
-/* Example order card */
-.preview {
-  max-width: 470px;
-  margin-top: 22px;
-  padding: 16px 18px;
-  border-radius: 20px;
-  color: #fff;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  backdrop-filter: blur(8px);
-  box-shadow: 0 20px 40px rgba(5, 10, 30, 0.3);
-}
-.pv-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 11.5px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #c9d0ea;
-}
-.pv-live {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: #7ef0b8;
-}
-.pv-live i {
-  position: relative;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #37d68a;
-}
-.pv-live i::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: #37d68a;
-  animation: ping 1.6s ease-out infinite;
-}
-.pv-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 12px 0;
-}
-.pv-ic {
-  width: 38px;
-  height: 38px;
-  flex: none;
-  display: grid;
-  place-items: center;
-  border-radius: 12px;
-  background: var(--brand);
-  color: #fff;
-}
-.pv-txt {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-.pv-txt strong {
-  font-size: 15px;
-}
-.pv-txt small {
-  font-size: 12.5px;
-  color: #c9d0ea;
-}
-.pv-eta {
-  font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: 800;
-  color: #ffc36b;
-}
-.pv-bar {
-  height: 8px;
-  border-radius: 99px;
-  background: rgba(255, 255, 255, 0.12);
-  overflow: hidden;
-}
-.pv-bar span {
-  display: block;
-  height: 100%;
-  width: 0;
-  border-radius: inherit;
-  background: linear-gradient(90deg, var(--brand), #ffc36b);
-  animation: fill 1.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.9s forwards;
-}
-.pv-steps {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 10px;
-  font-size: 11.5px;
-  font-weight: 600;
-  color: #8f99bd;
-}
-.pv-steps .done {
-  color: #dfe4f7;
-}
-.pv-steps .now {
-  color: #ffc36b;
-}
-
 /* Card */
 .si-card {
   position: relative;
@@ -560,9 +431,6 @@ const steps = [
   from { transform: scale(1); opacity: 0.7; }
   to { transform: scale(2.2); opacity: 0; }
 }
-@keyframes fill {
-  to { width: 68%; }
-}
 @keyframes dash {
   to { background-position: 8px 0; }
 }
@@ -575,6 +443,9 @@ const steps = [
     grid-template-columns: 1fr;
     gap: 28px;
     padding: 36px 18px 16px;
+  }
+  .si-card {
+    order: -1;
   }
   .si-headline {
     font-size: 32px;
@@ -597,15 +468,10 @@ const steps = [
   .anim-pop,
   .anim-fade,
   .pill-dot::after,
-  .pv-live i::after,
   .pt-ic::after,
   .step:not(:last-child)::after,
   .grad {
     animation: none !important;
-  }
-  .pv-bar span {
-    animation: none;
-    width: 68%;
   }
   .si-points li,
   .step,
