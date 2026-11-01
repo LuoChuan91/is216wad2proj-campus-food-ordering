@@ -8,9 +8,13 @@ function client() {
   return supabase
 }
 
-// Accepts name@smu.edu.sg and name@business.smu.edu.sg style addresses
-const SMU_EMAIL = /^[^\s@]+@([a-z0-9-]+\.)*smu\.edu\.sg$/i
-export const isSmuEmail = (email) => SMU_EMAIL.test(email.trim())
+// Only these SMU domains are allowed, matched exactly after the @
+const SMU_DOMAINS = ['smu.edu.sg', 'computing.smu.edu.sg', 'accountancy.smu.edu.sg', 'business.smu.edu.sg']
+
+export const isSmuEmail = (email) => {
+  const domain = email.trim().toLowerCase().split('@')[1] || ''
+  return SMU_DOMAINS.includes(domain)
+}
 
 export async function signUp({ email, password, name }) {
   const { data, error } = await client().auth.signUp({
