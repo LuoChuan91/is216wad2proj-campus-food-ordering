@@ -94,6 +94,8 @@ The map uses OpenStreetMap's tiles, which need no API key (CARTO's tiles now nee
 | GET | `/api/deliveries?status=open` | Delivery jobs waiting for a courier (`?status=expired`: expired in the last 5 minutes) |
 | GET | `/api/deliveries?courier_id=` | Every job a student has taken on |
 | PATCH | `/api/deliveries/:id` | `{ "action": "accept" \| "pickup" \| "deliver", "courier_id": "<profile id>" }` |
+| PUT | `/api/deliveries/:id/location` | The courier's phone shares its GPS fix: `{ "courier_id": "<profile id>", "lat": 1.2966, "lng": 103.85, "accuracy": 12 }` (only the job's courier, only while accepted or picked up) |
+| GET | `/api/deliveries/:id/location` | The courier's last fix for "Where is my rider": `{ "status": "picked_up", "location": { "lat", "lng", "accuracy", "at" } \| null }` |
 | GET | `/api/profiles` (optional `?role=`) | Accounts (id, role, name, email, status) |
 | GET | `/api/profiles/:id` | One account |
 | PATCH | `/api/profiles/:id` | Admin changes a student's status: `{ "status": "active" }` |

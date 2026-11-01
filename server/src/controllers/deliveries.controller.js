@@ -15,3 +15,13 @@ exports.patchDelivery = async (req, res) => {
   const job = await service.act(req.params.id, req.body);
   res.json(job);
 };
+
+// GET /api/deliveries/:id/location -> { status, location: { lat, lng, accuracy, at } | null }
+exports.getLocation = async (req, res) => {
+  res.json(await service.getLocation(req.params.id));
+};
+
+// PUT /api/deliveries/:id/location  { "courier_id": "<profile id>", "lat": 1.29, "lng": 103.85, "accuracy": 12 }
+exports.putLocation = async (req, res) => {
+  res.json(await service.saveLocation(req.params.id, req.body));
+};

@@ -106,3 +106,25 @@ Notes:
   is a dashboard-side decision. (A future preparing tab needs no change here; the
   list already refetches on any order change.)
 - Requires `realtime_merchant_orders.sql` to be run in Supabase.
+
+---
+
+## 5. Where is my rider
+
+A 2D map on the tracking page (`components/rider/RiderTracker.vue`, Leaflet + GSAP)
+while a peer delivery is accepted or picked up: the walking route, the store and the
+drop-off, the courier as a moving beacon, how many metres away they are and when they
+should arrive.
+
+- **Courier side** (`useCourierBeacon` in `DeliverView.vue`): while the courier has jobs
+  in progress, the phone's GPS is followed and the latest fix is sent every 5s with
+  `PUT /api/deliveries/:id/location`. A line under "Current deliveries" says whether it is
+  sharing. GPS needs https (or localhost) and the courier's permission.
+- **Student side** (`useRiderLocation`): polls `GET /api/deliveries/:id/location` every
+  `pollMs`. The chip says **Live GPS** for a fix under 45s old; otherwise **Estimated**, and
+  the courier is placed along the route by walking time since pickup (75 m/min, never
+  shown as arrived). Maths in `utils/riderPosition.js`.
+- The server keeps only the last fix per delivery, in memory, and stops returning it once
+  the delivery is done. A server restart just means "Estimated" until the next fix.
+- Map can't load: the card still shows distance, arrival time and progress.
+

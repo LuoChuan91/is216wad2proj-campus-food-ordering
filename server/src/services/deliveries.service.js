@@ -89,3 +89,39 @@ exports.act = async (deliveryId, { action, courier_id: courierId } = {}) => {
 
   return jobView(await repository.findById(deliveryId));
 };
+
+// "Where is my rider": the courier's phone sends its GPS fix every few seconds while a job is
+// in progress, and the student's tracking page reads the latest one.
+// ponytail: kept in memory, so a restart forgets fixes (the page falls back to an estimate) and
+// several server instances wouldn't share them. Move to a deliveries column if the server scales out.
+const locations = new Map();
+const SHARING = ['accepted', 'picked_up'];
+
+exports.saveLocation = async (deliveryId, { courier_id: courierId, lat, lng, accuracy } = {}) => {
+  const la = Number(lat), ln = Number(lng);
+  if (lat == null || lng == null || !Number.isFinite(la) || !Number.isFinite(ln) || Math.abs(la) > 90 || Math.abs(ln) > 180) {
+    throw httpError(400, 'lat and lng must be valid coordinates');
+  }
+  if (!courierId) throw httpError(400, 'courier_id is required');
+
+  const d = await repository.findById(deliveryId);
+  if (!d) throw httpError(404, 'Delivery not found');
+  if (d.courier_id !== courierId) throw httpError(403, 'This is not your delivery');
+  if (!SHARING.includes(d.status)) throw httpError(409, `This delivery is ${d.status}`);
+
+  const acc = Number(accuracy);
+  const fix = { lat: la, lng: ln, accuracy: accuracy != null && Number.isFinite(acc) ? Math.round(acc) : null, at: new Date().toISOString() };
+  locations.set(deliveryId, fix);
+  return fix;
+};
+
+// The courier's last fix, only while the delivery is in progress (sharing stops once it's delivered)
+exports.getLocation = async (deliveryId) => {
+  const d = await repository.findById(deliveryId);
+  if (!d) throw httpError(404, 'Delivery not found');
+  if (!SHARING.includes(d.status)) {
+    locations.delete(deliveryId);
+    return { status: d.status, location: null };
+  }
+  return { status: d.status, location: locations.get(deliveryId) || null };
+};

@@ -13,6 +13,8 @@ import { config as cfg } from '@/config/index.js'
 import { shortName } from '@/utils/landmarks.js'
 import { acquireStoreWait, releaseStoreWait, peekStoreWait } from '@/composables/storeWaitCache.js'
 import StatusTag from '@/components/StatusTag.vue'
+import { useSessionStore } from '@/stores/session.js'
+import { useCourierBeacon } from '@/composables/useRiderLocation.js'
 
 const ui = useUiStore()
 const catalog = useCatalogStore()
@@ -49,6 +51,16 @@ const atLimit = computed(() => activeList.value.length >= MAX_JOBS)
 const jobs = computed(() => (on.value ? orders.openJobs().map(jobView) : []))
 const expired = computed(() => (on.value ? orders.db.expiredJobs.map(jobView) : []))
 const earn = computed(() => orders.earnings())
+
+// Share this phone's GPS with the customers of the jobs in progress ("Where is my rider")
+const session = useSessionStore()
+const { state: gps } = useCourierBeacon(() => orders.activeJobs().map((d) => d.id), () => session.session.userId)
+const GPS_TEXT = {
+  waiting: 'Finding your location so your customers can follow you',
+  on: 'Sharing your live location with your customers',
+  denied: 'Location is blocked, so your customers see an estimate instead',
+  unsupported: "This browser can't share location, so your customers see an estimate instead",
+}
 
 // Keep one live engine per visible job's (store, order); release the rest.
 function syncJobWaits() {
@@ -91,6 +103,9 @@ onBeforeUnmount(() => {
     <template v-if="activeList.length">
       <h4 class="sec">Current {{ activeList.length === 1 ? 'delivery' : 'deliveries' }} <span class="count">{{
         activeList.length }}/{{ MAX_JOBS }}</span></h4>
+      <p v-if="GPS_TEXT[gps]" class="gps-line d-flex align-items-center gap-2" :class="'gps-' + gps">
+        <Icon name="locate" :size="14" />{{ GPS_TEXT[gps] }}
+      </p>
       <div class="row g-2">
       <div v-for="active in activeList" :key="active.d.id" class="col-12 col-md-6 col-lg-4">
       <div class="panel job active-job d-grid gap-2 h-100 align-content-start">
@@ -271,6 +286,22 @@ onBeforeUnmount(() => {
 
 .aj-line.ok {
   color: var(--ok);
+}
+
+.gps-line {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+  margin: -4px 0 10px;
+}
+
+.gps-line.gps-on {
+  color: var(--ok);
+}
+
+.gps-line.gps-denied,
+.gps-line.gps-unsupported {
+  color: var(--warn);
 }
 
 .aj-line.warn {
