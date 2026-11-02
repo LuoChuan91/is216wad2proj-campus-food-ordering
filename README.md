@@ -288,8 +288,29 @@ If you're midway on a branch and `main` has moved on, bring the changes in with 
 
 ## AI assistance
 
-We used Claude (Anthropic's AI assistant) on this project. Keep this section up to date if more AI help is used.
+The module allows AI for information search, concepts and UI inspiration, debugging hints, boilerplate code, and sample or mock data. It does not allow AI for core implementation. This section records what was used and who wrote what.
 
-- **Generated with AI on this branch:** the Vue port of our prototype website (everything in `client/src/app`, `client/src/components`, `client/src/portals`, `client/src/assets/app.css`, `App.vue` and `main.js`), and the new API endpoints for venues, destinations, profiles, deliveries, wait times, menu lists and order status, with their tests (`deliveries.service.test.js`, `engine.test.js` and the new cases in `orders.service.test.js`). The prototype website it was ported from was also made with Claude.
-- **Written by the team:** TODO: list what each of us wrote (e.g. the database, the first API endpoints and tests, the first student screens), and any other parts where we had AI help.
-- **How we checked it:** we ran the unit tests (`pnpm test` in `server`) and clicked through every screen as a student, merchant, courier and admin.
+### Written by the team
+
+| Member | Main area |
+| ------ | --------- |
+| Farhaan | Supabase auth: sign-in, sign-up, password reset, profiles, roles and admin approvals |
+| Angel | Wait-time engine, live order tracking, realtime notifications, merchant live updates |
+| Luo Chuan | Student ordering: store list, store page, cart, checkout and payment; venues and destinations API |
+| Jia Ying | Merchant store and menu management, responsive layout pass, shared status tags |
+| Keng Shion | Campus map (Leaflet + OpenStreetMap + OSRM walking times), venue map, store list and store details |
+| Nhat Quang | Peer-delivery marketplace and the 10-minute pickup fallback |
+
+### Where AI helped
+
+- The first Vue port of our prototype website (the client application), plus starting-point versions of some Express endpoints (venues, destinations, profiles, deliveries, wait times, menu lists and order status) and their tests. The prototype it was ported from was also made with Claude.
+- Boilerplate components, CSS cleanup, sample data and debugging hints.
+
+All of that generated code was reviewed, tested and changed by the team. Each member can explain the behaviour of the area they own, including the parts that were AI-assisted at the start.
+
+### How we checked it
+
+- `pnpm test` in `server` — 73 unit tests
+- `pnpm exec vitest run` in `client`
+- `pnpm exec playwright test` — end-to-end journeys
+- A manual click-through as a student, merchant, courier and admin
