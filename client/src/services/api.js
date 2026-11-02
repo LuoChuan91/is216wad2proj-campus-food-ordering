@@ -52,6 +52,7 @@ export const api = {
   addMenuItem: (item) => http.post('/menu', item),
   removeMenuItem: (itemId) => http.delete(`/menu/${itemId}`),
   delivery: (jobId, action, courierId) => http.patch(`/deliveries/${jobId}`, { action, courier_id: courierId }),
+  switchToPickup: (jobId, studentId) => http.patch(`/deliveries/${jobId}`, { action: 'switch_to_pickup', student_id: studentId }),
   shareLocation: (jobId, courierId, fix) => http.put(`/deliveries/${jobId}/location`, { courier_id: courierId, ...fix }),
   setProfileStatus: (id, status) => http.patch(`/profiles/${id}`, { status }),
   markPasswordSet: (id) => http.patch(`/profiles/${id}/password-set`),

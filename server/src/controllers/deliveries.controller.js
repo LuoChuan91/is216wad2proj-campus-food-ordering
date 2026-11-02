@@ -9,10 +9,15 @@ exports.listDeliveries = async (req, res) => {
   res.json(jobs);
 };
 
-// PATCH /api/deliveries/:id  { "action": "accept" | "pickup" | "deliver", "courier_id": "<profile id>" }
+// PATCH /api/deliveries/:id
+//   courier: { "action": "accept" | "pickup" | "deliver", "courier_id": "<profile id>" }
+//   student: { "action": "switch_to_pickup", "student_id": "<profile id>" }  (only before a courier accepts)
 exports.patchDelivery = async (req, res) => {
   await service.expireOverdue();
-  const job = await service.act(req.params.id, req.body);
+  const body = req.body || {};
+  const job = body.action === 'switch_to_pickup'
+    ? await service.switchToPickup(req.params.id, body.student_id)
+    : await service.act(req.params.id, body);
   res.json(job);
 };
 

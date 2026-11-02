@@ -4,7 +4,7 @@
 // Migrated from portals/student/TrackPage.vue. The order id now comes from the
 // route param (:orderId) rather than S.ui.student.trackOrderId. The peer-delivery
 // walking leg still comes from the campus map's model (utils/mapApi.js), unchanged.
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui.js'
@@ -33,6 +33,9 @@ const venue = computed(() => (store.value ? catalog.venue(store.value.venue_id) 
 const venueName = computed(() => (venue.value ? shortName(venue.value.name) : ''))
 const lines = computed(() => order.value.items)
 const d = computed(() => order.value.delivery)
+// "Collect it myself instead": a second tap confirms, since it can't be undone
+const confirmSwitch = ref(false)
+watch(orderId, () => { confirmSwitch.value = false })
 const drop = computed(() => d.value && catalog.dropoff(d.value.destination_id))
 
 // Live wait for THIS order from the single frontend engine (store:<id> realtime).
@@ -159,6 +162,18 @@ const courierLine = computed(() => {
           <div class="meter"
             :class="(d.expires_at - now) < 120e3 ? 'late' : (d.expires_at - now) < 300e3 ? 'warn' : 'ok'"><i
               :style="{ width: Math.max(0, (d.expires_at - now) / (cfg.deliveryWindowMin * 600)) + '%' }"></i></div>
+          <button v-if="!confirmSwitch" type="button" class="btn btn-outline-secondary btn-sm w-100 mt-2"
+            @click="confirmSwitch = true">Collect it myself instead</button>
+          <div v-else class="c-confirm mt-2">
+            <p class="m-0 mb-2">Switch to pickup? You'll collect it at {{ store.name }}<template v-if="venueName">,
+                {{ venueName }}</template>, and the {{ E.money(d.fee) }} delivery fee is waived. This can't be undone.</p>
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-primary btn-sm flex-grow-1" :disabled="busy['switch:' + order.id]"
+                @click="orders.switchToPickup(order.id)">{{ busy['switch:' + order.id] ? 'Switching…' : 'Yes, switch to pickup' }}</button>
+              <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="busy['switch:' + order.id]"
+                @click="confirmSwitch = false">Keep waiting</button>
+            </div>
+          </div>
         </template>
         <template v-else-if="d.courier_name">
           <div class="c-head d-flex align-items-center gap-3">
@@ -319,6 +334,11 @@ const courierLine = computed(() => {
 
 .courier .meter {
   margin-top: 10px;
+}
+
+.c-confirm p {
+  font-size: var(--fs-desc);
+  color: var(--ink-2);
 }
 
 .c-drop {
