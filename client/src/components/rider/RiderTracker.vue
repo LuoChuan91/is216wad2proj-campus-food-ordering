@@ -161,22 +161,12 @@ onBeforeUnmount(() => {
 .stage {
   position: absolute;
   inset: 0;
-  background: var(--night);
+  background: #f2efe9; /* OpenStreetMap's land colour, shown while tiles load */
   font: inherit;
 }
 
-/* night look for the light OpenStreetMap tiles */
-.stage :deep(.leaflet-tile-pane) {
-  filter: invert(1) hue-rotate(200deg) brightness(0.75) saturate(0.6);
-}
-
-.stage :deep(.leaflet-control-attribution) {
-  background: rgba(10, 15, 36, 0.6);
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 9px;
-}
-
-.stage :deep(.leaflet-control-attribution a) { color: rgba(176, 192, 255, 0.8); }
+/* Same normal OpenStreetMap look as the campus map on the Explore page
+   (the old dark "night" filter on the tiles is gone). */
 
 /* every map label hangs centred above its point */
 .stage :deep(.rmk > span) {
@@ -204,27 +194,27 @@ onBeforeUnmount(() => {
   font-weight: 700;
   white-space: nowrap;
   pointer-events: none;
-  text-shadow: 0 1px 6px rgba(10, 15, 36, 0.95);
+  text-shadow: 0 0 2px #fff, 0 0 6px #fff;
 }
 
 .stage :deep(.rmk > .place-building) { transform: translate(-50%, -50%); }
 
 .stage :deep(.place-building) {
-  color: rgba(176, 192, 255, 0.75);
+  color: #3b4466;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   font-size: 9px;
 }
 
 .stage :deep(.place-store) {
-  color: #ffd29a;
+  color: #8a4b00;
   white-space: pre;
   line-height: 1.35;
   text-align: center;
   padding: 1px 6px;
   border-radius: 999px;
-  background: rgba(10, 15, 36, 0.6);
-  border: 1px solid rgba(255, 179, 71, 0.45);
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(255, 179, 71, 0.9);
 }
 .stage :deep(.t-drop) { color: #8ff5c9; }
 .stage :deep(.t-rider) { color: #fff; border-color: var(--glow); background: rgba(255, 106, 61, 0.35); }
@@ -265,6 +255,13 @@ onBeforeUnmount(() => {
   pointer-events: none;
 }
 
+.hud-top > div {
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: linear-gradient(160deg, rgba(30, 42, 90, 0.78), rgba(10, 15, 36, 0.82));
+  backdrop-filter: blur(10px);
+}
+
 .eyebrow {
   display: block;
   text-transform: uppercase;
@@ -300,8 +297,8 @@ onBeforeUnmount(() => {
   animation: beat 1.6s infinite;
 }
 
-.chip.gps { color: #7dffc6; background: rgba(46, 229, 157, 0.16); border: 1px solid rgba(46, 229, 157, 0.35); }
-.chip.estimate { color: #ffd48a; background: rgba(255, 190, 90, 0.14); border: 1px solid rgba(255, 190, 90, 0.35); }
+.chip.gps { color: #7dffc6; background: rgba(10, 15, 36, 0.8); border: 1px solid rgba(46, 229, 157, 0.6); }
+.chip.estimate { color: #ffd48a; background: rgba(10, 15, 36, 0.8); border: 1px solid rgba(255, 190, 90, 0.6); }
 
 @keyframes beat {
   0% { box-shadow: 0 0 0 0 currentColor; }
