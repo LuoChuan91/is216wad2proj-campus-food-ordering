@@ -10,6 +10,7 @@ import * as E from "@/utils/engine.js";
 import { useSessionStore } from "./session.js";
 import { useCatalogStore } from "./catalog.js";
 import { useUiStore } from "./ui.js";
+import { markSwitchedToPickup } from "@/utils/pickupSwitch.js";
 
 const ACTIVE = ["paid", "preparing", "ready"];
 
@@ -233,6 +234,19 @@ export const useOrdersStore = defineStore("orders", () => {
   const pickUp = (jobId) => courierAction(jobId, "pickup");
   const deliver = (jobId) => courierAction(jobId, "deliver");
 
+  /* student: stop waiting for a courier and collect the order yourself */
+  async function switchToPickup(orderId) {
+    const ui = useUiStore();
+    const o = order(orderId);
+    if (!o || !o.delivery || o.delivery.status !== "open") return;
+    // remembered first: the "Switched to pickup" message can arrive before the reply does
+    markSwitchedToPickup(orderId);
+    const saved = await ui.run(`switch:${orderId}`, () =>
+      api.switchToPickup(o.delivery.id, useSessionStore().session.userId),
+    );
+    if (saved) await loadLive().catch(() => {});
+  }
+
   /* admin */
   // TODO: should not be under orders.js
   async function setStudentStatus(userId, status) {
@@ -305,6 +319,7 @@ export const useOrdersStore = defineStore("orders", () => {
     acceptJob,
     pickUp,
     deliver,
+    switchToPickup,
     setStudentStatus,
     approveStudent,
     blockStudent,

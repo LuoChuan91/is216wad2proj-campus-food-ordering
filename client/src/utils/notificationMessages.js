@@ -26,6 +26,8 @@ const TOAST = {
   delivery: { accepted: true, picked_up: true, delivered: false, expired: true },
 };
 
+import { wasSwitchedToPickup } from './pickupSwitch.js';
+
 const first = (name) => (name || '').split(' ')[0];
 
 /**
@@ -111,11 +113,16 @@ export function buildNotification(payload, ctx = {}) {
       body = `Dropped at ${drop}`;
       variant = 'success';
     } else {
-      // expired -> switched to pickup
+      // expired -> switched to pickup (by the 10-minute rule, or by the student themselves)
       title = 'Switched to pickup';
-      const mins = ctx.deliveryWindowMin != null ? `${ctx.deliveryWindowMin} min` : 'time';
-      body = `No courier took your order in ${mins}. Collect it at ${store}. Delivery fee waived.`;
-      variant = 'warning';
+      if (wasSwitchedToPickup(payload.order_id)) {
+        body = `Collect it at ${store}. Delivery fee waived.`;
+        variant = 'success';
+      } else {
+        const mins = ctx.deliveryWindowMin != null ? `${ctx.deliveryWindowMin} min` : 'time';
+        body = `No courier took your order in ${mins}. Collect it at ${store}. Delivery fee waived.`;
+        variant = 'warning';
+      }
     }
   }
 

@@ -112,3 +112,22 @@ test('rider location: sharing stops once the delivery is done', async () => {
   assert.equal((await service.getLocation('job-1')).location, null);
   await assert.rejects(service.saveLocation('job-1', { courier_id: 'stu-ben', lat: 1.2966, lng: 103.85 }), (err) => err.status === 409);
 });
+
+test('switch to pickup: the student stops waiting for a courier; order becomes a pickup, fee waived', async () => {
+  const view = await service.switchToPickup('job-1', 'stu-amy');
+  assert.equal(view.status, 'expired');
+  assert.ok(Date.parse(job.expires_at) <= Date.now());
+  assert.deepEqual(orderChanges, { type: 'pickup', delivery_fee: null });
+});
+
+test('switch to pickup: only the student who placed the order can do it', async () => {
+  await assert.rejects(service.switchToPickup('job-1', 'stu-ben'), (err) => err.status === 403);
+  await assert.rejects(service.switchToPickup('job-1', undefined), (err) => err.status === 400);
+  assert.equal(job.status, 'open');
+});
+
+test('switch to pickup: too late once a courier has accepted', async () => {
+  Object.assign(job, { status: 'accepted', courier_id: 'stu-ben' });
+  await assert.rejects(service.switchToPickup('job-1', 'stu-amy'), (err) => err.status === 409);
+  assert.equal(orderChanges, null);
+});
