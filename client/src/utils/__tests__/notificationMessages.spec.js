@@ -6,14 +6,14 @@ const pickup = { code: 'E287', type: 'pickup' }
 const delivery = { code: 'D512', type: 'delivery', delivery: { courier_name: 'Mingli Tan', destination_id: 'd1' } }
 
 describe('buildNotification (shared, order-aware wording)', () => {
-  it('order paid -> the "cooking" line with store + ready time', () => {
+  it('order paid -> the order-submitted line with the reference code', () => {
     const v = buildNotification(
       { kind: 'order', status: 'paid', order_id: 'o1' },
-      { order: pickup, storeName: 'Hawker Corner', readyAtClock: '1:05pm' }
+      { order: pickup, storeName: 'Hawker Corner' }
     )
-    expect(v).toMatchObject({ title: 'Hawker Corner is cooking your order', variant: 'info', toast: false })
+    expect(v).toMatchObject({ title: 'Order submitted', variant: 'info', toast: false })
+    expect(v.body).toContain('Your order reference is')
     expect(v.body).toContain('#E287')
-    expect(v.body).toContain('1:05pm')
   })
 
   it('order ready (pickup) -> "Collect order #code at store"', () => {
@@ -81,8 +81,8 @@ describe('buildNotification (shared, order-aware wording)', () => {
 
   it('omits the "#" fragment entirely when there is no code and no order_id', () => {
     const v = buildNotification({ kind: 'order', status: 'paid' })
-    expect(v.title).toBe('The store is cooking your order')
-    expect(v.body).toBe('Order')
+    expect(v.title).toBe('Order submitted')
+    expect(v.body).toContain('Your order reference is')
     expect(v.body).not.toContain('#')
     const ready = buildNotification({ kind: 'order', status: 'ready' })
     expect(ready.body).toBe('Collect order at the store')
