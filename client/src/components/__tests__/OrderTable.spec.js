@@ -47,7 +47,7 @@ describe('OrderTable', () => {
 
   it('shows the first two item lines and a "+N more" note', () => {
     const w = mountTable([{ o: order(), s }])
-    expect(w.text()).toContain('2x Teriyaki')
+    expect(w.text()).toContain('2\u00d7 Teriyaki') // "2× Teriyaki"
     expect(w.text()).toContain('White Rice')
     expect(w.text()).toContain('+1 more') // 3 items, 2 shown
   })
