@@ -1,4 +1,5 @@
 // The 2D campus map behind "Where is my rider" (Leaflet + OpenStreetMap tiles, GSAP glide).
+// Uses the same tiles (cfg.tiles) and light look as the Explore page's campus map.
 //
 // Pieces: campus building names, an amber pin per building with other stores, the walking
 // route (solid orange behind the courier, dashed blue ahead), the store and drop-off dots,
@@ -65,7 +66,7 @@ export function createRiderMap(el, { from, to, coords, riderName, buildings, sto
     label([b.lat, b.lng], 'place place-store', b.names.slice(0, MAX_NAMES).join('\n') + (more > 0 ? `\n+${more} more` : ''), -100).addTo(map)
   }
 
-  const ahead = L.polyline([], { color: '#8ea2ff', weight: 5, opacity: 0.9, dashArray: '2 10', lineCap: 'round', interactive: false }).addTo(map)
+  const ahead = L.polyline([], { color: '#4f63d9', weight: 5, opacity: 0.9, dashArray: '2 10', lineCap: 'round', interactive: false }).addTo(map)
   const walked = L.polyline([], { color: '#ff6a3d', weight: 6, opacity: 1, lineCap: 'round', lineJoin: 'round', interactive: false }).addTo(map)
 
   L.circleMarker([from.lat, from.lng], { radius: 8, color: '#fff', weight: 2, fillColor: '#ff6a3d', fillOpacity: 1, interactive: false }).addTo(map)
