@@ -88,3 +88,27 @@ test('10-minute rule: an overdue open job expires and the order becomes a pickup
   assert.equal(job.status, 'expired');
   assert.deepEqual(orderChanges, { type: 'pickup', delivery_fee: null });
 });
+
+test('rider location: the courier shares a fix and the student reads it back', async () => {
+  Object.assign(job, { status: 'picked_up', courier_id: 'stu-ben' });
+  const fix = await service.saveLocation('job-1', { courier_id: 'stu-ben', lat: 1.2966, lng: 103.85, accuracy: 8.4 });
+  assert.equal(fix.accuracy, 8);
+  const seen = await service.getLocation('job-1');
+  assert.equal(seen.status, 'picked_up');
+  assert.deepEqual([seen.location.lat, seen.location.lng], [1.2966, 103.85]);
+});
+
+test("rider location: only the job's courier can share, and only with valid coordinates", async () => {
+  Object.assign(job, { status: 'accepted', courier_id: 'stu-ben' });
+  await assert.rejects(service.saveLocation('job-1', { courier_id: 'stu-amy', lat: 1.3, lng: 103.8 }), (err) => err.status === 403);
+  await assert.rejects(service.saveLocation('job-1', { courier_id: 'stu-ben', lat: 'x', lng: 103.8 }), (err) => err.status === 400);
+  await assert.rejects(service.saveLocation('job-1', { courier_id: 'stu-ben', lat: 91, lng: 103.8 }), (err) => err.status === 400);
+});
+
+test('rider location: sharing stops once the delivery is done', async () => {
+  Object.assign(job, { status: 'picked_up', courier_id: 'stu-ben' });
+  await service.saveLocation('job-1', { courier_id: 'stu-ben', lat: 1.2966, lng: 103.85 });
+  job.status = 'delivered';
+  assert.equal((await service.getLocation('job-1')).location, null);
+  await assert.rejects(service.saveLocation('job-1', { courier_id: 'stu-ben', lat: 1.2966, lng: 103.85 }), (err) => err.status === 409);
+});

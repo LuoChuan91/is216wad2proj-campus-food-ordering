@@ -16,6 +16,7 @@ import { shortName } from '@/utils/landmarks.js'
 import { estimateWalkingSeconds } from '@/utils/mapApi.js'
 import { useStoreWait } from '@/composables/storeWaitCache.js'
 import ReceiptPanel from '@/components/ReceiptPanel.vue'
+import RiderTracker from '@/components/rider/RiderTracker.vue'
 
 const route = useRoute()
 const ui = useUiStore()
@@ -47,6 +48,9 @@ const q = computed(() => {
 const pay = computed(() => order.value.payment)
 const firstItem = computed(() => lines.value[0] && catalog.item(lines.value[0].menu_item_id))
 const delivering = computed(() => !!d.value && !order.value.fallback)
+// "Where is my rider" map, while a courier has the job (accepted or picked up)
+const riderFrom = computed(() => (venue.value && store.value ? { lat: venue.value.lat, lng: venue.value.lng, name: store.value.name } : null))
+const showRider = computed(() => delivering.value && !!riderFrom.value && !!drop.value && ['accepted', 'picked_up'].includes(d.value.status))
 
 // The walking leg for peer delivery, from the campus map's model (utils/mapApi.js):
 // straight-line distance x 1.3, walking at 75 m/min.
@@ -141,6 +145,8 @@ const courierLine = computed(() => {
           </p>
         </template>
       </div>
+
+      <RiderTracker v-if="showRider" :delivery="d" :from="riderFrom" :to="drop" :now="now" />
 
       <div v-if="d && !order.fallback" class="panel courier" :class="'c-' + d.status">
         <template v-if="d.status === 'open'">

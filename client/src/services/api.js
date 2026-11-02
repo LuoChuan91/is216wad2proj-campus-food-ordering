@@ -36,6 +36,7 @@ export const api = {
   openJobs: () => http.get('/deliveries', { params: { status: 'open' } }),
   expiredJobs: () => http.get('/deliveries', { params: { status: 'expired' } }),
   myJobs: (courierId) => http.get('/deliveries', { params: { courier_id: courierId } }),
+  riderLocation: (jobId) => http.get(`/deliveries/${jobId}/location`),
 
   // wait-time estimate engine (used by useWaitTime / waitTimeApi)
   ordersAhead: (storeId, orderId) =>
@@ -51,6 +52,7 @@ export const api = {
   addMenuItem: (item) => http.post('/menu', item),
   removeMenuItem: (itemId) => http.delete(`/menu/${itemId}`),
   delivery: (jobId, action, courierId) => http.patch(`/deliveries/${jobId}`, { action, courier_id: courierId }),
+  shareLocation: (jobId, courierId, fix) => http.put(`/deliveries/${jobId}/location`, { courier_id: courierId, ...fix }),
   setProfileStatus: (id, status) => http.patch(`/profiles/${id}`, { status }),
   markPasswordSet: (id) => http.patch(`/profiles/${id}/password-set`),
   addVenue: (venue) => http.post('/venues', venue),
