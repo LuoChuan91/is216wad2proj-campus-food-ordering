@@ -16,7 +16,7 @@ describe('ReceiptPanel', () => {
     const w = mount(ReceiptPanel, { props: { lines, discount: 0, paid: 24.6 } })
     const rows = w.findAll('.co-line')
     expect(rows).toHaveLength(2)
-    expect(w.text()).toContain('2×')
+    expect(w.text()).toContain('2\u00d7') // "2×" (U+00D7 multiplication sign, as the component renders)
     expect(w.text()).toContain('Chicken Teriyaki Bento')
     expect(w.text()).toContain('White Rice, Add Tamago')
     expect(w.text()).toContain('$22.60') // 11.30 * 2
@@ -33,7 +33,7 @@ describe('ReceiptPanel', () => {
     expect(none.find('.rc-row.disc').exists()).toBe(false)
     const some = mount(ReceiptPanel, { props: { lines, discount: 3.39, paid: 21.21 } })
     expect(some.find('.rc-row.disc').exists()).toBe(true)
-    expect(some.find('.rc-row.disc').text()).toContain('−$3.39')
+    expect(some.find('.rc-row.disc').text()).toContain('\u2212$3.39') // "−$3.39" (U+2212 minus sign)
   })
 
   it('renders the paid amount', () => {

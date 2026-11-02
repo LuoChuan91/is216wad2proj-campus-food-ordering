@@ -79,14 +79,17 @@ describe('useWaitTime', () => {
     const { get } = mountWith({ storeId: 'store-1', orderId: null, options: { supabaseClient: client } })
     await flushPromises()
     fetchQueue.mockResolvedValue({
-      orderItems: [{ menu_item_id: 'burger', qty: 6 }], // 3 batches * 60 = 180
+      // 6 burgers, batch size 2 -> 3 batches of 60s. With the default resolved
+      // settings (scheduled strategy, 2 stations) these 3 batches run across 2
+      // parallel stations: [60,60] then +60 -> makespan 120s.
+      orderItems: [{ menu_item_id: 'burger', qty: 6 }],
       cookingDetails: QUEUE.cookingDetails,
       ahead: 3,
     })
     state.handler({ event: 'queue_change', payload: {} })
     vi.advanceTimersByTime(300)
     await flushPromises()
-    expect(get().seconds.value).toBe(180)
+    expect(get().seconds.value).toBe(120)
     expect(get().ahead.value).toBe(3)
   })
 

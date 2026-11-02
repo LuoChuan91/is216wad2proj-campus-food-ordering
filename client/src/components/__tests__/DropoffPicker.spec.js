@@ -23,6 +23,7 @@ describe('DropoffPicker', () => {
     expect(rows).toHaveLength(1)
     expect(wrapper.text()).toContain('SOE Bench')
     expect(wrapper.text()).not.toContain('Library Entrance Desk')
+    expect(wrapper.text()).not.toContain('Campus Green')
   })
 
   it('shows an empty note when nothing matches', async () => {
