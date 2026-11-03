@@ -1,4 +1,4 @@
-import process from 'node:process'
+﻿import process from 'node:process'
 import { defineConfig, devices } from '@playwright/test'
 
 /**
@@ -12,6 +12,7 @@ import { defineConfig, devices } from '@playwright/test'
  */
 export default defineConfig({
   testDir: './e2e',
+  globalSetup: './e2e/global-setup.js',
   /* Maximum time one test can run for. */
   timeout: 30 * 1000,
   expect: {
