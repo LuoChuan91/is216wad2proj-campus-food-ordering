@@ -214,12 +214,60 @@ For example, placing an order goes:
 
 ## Testing
 
+### Unit tests
+
 ```bash
 cd server
 pnpm test
 ```
 
-The tests in `server/test/` check the order rules (`orders.service.test.js`), peer delivery and the 10-minute rule (`deliveries.service.test.js`) and the wait-time engine (`engine.test.js`). The order tests cover server-side pricing (a tampered price from the browser is ignored), percentage and dollar discounts, closed stores, sold-out or archived dishes, unavailable options, each option group's min/max picks, and that only real database columns are saved. The repositories are replaced with fake data, so the tests never touch Supabase and give the same result every run.
+The tests in `server/test/` check the order rules (`orders.service.test.js`), peer
+delivery and the 10-minute rule (`deliveries.service.test.js`), the wait-time
+engine (`engine.test.js`), and the menu, stores and profiles services. The order
+tests cover server-side pricing (a tampered price from the browser is ignored),
+percentage and dollar discounts, closed stores, sold-out or archived dishes,
+unavailable options, each option group's min/max picks, and that only real
+database columns are saved. The repositories are replaced with fake data, so the
+tests never touch Supabase and give the same result every run.
+
+The client has component and composable tests too:
+
+```bash
+cd client
+pnpm exec vitest run
+```
+
+### End-to-end tests (Playwright)
+
+The E2E suite drives the real app against the real database, then removes
+everything it created. It needs `server/.env` and `client/.env` filled in (see
+"Environment variables"), because it signs in with real Supabase accounts.
+
+```bash
+cd client
+pnpm exec playwright test --project=chromium --workers=1
+```
+
+What it covers:
+
+| File | Journey |
+| ---- | ------- |
+| `e2e/specs/auth.spec.js` | Each role reaches its portal; wrong password rejected; non-SMU sign-up blocked |
+| `e2e/specs/browse.spec.js` | Campus map renders; store list → store page → live wait |
+| `e2e/specs/ordering.spec.js` | Add a dish → cart → checkout → pay → tracking → history |
+| `e2e/specs/merchant.spec.js` | New order → Start cooking → Mark ready |
+| `e2e/specs/tracking.spec.js` | A merchant status change updates the student's page live |
+| `e2e/specs/delivery.spec.js` | Peer delivery: courier accepts, picks up, delivers |
+| `e2e/specs/fallback.spec.js` | An unaccepted delivery switches to pickup and waives the fee |
+| `e2e/specs/admin.spec.js` | Admin approvals screen renders |
+| `e2e/specs/responsive.spec.js` | 390 / 768 / 1440 px with no horizontal scrolling |
+| `e2e/specs/errors.spec.js` | Sold-out dish and empty search |
+
+`e2e/global-setup.js` creates the `e2e.*` accounts and an `E2E Test Kitchen` with
+one dish; `e2e/global-teardown.js` deletes them again, so the shared database is
+left clean. Only chromium is installed — run `pnpm exec playwright install` to
+add the other browsers.
+
 
 ## Database notes
 
@@ -290,8 +338,29 @@ If you're midway on a branch and `main` has moved on, bring the changes in with 
 
 ## AI assistance
 
-We used Claude (Anthropic's AI assistant) on this project. Keep this section up to date if more AI help is used.
+The module allows AI for information search, concepts and UI inspiration, debugging hints, boilerplate code, and sample or mock data. It does not allow AI for core implementation. This section records what was used and who wrote what.
 
-- **Generated with AI on this branch:** the Vue port of our prototype website (everything in `client/src/app`, `client/src/components`, `client/src/portals`, `client/src/assets/app.css`, `App.vue` and `main.js`), and the new API endpoints for venues, destinations, profiles, deliveries, wait times, menu lists and order status, with their tests (`deliveries.service.test.js`, `engine.test.js` and the new cases in `orders.service.test.js`). The prototype website it was ported from was also made with Claude.
-- **Written by the team:** TODO: list what each of us wrote (e.g. the database, the first API endpoints and tests, the first student screens), and any other parts where we had AI help.
-- **How we checked it:** we ran the unit tests (`pnpm test` in `server`) and clicked through every screen as a student, merchant, courier and admin.
+### Written by the team
+
+| Member | Main area |
+| ------ | --------- |
+| Farhaan | Supabase auth: sign-in, sign-up, password reset, profiles, roles and admin approvals |
+| Angel | Wait-time engine, live order tracking, realtime notifications, merchant live updates |
+| Luo Chuan | Student ordering: store list, store page, cart, checkout and payment; venues and destinations API |
+| Jia Ying | Merchant store and menu management, responsive layout pass, shared status tags |
+| Keng Shion | Campus map (Leaflet + OpenStreetMap + OSRM walking times), venue map, store list and store details |
+| Nhat Quang | Peer-delivery marketplace and the 10-minute pickup fallback |
+
+### Where AI helped
+
+- The first Vue port of our prototype website (the client application), plus starting-point versions of some Express endpoints (venues, destinations, profiles, deliveries, wait times, menu lists and order status) and their tests. The prototype it was ported from was also made with Claude.
+- Boilerplate components, CSS cleanup, sample data and debugging hints.
+
+All of that generated code was reviewed, tested and changed by the team. Each member can explain the behaviour of the area they own, including the parts that were AI-assisted at the start.
+
+### How we checked it
+
+- `pnpm test` in `server` — 73 unit tests
+- `pnpm exec vitest run` in `client`
+- `pnpm exec playwright test` — end-to-end journeys
+- A manual click-through as a student, merchant, courier and admin
