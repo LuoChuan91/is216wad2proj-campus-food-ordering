@@ -3,19 +3,23 @@
 //
 // Channel: user:<userId>   Event: 'notification'   Payload: { kind, status, order_id, at }
 //
-// The subscription follows the auth store's userId: it (re)subscribes whenever a
-// user logs in / changes, and tears down on logout or unmount.
-import { watch, onBeforeUnmount } from 'vue'
+// The subscription follows the SESSION store's userId (the app's single source of
+// truth for who's signed in — the same source useLiveSync uses). It (re)subscribes
+// whenever the user logs in / changes, and tears down on logout or unmount.
+import { watch, onBeforeUnmount, toValue } from 'vue'
 import { storeToRefs } from 'pinia'
 import defaultSupabase from '@/common/supabase.js'
-import { useAuthStore } from '@/stores/auth.js'
+import { useSessionStore } from '@/stores/session.js'
 import { useNotificationsStore } from '@/stores/notifications.js'
 
 export function useRealtimeNotifications(options = {}) {
   const supabase = options.supabaseClient || defaultSupabase
-  const auth = useAuthStore()
   const notifications = useNotificationsStore()
-  const { userId } = storeToRefs(auth)
+
+  // userId source: defaults to the session store, but injectable (tests, or a
+  // future real-auth source) as a ref/getter/plain value.
+  const session = useSessionStore()
+  const userId = options.userId ?? (() => session.session.userId)
 
   let channel = null
 
@@ -59,7 +63,7 @@ export function useRealtimeNotifications(options = {}) {
 
   // Follow the logged-in user. immediate so we attach as soon as a user is known.
   const stopWatch = watch(
-    userId,
+    () => toValue(userId),
     (id) => subscribe(id),
     { immediate: true }
   )

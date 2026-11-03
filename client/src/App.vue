@@ -30,8 +30,8 @@ const route = useRoute()
 const showChrome = computed(() => !!me.value && route.name !== 'signin' && route.name !== 'reset-password')
 
 // realtime: the session store is the single source of truth for who's signed in;
-// it pushes the id into the auth store (session.signIn/out -> auth.setUserId), so
-// this subscription targets user:<id>
+// useRealtimeNotifications reads session.session.userId directly (same source as
+// useLiveSync) and subscribes to user:<id>.
 useRealtimeNotifications()
 
 // Liveness coordinator: Supabase realtime drives refreshes of the signed-in

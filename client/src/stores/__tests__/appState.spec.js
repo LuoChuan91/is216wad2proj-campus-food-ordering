@@ -37,7 +37,6 @@ import { useCatalogStore } from '../catalog.js'
 import { useOrdersStore } from '../orders.js'
 import { useUiStore } from '../ui.js'
 import { useNotificationsStore } from '../notifications.js'
-import { useAuthStore } from '../auth.js'
 
 // A small fixture: one venue, one store, one menu item with a required single-choice
 // group and an optional multi group.
@@ -214,33 +213,6 @@ describe('session store: signIn resets per-user state', () => {
     expect(orders.db.orders).toEqual([])
     expect(notes.items).toEqual([])
     expect(ui.ui.student.tab).toBe('explore')
-  })
-
-  it('signIn pushes the id into the auth store, and signOut clears it (no bridge)', () => {
-    seedCatalog()
-    const session = useSessionStore()
-    const auth = useAuthStore()
-    // auth starts empty; session is the single source of truth.
-    expect(auth.userId).toBeNull()
-    session.signIn('stu')
-    expect(auth.userId).toBe('stu') // session pushed it in directly
-    expect(auth.ready).toBe(true)
-    session.signOut()
-    expect(auth.userId).toBeNull() // cleared on sign-out
-  })
-
-  it('restoreSession re-hydrates the auth store id on a refresh', () => {
-    try { sessionStorage.clear() } catch { /* ignore */ }
-    seedCatalog()
-    useSessionStore().signIn('stu') // persists to sessionStorage
-    // Simulate a refresh: new Pinia, same tab/sessionStorage.
-    setActivePinia(createPinia())
-    seedCatalog()
-    const session = useSessionStore()
-    const auth = useAuthStore()
-    expect(auth.userId).toBeNull()
-    session.restoreSession()
-    expect(auth.userId).toBe('stu')
   })
 
   it('merchant sign-in selects their first store', () => {
