@@ -23,7 +23,7 @@ admin approves accounts and manages venues.
 ### Clone
 
 ```bash
-git clone <GIT_REPO_URL>        # placeholder — see section 3
+git clone https://github.com/LuoChuan91/is216wad2proj-campus-food-ordering.git        # placeholder — see section 3
 cd is216wad2proj-campus-food-ordering
 ```
 
@@ -84,7 +84,7 @@ are in `.gitignore`.
 
 ## 3. Repository
 
-**Git repo:** `<GIT_REPO_URL>`  *(placeholder — replace with the repo URL)*
+**Git repo:** `https://github.com/LuoChuan91/is216wad2proj-campus-food-ordering.git`  *(placeholder — replace with the repo URL)*
 
 ---
 
@@ -111,8 +111,8 @@ list. Credentials below are placeholders; replace with the real seeded accounts.
 
 ```bash
 cd client
-pnpm vitest run        # one-off run (CI mode)
-pnpm test:unit         # watch mode
+pnpm exec vitest run        # one-off run (CI mode)
+pnpm test:unit              # watch mode
 ```
 
 ~350 tests across ~48 files. What's covered:
