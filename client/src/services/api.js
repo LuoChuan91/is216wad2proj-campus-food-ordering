@@ -32,6 +32,7 @@ export const api = {
 
   // live data
   studentOrders: (studentId) => http.get('/orders', { params: { student_id: studentId } }),
+  previousOrders: (studentId) => http.get('/orders/previous', { params: { student_id: studentId } }),
   storeOrders: (storeId) => http.get('/orders', { params: { store_id: storeId } }),
   openJobs: () => http.get('/deliveries', { params: { status: 'open' } }),
   expiredJobs: () => http.get('/deliveries', { params: { status: 'expired' } }),

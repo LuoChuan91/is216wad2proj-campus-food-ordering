@@ -320,6 +320,44 @@ export const useUiStore = defineStore("ui", () => {
     });
     u.sheet = null;
   }
+  function reorder(order) {
+    const catalog = useCatalogStore();
+    const u = ui.student;
+    const store = catalog.store(order.store_id);
+    if (!catalog.storeAvailable(store) || !open(store).open) {
+      notify("Can't order again", `${order.store_name || "This store"} isn't taking orders right now`, "warn");
+      return;
+    }
+    const lines = [];
+    for (const line of order.items) {
+      const item = catalog.item(line.menu_item_id);
+      if (!item || item.available === false) continue;
+      const opts = catalog.options(item.id);
+      const selected = line.selected_options;
+      const optionsOk = selected.every((id) => opts.some((o) => o.id === id && o.available !== false));
+      if (!optionsOk || !E.validate(catalog.groups(item.id), opts, selected).ok) continue;
+      lines.push({
+        key: `line-${++lineSeq}`,
+        menu_item_id: item.id,
+        qty: line.qty,
+        selected: selected.slice(),
+        unit_price: E.unitPrice(item, opts, selected),
+      });
+    }
+    if (!lines.length) {
+      notify("Can't order again", "None of these items are available any more", "warn");
+      return;
+    }
+    if (u.cart.storeId && u.cart.storeId !== order.store_id) u.cart.lines = [];
+    u.cart.storeId = order.store_id;
+    u.cart.lines.push(...lines);
+    const skipped = order.items.length - lines.length;
+    notify(
+      "Added to cart",
+      skipped ? `${skipped} item${skipped === 1 ? " is" : "s are"} no longer available and ${skipped === 1 ? "was" : "were"} left out` : `${order.store_name || "Your"} order is in your cart`,
+      skipped ? "warn" : "ok",
+    );
+  }
   function setLineQty(key, qty) {
     const u = ui.student;
     const line = u.cart.lines.find((l) => l.key === key);
@@ -436,7 +474,7 @@ export const useUiStore = defineStore("ui", () => {
     loaded, loadError, online, now, ui, courierOn, mapOffline, busy,
     notify, notifyView, run, tick, place, walk, open,
     setTab, setSearch, setListSearch, setListFilter, setListSort, openStoreItem, openVenue, locate,
-    closeSheet, openStore, back, openItem, toggleOption, setDraftQty, addToCart, setLineQty,
+    closeSheet, openStore, back, openItem, toggleOption, setDraftQty, addToCart, reorder, setLineQty,
     openCheckout, setFulfilment, setDropoff, setNote, openPay, confirmPay, openTracking,
     setMerchantTab, setMerchantStore, setAdminTab, setVenueDraft,
   }

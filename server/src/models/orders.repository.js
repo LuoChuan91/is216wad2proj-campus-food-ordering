@@ -78,6 +78,19 @@ exports.findByStudent = async (studentId) => {
   return data;
 };
 
+exports.findRecentByStudent = async (studentId, limit) => {
+  const { data, error } = await supabase
+    .from('orders')
+    .select('id, store_id, created_at, stores(name), order_items(menu_item_id, qty, selected_options, menu_items(name))')
+    .eq('student_id', studentId)
+    .not('status', 'in', '(pending,cancelled)')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+  return data;
+};
+
 // One order, or null
 exports.findById = async (orderId) => {
   const { data, error } = await supabase.from('orders').select(DETAIL).eq('id', orderId).maybeSingle();

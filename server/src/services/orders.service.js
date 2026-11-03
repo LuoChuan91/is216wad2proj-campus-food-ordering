@@ -78,6 +78,26 @@ exports.listStudentOrders = async (studentId) => {
   return present(await repository.findByStudent(studentId));
 };
 
+const PREVIOUS_LIMIT = 3;
+
+exports.listPreviousOrders = async (studentId) => {
+  if (!studentId) throw httpError(400, 'student_id is required, e.g. /api/orders/previous?student_id=<id>');
+  const orders = await withOptionNames(await repository.findRecentByStudent(studentId, PREVIOUS_LIMIT));
+  return orders.map((order) => ({
+    id: order.id,
+    store_id: order.store_id,
+    store_name: order.stores ? order.stores.name : null,
+    created_at: order.created_at,
+    items: order.order_items.map((item) => ({
+      menu_item_id: item.menu_item_id,
+      name: item.menu_items ? item.menu_items.name : null,
+      qty: item.qty,
+      selected_options: item.selected_options || [],
+      option_names: item.option_names,
+    })),
+  }));
+};
+
 exports.getOrder = async (orderId) => {
   const order = await repository.findById(orderId);
   if (!order) throw httpError(404, 'Order not found');
