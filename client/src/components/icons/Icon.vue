@@ -9,6 +9,7 @@ const props = defineProps({
 })
 
 const ICONS = {
+  chart: '<path d="M4 20h16"/><path d="M7 16v-4M12 16V8M17 16v-6"/>',
   map: '<path d="M9 18l-6 3V6l6-3 6 3 6-3v15l-6 3-6-3z"/><path d="M9 3v15M15 6v15"/>',
   receipt: '<path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M9 8h6M9 12h6"/>',
   bike: '<circle cx="5.5" cy="17" r="3.5"/><circle cx="18.5" cy="17" r="3.5"/><path d="M5.5 17l3.5-8h6l3.5 8M9 9L7.5 5.5H5M15 9l-1.5-3.5H16"/>',

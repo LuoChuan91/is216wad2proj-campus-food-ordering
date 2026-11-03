@@ -19,6 +19,7 @@ const TrackPage = () => import('@/views/student/TrackView.vue')
 const MerchantOrdersView = () => import('@/views/merchant/MerchantOrdersView.vue')
 const MerchantMenuView = () => import('@/views/merchant/MerchantMenuView.vue')
 const MerchantStoreView = () => import('@/views/merchant/MerchantStoreView.vue')
+const MerchantAnalyticsView = () => import('@/views/merchant/MerchantAnalyticsView.vue')
 const AdminApprovalsView = () => import('@/views/admin/AdminApprovalsView.vue')
 const AdminVenuesView = () => import('@/views/admin/AdminVenuesView.vue')
 const AdminStoresView = () => import('@/views/admin/AdminStoresView.vue')
@@ -59,6 +60,7 @@ const routes = [
       { path: '', name: 'merchant-orders', component: MerchantOrdersView, meta: { role: 'merchant', merchantTab: 'orders' } },
       { path: 'menu', name: 'merchant-menu', component: MerchantMenuView, meta: { role: 'merchant', merchantTab: 'menu' } },
       { path: 'store', name: 'merchant-store', component: MerchantStoreView, meta: { role: 'merchant', merchantTab: 'store' } },
+      { path: 'analytics', name: 'merchant-analytics', component: MerchantAnalyticsView, meta: { role: 'merchant', merchantTab: 'analytics' } },
     ],
   },
 

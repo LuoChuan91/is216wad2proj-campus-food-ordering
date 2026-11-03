@@ -34,6 +34,7 @@ export const api = {
   studentOrders: (studentId) => http.get('/orders', { params: { student_id: studentId } }),
   previousOrders: (studentId) => http.get('/orders/previous', { params: { student_id: studentId } }),
   storeOrders: (storeId) => http.get('/orders', { params: { store_id: storeId } }),
+  storeAnalytics: (storeId, from, to) => http.get(`/stores/${storeId}/analytics`, { params: { from, to } }),
   openJobs: () => http.get('/deliveries', { params: { status: 'open' } }),
   expiredJobs: () => http.get('/deliveries', { params: { status: 'expired' } }),
   myJobs: (courierId) => http.get('/deliveries', { params: { courier_id: courierId } }),

@@ -90,6 +90,7 @@ onBeforeUnmount(() => {
       <button :class="{ on: t.merchantTab === 'orders' }" @click="ui.setMerchantTab('orders')"><Icon name="receipt" :size="20" /><span>Orders</span></button>
       <button :class="{ on: t.merchantTab === 'menu' }" @click="ui.setMerchantTab('menu')"><Icon name="menu" :size="20" /><span>Menu</span></button>
       <button :class="{ on: t.merchantTab === 'store' }" @click="ui.setMerchantTab('store')"><Icon name="store" :size="20" /><span>Store</span></button>
+      <button :class="{ on: t.merchantTab === 'analytics' }" @click="ui.setMerchantTab('analytics')"><Icon name="chart" :size="20" /><span>Analytics</span></button>
     </nav>
     <div v-if="!store" class="m-main"><p class="col-empty">This account doesn't run any stores yet. An admin links stores to merchant accounts.</p></div>
     <div v-else class="m-main">

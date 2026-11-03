@@ -66,6 +66,20 @@ exports.findByStore = async (storeId) => {
   return data;
 };
 
+exports.findForAnalytics = async (storeId, fromIso, toIso) => {
+  const { data, error } = await supabase
+    .from('orders')
+    .select('id, status, subtotal, delivery_fee, created_at, paid_at, ready_at, payments(amount), deliveries(status, fee)')
+    .eq('store_id', storeId)
+    .gte('created_at', fromIso)
+    .lt('created_at', toIso)
+    .not('status', 'in', '(pending,cancelled)')
+    .order('created_at');
+
+  if (error) throw error;
+  return data;
+};
+
 // A student's orders, newest first
 exports.findByStudent = async (studentId) => {
   const { data, error } = await supabase
