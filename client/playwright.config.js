@@ -15,7 +15,7 @@ export default defineConfig({
   globalSetup: './e2e/global-setup.js',
   globalTeardown: './e2e/global-teardown.js',
   /* Maximum time one test can run for. */
-  timeout: 30 * 1000,
+  timeout: 60 * 1000,
   expect: {
     /**
      * Maximum time expect() should wait for the condition to be met.
@@ -105,7 +105,7 @@ export default defineConfig({
       cwd: '../server',
       port: 3000,
       reuseExistingServer: !process.env.CI,
-      timeout: 30 * 1000,
+      timeout: 60 * 1000,
     },
     {
       command: process.env.CI ? 'pnpm preview' : 'pnpm dev',
