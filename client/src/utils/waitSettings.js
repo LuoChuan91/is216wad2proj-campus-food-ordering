@@ -17,8 +17,6 @@ export const DEFAULT_WAIT = Object.freeze({
   stations: cfg.wait?.stations ?? 2,
   strategy: cfg.wait?.strategy ?? 'scheduled',
 })
-export const DEFAULT_STRATEGY = DEFAULT_WAIT.strategy
-export const DEFAULT_STATIONS = DEFAULT_WAIT.stations
 
 /**
  * Resolve a store's wait-time settings, taken DIRECTLY from the server-provided

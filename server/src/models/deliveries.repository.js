@@ -42,19 +42,6 @@ exports.findOverdue = async (nowIso) => {
   return data;
 };
 
-// The delivery this courier is in the middle of, or null
-exports.findActiveForCourier = async (courierId) => {
-  const { data, error } = await supabase
-    .from('deliveries')
-    .select('id')
-    .eq('courier_id', courierId)
-    .in('status', ['accepted', 'picked_up'])
-    .limit(1);
-
-  if (error) throw error;
-  return data[0] || null;
-};
-
 // How many deliveries this courier currently has in progress (accepted/picked_up).
 exports.countActiveForCourier = async (courierId) => {
   const { count, error } = await supabase

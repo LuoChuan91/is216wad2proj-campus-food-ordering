@@ -10,15 +10,11 @@
 //   - store:<id>           -> realtime_wait_time.sql       (queue_change)
 //   - merchant-store:<id>  -> realtime_merchant_orders.sql (order_change)
 //   - courier-jobs         -> delivery trigger             (delivery_change)
-import { config as cfg } from '@/config/index.js'
 
 // ---- timing (ms) ----------------------------------------------------------
 // Debounce window that collapses a burst of broadcasts into a single refetch.
 export const DEBOUNCE_MS = 300
 
-// Fast fallback poll for the signed-in user's data when realtime is down. This
-// reuses the ONE source of truth in config (do not fork a second pollMs).
-export const USER_POLL_MS = cfg.pollMs
 // Long safety-net poll run WHILE realtime is connected (two-speed mode), in case
 // a single broadcast is ever missed.
 export const SAFETY_MS = 60000

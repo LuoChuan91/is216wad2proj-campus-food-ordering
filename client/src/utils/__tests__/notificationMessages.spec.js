@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildNotification, shouldToast } from '../notificationMessages.js'
+import { buildNotification } from '../notificationMessages.js'
 
 // A pickup order and a delivery order to exercise the order-aware wording.
 const pickup = { code: 'E287', type: 'pickup' }
@@ -115,18 +115,5 @@ describe('buildNotification (shared, order-aware wording)', () => {
     expect(buildNotification({ kind: 'nope', status: 'ready' })).toBeNull()
     expect(buildNotification(null)).toBeNull()
     expect(buildNotification({})).toBeNull()
-  })
-})
-
-describe('shouldToast', () => {
-  it('is true only for the toast statuses', () => {
-    expect(shouldToast({ kind: 'order', status: 'ready' })).toBe(true)
-    expect(shouldToast({ kind: 'order', status: 'completed' })).toBe(true)
-    expect(shouldToast({ kind: 'delivery', status: 'accepted' })).toBe(true)
-    expect(shouldToast({ kind: 'delivery', status: 'picked_up' })).toBe(true)
-    expect(shouldToast({ kind: 'delivery', status: 'expired' })).toBe(true)
-    expect(shouldToast({ kind: 'order', status: 'paid' })).toBe(false)
-    expect(shouldToast({ kind: 'delivery', status: 'delivered' })).toBe(false)
-    expect(shouldToast({ kind: 'order', status: 'preparing' })).toBe(false)
   })
 })

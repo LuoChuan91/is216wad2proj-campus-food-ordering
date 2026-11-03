@@ -255,5 +255,3 @@ export function estimateNewOrderWait(queueOrders, cartLines, cookingDetails, opt
     ahead: queue.length,
   };
 }
-
-export { scheduleKitchen };

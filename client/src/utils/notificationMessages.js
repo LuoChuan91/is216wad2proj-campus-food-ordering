@@ -142,11 +142,3 @@ export function buildNotification(payload, ctx = {}) {
     toast: toastByStatus[payload.status],
   };
 }
-
-/** True when the payload should pop up as a toast. */
-export function shouldToast(payload) {
-  const by = TOAST[payload?.kind];
-  return !!by && !!by[payload?.status];
-}
-
-export { TOAST };
