@@ -10,11 +10,13 @@ import { config as cfg } from '@/config/index.js'
 let seq = 0
 const nextId = () => `n${Date.now()}_${seq++}`
 
-// Content-based de-duplication.
-const DEDUP_WINDOW_MS = 15000
+// Collapses the same notification arriving within DEDUP_WINDOW_MS (e.g. a status
+// event delivered by both the realtime and poll-diff paths around a connect/
+// disconnect transition).
+const DEDUP_WINDOW_MS = 3000
 function dupKey(n) {
-  // Status events collapse by kind|status|order (so realtime + mirror copies
-  // match even if wording differs); plain messages fall back to their text.
+  // Status events are keyed by kind|status|order (matches even if wording differs);
+  // plain messages fall back to their title+body.
   if (n.kind) return `k:${n.kind}|${n.status || ''}|${n.orderId ?? ''}`
   return `t:${n.title || ''}|${n.body || ''}`
 }
@@ -141,10 +143,14 @@ export const useNotificationsStore = defineStore('notifications', () => {
   }
 
   /**
-   * Add a notification that originated outside the realtime channel (the
-   * poll-diff mirror in ui.js). 
+   * Add a notification from the poll-diff path (ui.js). Skips status events (those
+   * with meta.kind) while realtime is connected, since the realtime path delivers
+   * them; plain messages always go through. Returns the notification, or null if
+   * skipped / de-duplicated.
    */
   function pushLocal({ title, body, variant = 'secondary', toast = true, meta = null }) {
+    if (realtimeConnected.value && meta?.kind) return null
+
     const notification = {
       id: nextId(),
       kind: meta?.kind ?? null,

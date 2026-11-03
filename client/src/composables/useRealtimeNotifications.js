@@ -26,8 +26,7 @@ export function useRealtimeNotifications(options = {}) {
       const payload = message?.payload ?? message
       notifications.receive(payload)
     },
-    // Mirror the realtime health into the store so the poll-diff fallback knows
-    // whether to suppress or mirror status/delivery notifications.
+    // Track realtime health so pushLocal knows whether to emit poll-diff status events.
     onStatus: (connected) => notifications.setRealtimeConnected(connected),
   })
 
