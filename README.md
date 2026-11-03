@@ -41,6 +41,8 @@ pnpm dev                    # starts on http://localhost:3000
 
 Verify: open http://localhost:3000/api/health — it returns `{"ok":true}`.
 
+See more detailed server documentation at [server/README.md](server/README.md)
+
 ### Client (terminal 2)
 
 The client has its **own** `.env` for Supabase Realtime (the publishable key only).
@@ -57,6 +59,8 @@ Open http://localhost:5173. Requests to `/api/...` are proxied to the server on
 port 3000, so the client uses relative URLs. Sign in by picking an account from the
 list (see dummy accounts in section 4). Open a second browser tab as a different
 account to watch an order move between roles in real time.
+
+See more detailed client documentation at [client/README.md](client/README.md)
 
 ### Environment variables
 
