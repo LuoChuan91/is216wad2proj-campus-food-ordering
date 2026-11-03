@@ -8,12 +8,12 @@ import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui.js'
 import { useCatalogStore } from '@/stores/catalog.js'
-import { useOrdersStore } from '@/stores/orders.js'
+import { useAdminStore } from '@/stores/admin.js'
 import AdminMap from '@/portals/admin/AdminMap.vue'
 
 const ui = useUiStore()
 const catalog = useCatalogStore()
-const orders = useOrdersStore()
+const admin = useAdminStore()
 const { ui: uiState } = storeToRefs(ui)
 
 const t = computed(() => uiState.value.staff)
@@ -24,7 +24,7 @@ const venues = computed(() => catalog.db.venues.map((v) => ({ v, stores: catalog
   <div class="adm-venues">
     <div class="row g-0 h-100 flex-column flex-md-row flex-nowrap">
     <div class="av-side scroll col col-md-4 d-flex flex-column gap-2">
-      <form class="av-form d-grid gap-2" @submit.prevent="orders.addVenue()">
+      <form class="av-form d-grid gap-2" @submit.prevent="admin.addVenue()">
         <strong>Add a venue</strong>
         <label for="venue-name">Name</label>
         <input id="venue-name" class="form-control form-control-sm" placeholder="e.g. SMU Labs" :value="t.venueDraft.name" @input="ui.setVenueDraft('name', $event.target.value)">

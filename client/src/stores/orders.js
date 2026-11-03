@@ -1,8 +1,9 @@
 // Orders store.
 //
 // The fast-changing, per-user data: a student's own orders (or a merchant's stores'
-// orders), the peer-delivery jobs, and the live wait times. Also the order/courier/
-// admin actions and the checkout estimate, preserved exactly from the prototype.
+// orders), the peer-delivery jobs, and the live wait times. Also the order/courier
+// actions and the checkout estimate, preserved exactly from the prototype.
+// (Admin actions — student status + addVenue — live in stores/admin.js.)
 import { defineStore } from "pinia";
 import { reactive } from "vue";
 import { api } from "@/services/api.js";
@@ -247,54 +248,9 @@ export const useOrdersStore = defineStore("orders", () => {
     if (saved) await loadLive().catch(() => {});
   }
 
-  /* admin */
-  // TODO: should not be under orders.js
-  async function setStudentStatus(userId, status) {
-    const ui = useUiStore();
-    const catalog = useCatalogStore();
-    const saved = await ui.run(userId, () =>
-      api.setProfileStatus(userId, status),
-    );
-    if (saved) Object.assign(catalog.user(userId), saved);
-  }
-  const approveStudent = (id) => setStudentStatus(id, "active");
-  const blockStudent = (id) => setStudentStatus(id, "blocked");
-  const removeStudent = (id) => setStudentStatus(id, "removed");
-
-  async function addVenue() {
-    const ui = useUiStore();
-    const catalog = useCatalogStore();
-    const t = ui.ui.staff;
-    const d = t.venueDraft;
-    const lat = parseFloat(d.lat);
-    const lng = parseFloat(d.lng);
-    if (!d.name.trim()) {
-      t.formError = "Give the venue a name.";
-      return;
-    }
-    if (!(lat > 1.15 && lat < 1.48 && lng > 103.6 && lng < 104.1)) {
-      t.formError = "Click the map to place the pin inside Singapore.";
-      return;
-    }
-    t.saving = true;
-    try {
-      const v = await api.addVenue({
-        name: d.name.trim(),
-        lat,
-        lng,
-        type: "eatery",
-      });
-      catalog.db.venues.push(v);
-      t.venueDraft = { name: "", lat: "", lng: "" };
-    } catch (err) {
-      t.formError = err.message;
-    } finally {
-      t.saving = false;
-    }
-  }
-
   // Ask the server's wait-time engine when the current cart would be ready
   // (removed: checkout now computes this on the frontend via useCartEstimate).
+  // Admin actions (approve/block/remove students, addVenue) moved to stores/admin.js.
 
   return {
     db,
@@ -320,12 +276,6 @@ export const useOrdersStore = defineStore("orders", () => {
     pickUp,
     deliver,
     switchToPickup,
-    setStudentStatus,
-    approveStudent,
-    blockStudent,
-    removeStudent,
-    // rejectStudent,
-    addVenue,
     _normaliseOrder: normaliseOrder,
     _normaliseJob: normaliseJob,
   };
