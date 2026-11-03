@@ -24,8 +24,6 @@ const { ui: uiState, now } = storeToRefs(ui)
 
 const u = computed(() => uiState.value.student)
 const me = computed(() => orders.me())
-const money = E.money
-const first = (name) => name.split(' ')[0]
 
 const near = computed(() => catalog.db.venues
   .map((v) => ({ v, walk: ui.walk(v), stores: catalog.storesAt(v.id) }))
@@ -190,7 +188,7 @@ const results = computed(() => {
   <div class="explore" ref="rootEl">
     <MapView @map-click="onMapClick" @map-interact="onMapInteract" />
     <div class="explore-top">
-      <div class="hello d-flex align-items-center gap-2 mb-2"><Avatar :name="me.name" :size="36" tone="brand" /><div><small>{{ greeting }}</small><strong>{{ first(me.name) }}</strong></div><span class="brand-pill ms-auto d-inline-flex align-items-center gap-2"><AppMark :size="18" />{{ cfg.appName }}</span></div>
+      <div class="hello d-flex align-items-center gap-2 mb-2"><Avatar :name="me.name" :size="36" tone="brand" /><div><small>{{ greeting }}</small><strong>{{ E.firstName(me.name) }}</strong></div><span class="brand-pill ms-auto d-inline-flex align-items-center gap-2"><AppMark :size="18" />{{ cfg.appName }}</span></div>
       <label class="search d-flex align-items-center gap-2"><Icon name="search" :size="16" /><input type="search" placeholder="Search dishes or stores" aria-label="Search dishes or stores" :value="u.search" @input="ui.setSearch($event.target.value)">
         <button v-if="u.search" type="button" class="icon-btn sm" aria-label="Clear search" @click="ui.setSearch('')"><Icon name="close" :size="12" /></button></label>
     </div>
@@ -203,15 +201,15 @@ const results = computed(() => {
           <p v-if="!results.stores.length && !results.dishes.length" class="empty-note">Nothing matches. Try "noodles", "kopi" or "bento".</p>
           <button v-for="x in results.stores" :key="x.s.id" class="venue-row d-flex align-items-center gap-3 w-100 text-start" :class="{ unavailable: !x.available }" :disabled="!x.available" @click="ui.openStore(x.s.id)">
             <Mono :store="x.s" :size="36" />
-            <span class="venue-main d-flex flex-column flex-grow-1 overflow-hidden"><strong>{{ x.s.name }}</strong><small class="d-inline-flex align-items-center gap-1">{{ x.s.cuisine }} · {{ x.v.short ?? x.v.name }}</small></span>
+            <span class="venue-main d-flex flex-column flex-grow-1 overflow-hidden"><strong>{{ x.s.name }}</strong><small class="d-inline-flex align-items-center gap-1">{{ x.s.cuisine }} · {{ E.venueLabel(x.v) }}</small></span>
             <StatusTag v-if="!x.available" tone="muted">Unavailable</StatusTag>
             <StatusTag v-else :tone="x.open ? 'ok' : 'muted'">{{ x.open ? 'Open' : 'Closed' }}</StatusTag>
           </button>
           <h4 v-if="results.dishes.length" class="sec">Dishes</h4>
           <button v-for="x in results.dishes" :key="x.m.id" class="venue-row d-flex align-items-center gap-3 w-100 text-start" :disabled="!x.ok" @click="ui.openStoreItem(x.s.id, x.m.id)">
             <span class="venue-ic d-flex align-items-center justify-content-center flex-shrink-0"><Icon name="bag" :size="16" /></span>
-            <span class="venue-main d-flex flex-column flex-grow-1 overflow-hidden"><strong>{{ x.m.name }}</strong><small class="d-inline-flex align-items-center gap-1">{{ x.s.name }} · {{ x.v.short ?? x.v.name }}</small></span>
-            <b v-if="x.ok" class="price">{{ money(x.m.price) }}</b><StatusTag v-else tone="muted">{{ x.m.available ? 'Closed' : 'Sold out' }}</StatusTag>
+            <span class="venue-main d-flex flex-column flex-grow-1 overflow-hidden"><strong>{{ x.m.name }}</strong><small class="d-inline-flex align-items-center gap-1">{{ x.s.name }} · {{ E.venueLabel(x.v) }}</small></span>
+            <b v-if="x.ok" class="price">{{ E.money(x.m.price) }}</b><StatusTag v-else tone="muted">{{ x.m.available ? 'Closed' : 'Sold out' }}</StatusTag>
           </button>
         </div>
       </div>
@@ -224,7 +222,7 @@ const results = computed(() => {
         <div class="near-list sheet-scroll" ref="listEl" :style="listStyle">
           <button v-for="x in near" :key="x.v.id" class="venue-row d-flex align-items-center gap-3 w-100 text-start" @click="ui.openVenue(x.v.id)">
             <span class="venue-ic d-flex align-items-center justify-content-center flex-shrink-0"><Icon name="store" :size="18" /></span>
-            <span class="venue-main d-flex flex-column flex-grow-1 overflow-hidden"><strong>{{ x.v.short ?? x.v.name }}</strong><small class="d-inline-flex align-items-center gap-1"><Icon name="walk" :size="12" />{{ x.walk.minutes }} min · {{ openCount(x.stores) }} of {{ x.stores.length }} open</small></span>
+            <span class="venue-main d-flex flex-column flex-grow-1 overflow-hidden"><strong>{{ E.venueLabel(x.v) }}</strong><small class="d-inline-flex align-items-center gap-1"><Icon name="walk" :size="12" />{{ x.walk.minutes }} min · {{ openCount(x.stores) }} of {{ x.stores.length }} open</small></span>
             <WaitChip v-if="bestWait(x.stores) !== null" :minutes="bestWait(x.stores)" prefix="from" />
           </button>
           <button type="button" class="see-all d-flex align-items-center justify-content-center gap-1 w-100" @click="ui.setTab('stores')">See all {{ catalog.db.stores.length }} stores<Icon name="chevR" :size="14" /></button>

@@ -40,7 +40,7 @@ function jobView(d) {
   const v = catalog.venue(s.venue_id)
   const drop = catalog.dropoff(d.destination_id) || { name: 'Drop-off point', lat: v ? v.lat : 0, lng: v ? v.lng : 0 }
   const est = jobReadyAt(d.pickup_store_id, d.order_id)
-  return { d, o: d.order, s, v, vName: v ? (v.short ?? v.name) : '', drop, walk: v ? E.walkEstimate(v, drop) : { meters: 0 }, items: d.order.items, est, left: d.expires_at - now.value }
+  return { d, o: d.order, s, v, vName: E.venueLabel(v), drop, walk: v ? E.walkEstimate(v, drop) : { meters: 0 }, items: d.order.items, est, left: d.expires_at - now.value }
 }
 
 const on = computed(() => courierOn.value)

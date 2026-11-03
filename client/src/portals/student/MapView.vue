@@ -53,13 +53,11 @@ const here = () => ui.place()
 const onCampus = () => E.distanceM(here(), DEFAULT_PLACE) < 2500
 const foodVenues = () => catalog.db.venues.filter((v) => catalog.storesAt(v.id).length)
 
-// The venue's short label comes from the DB ('short' field); fall back to its name.
-const shortName = (v) => (v && (v.short || v.name)) || ''
 
 // Landmarks: database venues without stores (every campus location lives in the DB).
 function landmarks() {
   return catalog.db.venues.filter((v) => !catalog.storesAt(v.id).length).map((v) => ({
-    id: v.id, name: v.name, short: v.short || v.name, address: v.address || '', lat: v.lat, lng: v.lng,
+    id: v.id, name: v.name, short: E.venueLabel(v), address: v.address || '', lat: v.lat, lng: v.lng,
     kind: /library/i.test(v.name) ? 'library' : /school/i.test(v.name) ? 'school' : 'building',
   }))
 }
@@ -72,7 +70,7 @@ function nearestFood(p) {
 /* ---------- marker HTML ---------- */
 function pinHtml(v, selected) {
   const w = ui.walk(v)
-  return `<div class="vpin${selected ? ' on' : ''}">${selected ? `<b>${esc(shortName(v))}</b>` : ''}<span>${w.minutes} min</span></div>`
+  return `<div class="vpin${selected ? ' on' : ''}">${selected ? `<b>${esc(E.venueLabel(v))}</b>` : ''}<span>${w.minutes} min</span></div>`
 }
 function venueTip(v) {
   const stores = catalog.storesAt(v.id)
@@ -93,7 +91,7 @@ function landmarkHtml(l) {
 function landmarkTip(l) {
   const walk = ui.walk(l)
   const food = nearestFood(l)
-  const foodLine = food ? `<span class="tip-food">Nearest food: <b>${esc(shortName(food.v))}</b>, ${Math.max(1, Math.round((food.m * 1.3) / 75))} min away</span>` : ''
+  const foodLine = food ? `<span class="tip-food">Nearest food: <b>${esc(E.venueLabel(food.v))}</b>, ${Math.max(1, Math.round((food.m * 1.3) / 75))} min away</span>` : ''
   return `<div class="map-tip-card"><strong>${esc(l.name)}</strong><small>${esc(l.address)}</small><span>${walk.minutes} min walk from you · ${walk.meters} m</span>${foodLine}</div>`
 }
 

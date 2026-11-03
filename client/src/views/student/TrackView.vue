@@ -23,13 +23,11 @@ const catalog = useCatalogStore()
 const orders = useOrdersStore()
 const { now, busy } = storeToRefs(ui)
 
-const first = (name) => (name || '').split(' ')[0]
-const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`
 const orderId = computed(() => route.params.orderId)
 const order = computed(() => orders.order(orderId.value))
 const store = computed(() => (order.value ? catalog.store(order.value.store_id) : null))
 const venue = computed(() => (store.value ? catalog.venue(store.value.venue_id) : null))
-const venueName = computed(() => (venue.value ? (venue.value.short ?? venue.value.name) : ''))
+const venueName = computed(() => E.venueLabel(venue.value))
 const lines = computed(() => order.value.items)
 const d = computed(() => order.value.delivery)
 // "Collect it myself instead": a second tap confirms, since it can't be undone
@@ -66,7 +64,7 @@ const walkSeconds = computed(() => {
 
 const phase = computed(() => {
   const o = order.value, dl = d.value, s = store.value
-  const cn = dl ? first(dl.courier_name) : ''
+  const cn = dl ? E.firstName(dl.courier_name) : ''
   if (o.status === 'paid') return { tone: 'info', title: 'In the queue' }
   if (o.status === 'preparing') return { tone: 'brand', title: 'Being prepared' }
   if (o.status === 'ready' && o.type === 'pickup') return { tone: 'ok', title: 'Ready for pickup', big: 'Collect now', sub: `At ${s.name}, ${venueName.value}${o.ready_at ? ' · ready since ' + E.clock(o.ready_at) : ''}` }

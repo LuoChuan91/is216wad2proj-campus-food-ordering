@@ -8,6 +8,7 @@ import { computed, watch, onBeforeUnmount } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui.js'
 import { useCatalogStore } from '@/stores/catalog.js'
+import { venueLabel } from '@/utils/engine.js'
 import { acquireStoreWait, releaseStoreWait, peekStoreWait } from '@/composables/storeWaitCache.js'
 import StoreCard from '@/components/StoreCard.vue'
 
@@ -100,7 +101,7 @@ const openCount = computed(() => rows.value.filter((r) => r.open.open).length)
       <div v-for="r in shown" :key="r.s.id" class="col-12 col-md-6 col-lg-4">
       <StoreCard class="h-100" :store="r.s" :open="r.open.open" :available="r.available">
         <small class="text-body-secondary">{{ r.s.cuisine }}</small>
-        <small v-if="r.v" class="d-inline-flex align-items-center gap-1 text-body-secondary"><Icon name="walk" :size="12" />{{ r.walk.minutes }} min · {{ r.v.short ?? r.v.name }}</small>
+        <small v-if="r.v" class="d-inline-flex align-items-center gap-1 text-body-secondary"><Icon name="walk" :size="12" />{{ r.walk.minutes }} min · {{ venueLabel(r.v) }}</small>
       </StoreCard>
       </div>
       <p v-if="!shown.length" class="empty-note col-12">No stores match. Try another filter.</p>

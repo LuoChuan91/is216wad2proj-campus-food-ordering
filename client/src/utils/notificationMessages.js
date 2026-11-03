@@ -28,8 +28,7 @@ const TOAST = {
 };
 
 import { wasSwitchedToPickup } from './pickupSwitch.js';
-
-const first = (name) => (name || '').split(' ')[0];
+import { firstName as first } from './engine.js';
 
 /**
  * @typedef {Object} NotificationPayload

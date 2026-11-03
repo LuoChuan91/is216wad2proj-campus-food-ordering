@@ -46,7 +46,7 @@ const drops = computed(() => {
       <div class="container px-0">
       <div class="row g-2">
       <div class="col-12 col-lg-7 d-flex flex-column gap-2">
-      <div class="panel co-store d-flex align-items-center gap-3"><Mono :store="store" :size="38" /><div><strong>{{ store.name }}</strong><small class="d-block">{{ venue ? (venue.short ?? venue.name) : '' }} · {{ store.unit_no }}</small></div></div>
+      <div class="panel co-store d-flex align-items-center gap-3"><Mono :store="store" :size="38" /><div><strong>{{ store.name }}</strong><small class="d-block">{{ E.venueLabel(venue) }} · {{ store.unit_no }}</small></div></div>
       <div class="panel co-lines">
         <div v-for="l in lines" :key="l.key" class="co-line d-flex align-items-center gap-2">
           <div class="qty mini d-inline-flex align-items-center gap-1 flex-shrink-0"><button class="icon-btn" aria-label="One fewer" @click="ui.setLineQty(l.key, l.qty - 1)"><Icon name="minus" :size="13" /></button><b>{{ l.qty }}</b><button class="icon-btn" aria-label="One more" @click="ui.setLineQty(l.key, l.qty + 1)"><Icon name="plus" :size="13" /></button></div>

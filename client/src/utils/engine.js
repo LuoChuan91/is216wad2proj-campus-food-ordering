@@ -11,6 +11,11 @@ export const money = (n) => "$" + round2(Number(n) || 0).toFixed(2);
 export const sum = (arr, f) => arr.reduce((s, x) => s + f(x), 0);
 const singular = (w) => (w.endsWith("s") ? w.slice(0, -1) : w);
 
+// First word of a name (e.g. a courier's given name), '' when missing.
+export const firstName = (name) => (name || "").split(" ")[0];
+// A venue's short map/label name from the DB ('short'), falling back to its full name.
+export const venueLabel = (venue) => (venue && (venue.short || venue.name)) || "";
+
 /* ---------- Option groups ---------- */
 
 // A single-choice group always allows exactly one pick; required groups need at least one.

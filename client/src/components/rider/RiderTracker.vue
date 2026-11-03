@@ -23,7 +23,6 @@ const props = defineProps({
 })
 
 const catalog = useCatalogStore()
-const first = (name) => (name || 'Courier').split(' ')[0]
 const active = computed(() => ['accepted', 'picked_up'].includes(props.delivery.status))
 const carrying = computed(() => props.delivery.status === 'picked_up')
 const { fix } = useRiderLocation(() => props.delivery.id, active, { fetchLocation: props.fetchLocation })
@@ -47,7 +46,7 @@ const failed = ref(false)
 // under another name).
 function campusBuildings() {
   const list = []
-  for (const b of catalog.db.venues.map((v) => ({ ...v, short: v.short || v.name }))) {
+  for (const b of catalog.db.venues.map((v) => ({ ...v, short: E.venueLabel(v) }))) {
     if (!list.some((x) => pathLength([[x.lat, x.lng], [b.lat, b.lng]]) < 50)) list.push(b)
   }
   return list
@@ -79,7 +78,7 @@ onMounted(async () => {
     if (gone) return
     scene = createRiderMap(box.value, {
       from: props.from, to: props.to, coords: route.value.coords, reducedMotion,
-      riderName: first(props.delivery.courier_name), buildings: campusBuildings(), stores: campusStores(),
+      riderName: E.firstName(props.delivery.courier_name) || 'Courier', buildings: campusBuildings(), stores: campusStores(),
     })
   } catch (e) {
     console.warn('[rider] map unavailable, showing the plain card:', e.message)
@@ -121,11 +120,11 @@ onBeforeUnmount(() => {
         <div class="flex-grow-1 overflow-hidden">
           <template v-if="carrying">
             <div class="big"><span>{{ Math.round(shown.metres) }}</span><small> m away</small></div>
-            <p class="sub m-0">{{ first(delivery.courier_name) }} is walking to {{ to.name }}<template v-if="arriveAt">, arrives about <b>{{ E.clock(arriveAt) }}</b></template></p>
+            <p class="sub m-0">{{ E.firstName(delivery.courier_name) || 'Courier' }} is walking to {{ to.name }}<template v-if="arriveAt">, arrives about <b>{{ E.clock(arriveAt) }}</b></template></p>
           </template>
           <template v-else>
             <div class="big big-sm">Collecting your food</div>
-            <p class="sub m-0">{{ first(delivery.courier_name) }} is picking it up from {{ from.name }}</p>
+            <p class="sub m-0">{{ E.firstName(delivery.courier_name) || 'Courier' }} is picking it up from {{ from.name }}</p>
           </template>
         </div>
       </div>

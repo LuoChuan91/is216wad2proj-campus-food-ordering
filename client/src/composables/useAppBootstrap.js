@@ -29,7 +29,6 @@ import { buildNotification } from '@/utils/notificationMessages.js'
 import { startRouting } from '@/router/sync.js'
 
 const ROLE = { student: 'Student', merchant: 'Merchant', admin: 'Admin' }
-const first = (name) => (name || '').split(' ')[0]
 
 /* ---------- notifications: compare what the server says now with what it said last time ---------- */
 let prev = null
@@ -200,7 +199,7 @@ export async function startApp() {
 
   // The tab title shows who's signed in, so several tabs are easy to tell apart
   const stopTitleWatch = watch(
-    () => { const me = orders.me(); return me ? `${first(me.name)} · ${ROLE[me.role]} · ${cfg.appName}` : `${cfg.appName} · Sign in` },
+    () => { const me = orders.me(); return me ? `${E.firstName(me.name)} · ${ROLE[me.role]} · ${cfg.appName}` : `${cfg.appName} · Sign in` },
     (t) => { document.title = t },
     { immediate: true },
   )

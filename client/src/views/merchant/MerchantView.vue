@@ -113,7 +113,7 @@ onBeforeUnmount(() => {
             <option v-for="x in stores" :key="x.s.id" :value="x.s.id">{{ x.s.name }}{{ x.waiting ? ' (' + x.waiting + ' waiting)' : '' }}</option>
           </select>
           <strong v-else>{{ store.name }}</strong>
-          <small>{{ venue ? (venue.short ?? venue.name) : '' }} · {{ store.unit_no }} · {{ open.label }}</small>
+          <small>{{ E.venueLabel(venue) }} · {{ store.unit_no }} · {{ open.label }}</small>
         </div>
         <label class="form-check form-switch mb-0 small fw-bold text-nowrap"><input class="form-check-input" type="checkbox" role="switch" :checked="store.is_open" :disabled="busy[store.id]" @change="ordersStore.setStoreOpen(store.id, $event.target.checked)"><span class="form-check-label">{{ store.is_open ? 'Taking orders' : 'Paused' }}</span></label>
         <StatCard cap label="Workstations" :value="kitchenSlots" title="Change it above the order board" />
