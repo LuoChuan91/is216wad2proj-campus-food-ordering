@@ -22,11 +22,7 @@ const MerchantStoreView = () => import('@/views/merchant/MerchantStoreView.vue')
 const AdminApprovalsView = () => import('@/views/admin/AdminApprovalsView.vue')
 const AdminVenuesView = () => import('@/views/admin/AdminVenuesView.vue')
 const AdminStoresView = () => import('@/views/admin/AdminStoresView.vue')
-const NotificationsView = () => import('@/views/NotificationsView.vue')
 const NotFoundView = () => import('@/views/NotFoundView.vue')
-const LoginView = () => import('@/views/auth/LoginView.vue')
-const SignUpView = () => import('@/views/auth/SignUpView.vue')
-const ForgotPasswordView = () => import('@/views/auth/ForgotPasswordView.vue')
 const ResetPasswordView = () => import('@/views/auth/ResetPasswordView.vue')
 
 
@@ -78,14 +74,6 @@ const routes = [
     ],
   },
 
-  // Full-screen notifications page (the same NotificationPanel the TopNav bell
-  // shows). Any signed-in role; the guard only requires a session (no role meta).
-  // TODO might not need
-  { path: '/notifications', name: 'notifications', component: NotificationsView },
-
-  { path: '/login', name: 'login', component: LoginView, meta: { public: true } },
-  { path: '/signup', name: 'signup', component: SignUpView, meta: { public: true } },
-  { path: '/forgot-password', name: 'forgot-password', component: ForgotPasswordView, meta: { public: true } },
   { path: '/reset-password', name: 'reset-password', component: ResetPasswordView, meta: { public: true } },
 
   { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFoundView, meta: { public: true } },

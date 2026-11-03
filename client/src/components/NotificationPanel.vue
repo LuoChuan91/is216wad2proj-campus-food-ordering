@@ -1,7 +1,6 @@
 <script setup>
-// Shared notification list UI. Used both by the full-screen NotificationsView
-// (mobile) and inside the offcanvas panel (desktop). Reads history from the
-// notifications store.
+// Shared notification list UI, rendered inside the TopNav bell's offcanvas panel.
+// Reads history from the notifications store.
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useNotificationsStore } from '@/stores/notifications.js'
