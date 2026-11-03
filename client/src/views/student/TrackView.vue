@@ -12,7 +12,6 @@ import { useCatalogStore } from '@/stores/catalog.js'
 import { useOrdersStore } from '@/stores/orders.js'
 import * as E from '@/utils/engine.js'
 import { config as cfg } from '@/config/index.js'
-import { shortName } from '@/utils/landmarks.js'
 import { estimateWalkingSeconds } from '@/utils/mapApi.js'
 import { useStoreWait } from '@/composables/storeWaitCache.js'
 import ReceiptPanel from '@/components/ReceiptPanel.vue'
@@ -30,7 +29,7 @@ const orderId = computed(() => route.params.orderId)
 const order = computed(() => orders.order(orderId.value))
 const store = computed(() => (order.value ? catalog.store(order.value.store_id) : null))
 const venue = computed(() => (store.value ? catalog.venue(store.value.venue_id) : null))
-const venueName = computed(() => (venue.value ? shortName(venue.value.name) : ''))
+const venueName = computed(() => (venue.value ? (venue.value.short ?? venue.value.name) : ''))
 const lines = computed(() => order.value.items)
 const d = computed(() => order.value.delivery)
 // "Collect it myself instead": a second tap confirms, since it can't be undone

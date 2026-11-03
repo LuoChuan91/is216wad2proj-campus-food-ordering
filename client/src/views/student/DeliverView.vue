@@ -10,7 +10,6 @@ import { useCatalogStore } from '@/stores/catalog.js'
 import { useOrdersStore } from '@/stores/orders.js'
 import * as E from '@/utils/engine.js'
 import { config as cfg } from '@/config/index.js'
-import { shortName } from '@/utils/landmarks.js'
 import { acquireStoreWait, releaseStoreWait, peekStoreWait } from '@/composables/storeWaitCache.js'
 import StatusTag from '@/components/StatusTag.vue'
 import { useSessionStore } from '@/stores/session.js'
@@ -41,7 +40,7 @@ function jobView(d) {
   const v = catalog.venue(s.venue_id)
   const drop = catalog.dropoff(d.destination_id) || { name: 'Drop-off point', lat: v ? v.lat : 0, lng: v ? v.lng : 0 }
   const est = jobReadyAt(d.pickup_store_id, d.order_id)
-  return { d, o: d.order, s, v, vName: v ? shortName(v.name) : '', drop, walk: v ? E.walkEstimate(v, drop) : { meters: 0 }, items: d.order.items, est, left: d.expires_at - now.value }
+  return { d, o: d.order, s, v, vName: v ? (v.short ?? v.name) : '', drop, walk: v ? E.walkEstimate(v, drop) : { meters: 0 }, items: d.order.items, est, left: d.expires_at - now.value }
 }
 
 const on = computed(() => courierOn.value)

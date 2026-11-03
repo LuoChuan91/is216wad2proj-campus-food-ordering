@@ -9,7 +9,6 @@
 import { computed, ref, reactive, watch, onMounted, onBeforeUnmount } from 'vue'
 import gsap from 'gsap'
 import * as E from '@/utils/engine.js'
-import { LANDMARKS, shortName } from '@/utils/landmarks.js'
 import { getRoute, ensureRoute } from '@/utils/routing.js'
 import { riderEstimate, pathLength } from '@/utils/riderPosition.js'
 import { useRiderLocation } from '@/composables/useRiderLocation.js'
@@ -43,11 +42,12 @@ watch(() => est.value.metresLeft, (m) => { if (m != null) gsap.to(shown, { metre
 const root = ref(null), box = ref(null), bar = ref(null)
 const failed = ref(false)
 
-// Every SMU building once: the map's landmarks plus the database's venues, minus any venue
-// within 50 m of one already listed (the same building under another name)
+// Every SMU building once: the database's venues (each carries its own 'short'
+// label), minus any venue within 50 m of one already listed (the same building
+// under another name).
 function campusBuildings() {
   const list = []
-  for (const b of [...LANDMARKS, ...catalog.db.venues.map((v) => ({ ...v, short: shortName(v.name) }))]) {
+  for (const b of catalog.db.venues.map((v) => ({ ...v, short: v.short || v.name }))) {
     if (!list.some((x) => pathLength([[x.lat, x.lng], [b.lat, b.lng]]) < 50)) list.push(b)
   }
   return list

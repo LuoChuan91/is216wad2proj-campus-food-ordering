@@ -155,8 +155,7 @@ client/
     │   ├── state.js            # app state (S), questions about it (Q) and every action (A)
     │   ├── live.js             # start-up, polling, notifications, address bar
     │   ├── engine.js           # option rules, prices, time and distance helpers
-    │   ├── routing.js          # walking routes (OSRM)
-    │   └── landmarks.js        # campus buildings shown on the map
+    │   └── routing.js          # walking routes (OSRM)
     ├── components/             # Icon, AppMark, Mono, Avatar, WaitChip, Toasts, SignIn, TopNav
     └── portals/
         ├── student/            # map, store list, store, item, checkout, payment, tracking, orders, deliver, me

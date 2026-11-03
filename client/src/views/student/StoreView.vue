@@ -11,7 +11,6 @@ import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui.js'
 import { useCatalogStore } from '@/stores/catalog.js'
 import * as E from '@/utils/engine.js'
-import { shortName } from '@/utils/landmarks.js'
 import WaitTimeEstimate from '@/components/WaitTimeEstimate.vue'
 import StoreHero from '@/components/StoreHero.vue'
 import StatusTag from '@/components/StatusTag.vue'
@@ -41,7 +40,7 @@ const cartTotal = computed(() => u.value.cart.lines.reduce((s, l) => s + l.unit_
 
 <template>
   <section v-if="store" class="page store-page">
-    <StoreHero :store="store" :venue-name="venue ? shortName(venue.name) : ''" @back="ui.back()" />
+    <StoreHero :store="store" :venue-name="venue ? (venue.short ?? venue.name) : ''" @back="ui.back()" />
     <div v-if="!available" class="menu scroll">
       <p class="empty-note">This store is currently unavailable.</p>
     </div>
