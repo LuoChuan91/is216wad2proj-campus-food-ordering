@@ -64,6 +64,9 @@ watch(() => est.value.progress, (p) => { if (bar.value) gsap.to(bar.value, { sca
 // rebuild the route only when the points change (the real route arrives after an estimate)
 watch(() => route.value.coords.flat().join(','), () => scene && scene.setRoute(route.value.coords))
 watch(() => [est.value.lat, est.value.lng, est.value.progress], () => scene && scene.setRider(est.value))
+// Self-heal: while the trail is still the straight-line estimate (OSRM was slow or
+// briefly unreachable), keep asking for the real route as the clock ticks.
+watch(() => props.now, () => { if (route.value.source !== 'osrm') ensureRoute(props.from, props.to) })
 
 onMounted(async () => {
   ensureRoute(props.from, props.to)
