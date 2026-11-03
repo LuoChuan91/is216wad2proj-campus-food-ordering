@@ -1,26 +1,26 @@
 // Checkout cart estimate — the pre-order "when would this cart be ready?" number,
-// computed entirely on the frontend (D1). Same realtime engine as the rest of the
-// wait-time system (store:<id> / queue_change, polling fallback), but instead of
-// estimating the existing queue it runs the ported fresh-order probe
-// (estimateNewOrderWait) to schedule the NOT-YET-PLACED cart behind that queue.
+// computed entirely on the frontend. Same realtime engine as the rest of the
+// wait-time system (store:<id> / queue_change, polling fallback) via the shared
+// useRealtimeResource primitive, but instead of estimating the existing queue it
+// runs the fresh-order probe (estimateNewOrderWait) to schedule the NOT-YET-PLACED
+// cart behind that queue.
 //
 // Returns a reactive estimate: { seconds, ahead, readyAt } where readyAt is
 // derived on the frontend as now + seconds, or null when the cart is empty / the
 // store queue can't be loaded.
-import { ref, computed, watch, onBeforeUnmount, toValue } from 'vue'
+import { ref, computed, toValue } from 'vue'
 import { estimateNewOrderWait } from '@/utils/waitTime.js'
 import { api as defaultApi } from '@/services/api.js'
-import defaultSupabase from '@/common/supabase.js'
 import { waitSettings } from '@/utils/waitSettings.js'
+import { useRealtimeResource } from './realtime/useRealtimeResource.js'
+import { channels, QUEUE_CHANGE, STORE_POLL_MS } from './realtime/channels.js'
 
-const POLL_MS = 60000
-const DEBOUNCE_MS = 300
 const ms = (t) => (t ? Date.parse(t) : null)
 
 export function useCartEstimate(storeId, cartLines, options = {}) {
   const {
     api = defaultApi,
-    supabaseClient = defaultSupabase,
+    supabaseClient,
     stations = null,
     strategy = null,
     now = () => Date.now(),
@@ -29,19 +29,15 @@ export function useCartEstimate(storeId, cartLines, options = {}) {
   const seconds = ref(0)
   const ahead = ref(0)
   const ready = ref(false) // true once we have a usable estimate
-  const loading = ref(true)
 
-  let channel = null
-  let pollTimer = null
-  let refetchTimer = null
-  let destroyed = false
-
+  // The fetch + fresh-order probe. Handles its own failure (ready=false) so the
+  // primitive's generic error/stale path stays dormant (this surface exposes
+  // neither — only { estimate, loading }).
   async function load() {
     const sid = toValue(storeId)
     const lines = toValue(cartLines) || []
     if (!sid || lines.length === 0) {
       ready.value = false
-      loading.value = false
       return
     }
     try {
@@ -57,7 +53,6 @@ export function useCartEstimate(storeId, cartLines, options = {}) {
           .filter(Boolean),
       )]
       const cookingDetails = ids.length ? await api.itemCookingDetails(ids) : []
-      if (destroyed) return
 
       const queueOrders = orders.map((o) => ({
         id: o.id,
@@ -76,62 +71,29 @@ export function useCartEstimate(storeId, cartLines, options = {}) {
       ahead.value = r.ahead
       ready.value = true
     } catch {
-      if (!destroyed) ready.value = false
-    } finally {
-      if (!destroyed) loading.value = false
+      ready.value = false
     }
   }
 
-  function scheduleRefetch() {
-    if (refetchTimer) clearTimeout(refetchTimer)
-    refetchTimer = setTimeout(load, DEBOUNCE_MS)
-  }
-  function startPolling() { stopPolling(); pollTimer = setInterval(load, POLL_MS) }
-  function stopPolling() { if (pollTimer) { clearInterval(pollTimer); pollTimer = null } }
-
-  function teardownChannel() {
-    if (channel && supabaseClient?.removeChannel) {
-      try { supabaseClient.removeChannel(channel) } catch { /* ignore */ }
-    }
-    channel = null
-  }
-
-  function subscribe() {
-    teardownChannel()
-    const sid = toValue(storeId)
-    if (!sid || !supabaseClient || typeof supabaseClient.channel !== 'function') {
-      if (sid) startPolling()
-      return
-    }
-    try {
-      channel = supabaseClient
-        .channel(`store:${sid}`)
-        .on('broadcast', { event: 'queue_change' }, scheduleRefetch)
-        .subscribe((status) => {
-          if (status === 'SUBSCRIBED') stopPolling()
-          else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') startPolling()
-        })
-    } catch {
-      channel = null
-      startPolling()
-    }
-  }
-
-  const estimate = computed(() => (ready.value ? { seconds: seconds.value, ahead: ahead.value, readyAt: now() + seconds.value * 1000 } : null))
-
-  // Re-run when the store, the cart contents or the store's wait settings change.
-  watch(
-    () => [toValue(storeId), (toValue(cartLines) || []).map((l) => `${l.menu_item_id}:${l.qty}`).join(','), JSON.stringify(waitSettings(toValue(storeId)))],
-    () => { loading.value = true; load(); subscribe() },
-    { immediate: true },
-  )
-
-  onBeforeUnmount(() => {
-    destroyed = true
-    if (refetchTimer) clearTimeout(refetchTimer)
-    stopPolling()
-    teardownChannel()
+  const { loading } = useRealtimeResource({
+    channel: () => channels.store(toValue(storeId)),
+    event: QUEUE_CHANGE,
+    pollMs: STORE_POLL_MS,
+    supabaseClient,
+    load,
+    // No separate data to apply; load() writes seconds/ahead/ready directly.
+    apply: () => {},
+    // Re-run when the store, the cart contents, or the store's wait settings change.
+    key: () => [
+      toValue(storeId),
+      (toValue(cartLines) || []).map((l) => `${l.menu_item_id}:${l.qty}`).join(','),
+      JSON.stringify(waitSettings(toValue(storeId))),
+    ],
   })
+
+  const estimate = computed(() =>
+    ready.value ? { seconds: seconds.value, ahead: ahead.value, readyAt: now() + seconds.value * 1000 } : null,
+  )
 
   return { estimate, loading }
 }

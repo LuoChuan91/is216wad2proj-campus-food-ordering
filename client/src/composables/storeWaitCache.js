@@ -21,13 +21,12 @@ import { estimateWaitTime } from '@/utils/waitTime.js'
 import { fetchQueue } from '@/utils/waitTimeApi.js'
 import defaultSupabase from '@/common/supabase.js'
 import { waitSettings } from '@/utils/waitSettings.js'
+import { useRealtimeResource } from './realtime/useRealtimeResource.js'
+import { channels, QUEUE_CHANGE, STORE_POLL_MS } from './realtime/channels.js'
 
-const POLL_MS = 60000
-const DEBOUNCE_MS = 300
-
-// key "storeId|orderId" -> { refs, state, channel, timers, ... }. orderId is
-// optional: omit it for a store-level "fresh order" estimate (badges, map tips),
-// or pass it for a specific order's position in the queue (tracking, deliver).
+// key "storeId|orderId" -> { refs, state, engine, ... }. orderId is optional:
+// omit it for a store-level "fresh order" estimate (badges, map tips), or pass it
+// for a specific order's position in the queue (tracking, deliver).
 const registry = new Map()
 
 const keyOf = (storeId, orderId) => `${storeId}|${orderId || ''}`
@@ -39,7 +38,6 @@ function makeEntryState() {
 
 function startEngine(storeId, orderId, rec, supabase) {
   const { state } = rec
-  let hasData = false
   let lastQueue = null
 
   function compute() {
@@ -47,76 +45,47 @@ function startEngine(storeId, orderId, rec, supabase) {
     state.seconds = estimateWaitTime(lastQueue.orderItems, lastQueue.cookingDetails, waitSettings(storeId)).seconds
   }
 
-  async function load() {
-    try {
-      const queue = await fetchQueue(storeId, orderId || null)
-      if (rec.destroyed) return
+  // The shared realtime engine owns the channel/poll/debounce/teardown; we drive
+  // it manually (manageLifecycle:false) from the ref-counted acquire/release, and
+  // mirror its flags into the reactive `state` entry the cache hands out.
+  const engine = useRealtimeResource({
+    channel: () => channels.store(storeId),
+    event: QUEUE_CHANGE,
+    pollMs: STORE_POLL_MS,
+    supabaseClient: supabase,
+    manageLifecycle: false,
+    load: () => fetchQueue(storeId, orderId || null),
+    apply: (queue) => {
       lastQueue = queue
       compute()
-      state.ahead = Number(queue.ahead) || 0
+      state.ahead = Number(queue?.ahead) || 0
       state.loading = false
       state.stale = false
-      hasData = true
-    } catch {
-      if (rec.destroyed) return
-      state.loading = false
-      if (hasData) state.stale = true
-    }
-  }
-  rec.load = load
+    },
+    onStatus: (connected) => { state.liveConnected = connected },
+  })
+  rec.engine = engine
+
+  // Mirror loading/stale from the engine refs into the reactive entry.
+  rec.stopFlags = watchSettings(
+    () => [engine.loading.value, engine.stale.value],
+    ([loading, stale]) => { state.loading = loading; state.stale = stale },
+  )
+
+  // Recompute (no refetch) when the resolved strategy/stations change.
   rec.stopSettings = watchSettings(() => JSON.stringify(waitSettings(storeId)), () => {
     if (!rec.destroyed) compute()
   })
 
-  function scheduleRefetch() {
-    if (rec.refetchTimer) clearTimeout(rec.refetchTimer)
-    rec.refetchTimer = setTimeout(load, DEBOUNCE_MS)
-  }
-  function startPolling() {
-    stopPolling()
-    rec.pollTimer = setInterval(load, POLL_MS)
-  }
-  function stopPolling() {
-    if (rec.pollTimer) { clearInterval(rec.pollTimer); rec.pollTimer = null }
-  }
-  rec.stopPolling = stopPolling
-
-  // Realtime-primary, polling-fallback (identical contract to useWaitTime).
-  if (!supabase || typeof supabase.channel !== 'function') {
-    startPolling()
-  } else {
-    try {
-      rec.channel = supabase
-        .channel(`store:${storeId}`)
-        .on('broadcast', { event: 'queue_change' }, scheduleRefetch)
-        .subscribe((status) => {
-          if (status === 'SUBSCRIBED') {
-            state.liveConnected = true
-            stopPolling()
-          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-            state.liveConnected = false
-            startPolling()
-          }
-        })
-    } catch {
-      rec.channel = null
-      state.liveConnected = false
-      startPolling()
-    }
-  }
-
-  load()
+  engine.start()
 }
 
-function teardownEngine(rec, supabase) {
+function teardownEngine(rec) {
   rec.destroyed = true
   if (rec.stopSettings) rec.stopSettings()
-  if (rec.refetchTimer) clearTimeout(rec.refetchTimer)
-  if (rec.pollTimer) clearInterval(rec.pollTimer)
-  if (rec.channel && supabase?.removeChannel) {
-    try { supabase.removeChannel(rec.channel) } catch { /* ignore */ }
-  }
-  rec.channel = null
+  if (rec.stopFlags) rec.stopFlags()
+  if (rec.engine) rec.engine.stop()
+  rec.engine = null
 }
 
 /**
@@ -132,7 +101,7 @@ export function acquireStoreWait(storeId, orderId = null, supabase = defaultSupa
   const key = keyOf(storeId, orderId)
   let rec = registry.get(key)
   if (!rec) {
-    rec = { refs: 0, state: makeEntryState(), channel: null, pollTimer: null, refetchTimer: null, destroyed: false }
+    rec = { refs: 0, state: makeEntryState(), engine: null, destroyed: false }
     registry.set(key, rec)
     startEngine(storeId, orderId, rec, supabase)
   }
@@ -150,7 +119,7 @@ export function releaseStoreWait(storeId, orderId = null, supabase = defaultSupa
   if (!rec) return
   rec.refs -= 1
   if (rec.refs <= 0) {
-    teardownEngine(rec, supabase)
+    teardownEngine(rec)
     registry.delete(key)
   }
 }
@@ -162,7 +131,7 @@ export function peekStoreWait(storeId, orderId = null) {
 
 // For tests / teardown.
 export function _resetStoreWaitCache() {
-  for (const [, rec] of registry) teardownEngine(rec, defaultSupabase)
+  for (const [, rec] of registry) teardownEngine(rec)
   registry.clear()
 }
 
