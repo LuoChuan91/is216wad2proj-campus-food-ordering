@@ -1,4 +1,4 @@
-// Prepares everything the E2E suite needs before the tests run:
+﻿// Prepares everything the E2E suite needs before the tests run:
 //   1. three accounts (student, merchant, admin) with known passwords
 //   2. a test venue, store, menu category and dish owned by the merchant
 //
@@ -15,7 +15,8 @@ const VENUE = { name: 'E2E Test Venue', address: 'E2E', lat: 1.2966, lng: 103.84
 const STORE = { name: 'E2E Test Kitchen', description: 'Automated test store', is_open: true }
 const CATEGORY = { name: 'Mains' }
 const DISH = { name: 'E2E Test Dish', description: 'Automated test dish', price: 5, cook_time_sec: 300, max_at_once: 2, available: true, is_archived: false }
-const HOURS = { mon: ['08:00', '22:00'], tue: ['08:00', '22:00'], wed: ['08:00', '22:00'], thu: ['08:00', '22:00'], fri: ['08:00', '22:00'], sat: ['08:00', '22:00'], sun: ['08:00', '22:00'] }
+// Always open: the app enforces opening hours, and tests can run at any time of night
+const HOURS = { mon: ['00:00', '23:59'], tue: ['00:00', '23:59'], wed: ['00:00', '23:59'], thu: ['00:00', '23:59'], fri: ['00:00', '23:59'], sat: ['00:00', '23:59'], sun: ['00:00', '23:59'] }
 
 function readServerEnv() {
   const file = path.resolve(here, '../../server/.env')

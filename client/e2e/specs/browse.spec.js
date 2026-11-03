@@ -21,10 +21,10 @@ test.describe('student browsing', () => {
     await expect(page).toHaveURL(/\/student\/stores/)
     await expect(page.getByRole('heading', { name: /All stores/i })).toBeVisible()
 
-    // Any store: the list changes as the team edits the data, so don't hard-code a name
-    const card = page.locator('button.store-card').first()
+    // Use the seeded test store: it is always open, unlike the real stores at night
+    const card = page.getByRole('button', { name: /E2E Test Kitchen/ })
     await expect(card).toBeVisible()
-    const name = (await card.innerText()).split('\n')[0].trim()
+    const name = 'E2E Test Kitchen'
 
     await card.click()
     await expect(page).toHaveURL(/\/student\/store\//)

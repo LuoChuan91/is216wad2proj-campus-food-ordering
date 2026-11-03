@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { ACCOUNTS } from '../accounts.js'
-import { signIn } from '../fixtures/auth.js'
+import { signIn, visible } from '../fixtures/auth.js'
 
 test.describe('sign in', () => {
   test('a student lands on the student portal', async ({ page }) => {
@@ -20,24 +20,24 @@ test.describe('sign in', () => {
 
   test('a wrong password shows an error and stays on the sign-in page', async ({ page }) => {
     await page.goto('/')
-    await page.getByLabel('SMU email').fill(ACCOUNTS.student.email)
-    await page.getByLabel('Password', { exact: true }).fill('definitely-wrong')
-    await page.getByRole('button', { name: 'Sign in', exact: true }).click()
+    await visible(page.getByLabel('SMU email')).fill(ACCOUNTS.student.email)
+    await visible(page.getByLabel('Password', { exact: true })).fill('definitely-wrong')
+    await visible(page.getByRole('button', { name: 'Sign in', exact: true })).click()
 
-    await expect(page.getByRole('alert')).toContainText(/wrong|invalid/i, { timeout: 15000 })
+    await expect(visible(page.getByRole('alert'))).toContainText(/wrong|invalid/i, { timeout: 15000 })
     await expect(page).not.toHaveURL(/\/student/)
   })
 
   test('sign-up rejects a non-SMU email', async ({ page }) => {
     await page.goto('/')
-    await page.getByRole('tab', { name: 'Create account' }).click()
+    await visible(page.getByRole('tab', { name: 'Create account' })).click()
 
-    await page.getByLabel('Full name').fill('Test Person')
-    await page.getByLabel('SMU email').fill('someone@gmail.com')
-    await page.getByLabel('Password', { exact: true }).fill('Abcd1234!')
-    await page.getByLabel('Confirm password').fill('Abcd1234!')
-    await page.getByRole('button', { name: 'Create account' }).click()
+    await visible(page.getByLabel('Full name')).fill('Test Person')
+    await visible(page.getByLabel('SMU email')).fill('someone@gmail.com')
+    await visible(page.getByLabel('Password', { exact: true })).fill('Abcd1234!')
+    await visible(page.getByLabel('Confirm password')).fill('Abcd1234!')
+    await visible(page.getByRole('button', { name: 'Create account' })).click()
 
-    await expect(page.getByRole('alert')).toContainText(/SMU email/i)
+    await expect(visible(page.getByRole('alert'))).toContainText(/SMU email/i)
   })
 })
