@@ -122,8 +122,7 @@ const courierLine = computed(() => {
       <div class="row g-2">
       <div class="col-12 col-lg-7 d-flex flex-column gap-2">
       <div v-if="order.fallback" class="fallback-note d-flex align-items-start gap-2">
-        <Icon name="bag" :size="16" /><span><strong>Switched to pickup.</strong> No courier accepted within {{
-          cfg.deliveryWindowMin }} min, so the delivery fee was waived.</span>
+        <Icon name="bag" :size="16" /><span><strong>Switched to pickup.</strong> No courier accepted your order, so the delivery fee was waived.</span>
       </div>
       <div class="status-card" :class="'tone-' + phase.tone">
         <small class="eyebrow">{{ phase.title }}</small>
