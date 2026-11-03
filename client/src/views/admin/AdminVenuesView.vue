@@ -1,9 +1,6 @@
 <script setup>
-// Admin venues body: add a venue by clicking the map.
-//
-// Migrated from the venues half of portals/admin/AdminApp.vue. The rail and header
-// live in the AdminView shell; this is the routed body for #/admin/venues. AdminMap
-// is kept as a component.
+// Admin venues body: add a venue by clicking the map. Routed body for #/admin/venues
+// (rail + header live in the AdminView shell).
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui.js'
@@ -40,7 +37,6 @@ const venues = computed(() => catalog.db.venues.map((v) => ({ v, stores: catalog
 </template>
 
 <style scoped>
-/* Admin venues: form + list beside the map (moved from the global stylesheet). */
 .adm-venues {
   flex: 1;
   min-height: 0;

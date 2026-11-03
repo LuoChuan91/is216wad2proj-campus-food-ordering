@@ -1,9 +1,5 @@
 <script setup>
 // Checkout: the cart, pickup or peer delivery, the ready time and the price.
-//
-// Migrated from portals/student/CheckoutPage.vue. The cart's store comes from the
-// cart itself (S.ui.student.cart.storeId), which the server-priced order needs; the
-// route for this page carries no param. Behaviour unchanged.
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui.js'
@@ -26,7 +22,7 @@ const venue = computed(() => catalog.venue(store.value.venue_id))
 const lines = computed(() => u.value.cart.lines.map((l) => ({ ...l, item: catalog.item(l.menu_item_id), snap: E.snapshot(catalog.groups(l.menu_item_id), catalog.options(l.menu_item_id), l.selected) })))
 const t = computed(() => E.totals(u.value.cart.lines, store.value, u.value.checkout.type, cfg.deliveryFee))
 
-// Ready-time estimate computed entirely on the frontend (D1): the fresh-order
+// Ready-time estimate compute: the fresh-order
 // probe schedules this cart behind the store's live queue (store:<id> realtime).
 // readyAt is derived here as now + seconds.
 const { estimate: est } = useCartEstimate(
@@ -88,9 +84,6 @@ const drops = computed(() => {
 </template>
 
 <style scoped>
-/* Checkout page (moved from the global stylesheet). Shared bits kept global:
-   .page/.bar, .co-line/.co-qty/.co-what (also used by the receipt), the .seg and
-   drop-off styles (now in SegToggle/DropoffPicker). */
 .checkout-body {
   flex: 1;
   padding: 12px 14px 20px;

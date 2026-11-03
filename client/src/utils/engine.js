@@ -1,6 +1,5 @@
-// Pure logic from the prototype: option rules, pricing, time and distance helpers. No Vue in here.
-// The server checks the same rules again and works out the real price (services/orders.service.js),
-// so these are only for showing things on screen before the order is sent.
+// Pure display logic: option rules, pricing, time and distance helpers (no Vue).
+// The server re-checks these and sets the real price; these are for the UI only.
 
 const SGT_OFFSET = 8 * 3600e3;
 const DAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];

@@ -1,12 +1,5 @@
-// "Where is my rider", both ends of it.
-//
-// useRiderLocation (student's tracking page): polls the courier's last GPS fix for one
-// delivery while it is in progress. A failed poll keeps the last fix; once that fix is
-// older than FIX_FRESH_MS the map switches to an estimate (utils/riderPosition.js).
-//
-// useCourierBeacon (courier's Deliver tab): while the courier has jobs in progress, follows
-// the phone's GPS and sends the latest fix for every one of those jobs every few seconds.
-// Browsers only allow GPS on https or localhost, and ask the courier for permission once.
+// "Where is my rider", both ends: useRiderLocation polls the courier's last GPS; 
+// useCourierBeacon shares the courier's phone GPS to every in-progress job while they deliver.
 import { ref, watch, onBeforeUnmount, toValue } from 'vue'
 import { api } from '@/services/api.js'
 import { config as cfg } from '@/config/index.js'
@@ -72,7 +65,7 @@ export function useCourierBeacon(jobIds, courierId, {
     if (watchId != null) return
     state.value = 'waiting'
     watchId = geo.watchPosition(onFix, onError, { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 })
-    // resend on a timer too: a courier standing still gets no new fixes, and stale means "estimate"
+    // resend on a timer
     timer = setInterval(send, SHARE_EVERY_MS)
   }, { immediate: true })
   onBeforeUnmount(stop)

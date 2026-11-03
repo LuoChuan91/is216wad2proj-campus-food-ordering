@@ -1,23 +1,6 @@
-// App bootstrap.
-//
-// This performs everything the prototype's start-up did EXCEPT the hand-rolled
-// hash/popstate routing (which vue-router takes over in the next task):
-//   - loads the catalog, restores this tab's sign-in, then does the first live load
-//   - polls the server for news (orders/queues/jobs) and the catalog, with a guard
-//   - ticks a 1-second clock for countdowns
-//   - keeps the tab title in step with who's signed in
-//   - closes menus on outside click, and menus/sheets on Escape
-//   - turns poll-diffs into notifications (announceChanges), preserving the
-//     meta/dedup contract (meta.kind events are mirror-skipped when realtime is connected)
-//
-// The realtime bridges (auth bridge + realtime notifications) are started in
-// App.vue's setup, not here, so App.vue's "Try again" button can re-run startApp()
-// without re-subscribing.
-//
-// Behaviour is identical to the prototype's app/live.js; only the routing has been
-// left out (vue-router owns navigation now).
-// The polling vs realtime notification paths are intentionally BOTH kept (not
-// de-duplicated) — that is a separate later task.
+// App bootstrap: load the catalog, restore this tab's sign-in, do the first live
+// load, then start the clock/catalog-poll/Escape/title watchers. announceChanges()
+// turns poll-diffs into notifications; realtime subscriptions live in App.vue.
 import { watch } from 'vue'
 import { useUiStore } from '@/stores/ui.js'
 import { useCatalogStore } from '@/stores/catalog.js'
@@ -68,7 +51,7 @@ function announceChanges() {
       if (!p) continue
       const s = catalog.store(o.store_id) || { name: 'The store' }
       const d = o.delivery
-      // Shared context so these messages read exactly like the realtime ones.
+      // Context so poll-diff messages read like the realtime ones.
       const ctx = () => {
         const drop = d ? catalog.dropoff(d.destination_id) : null
         return {
@@ -76,16 +59,9 @@ function announceChanges() {
           storeName: s.name,
           dropoffName: drop ? drop.name : undefined,
           courierName: d ? d.courier_name : undefined,
-          // readyAtClock is omitted: the server wait snapshot is gone and the
-          // frontend engine is per-component; the message reads fine without it.
           deliveryWindowMin: cfg.deliveryWindowMin,
         }
       }
-      // order paid -> preparing: the kitchen has started cooking. There is no
-      // realtime 'preparing' broadcast (the SQL trigger only fires on paid/ready/
-      // completed), so this poll-diff notification has no realtime twin and won't
-      // double up. The "Order submitted" (paid) notification is delivered once by
-      // the realtime INSERT trigger at order creation.
       if (p.status === 'paid' && o.status === 'preparing') {
         ui.notifyView(buildNotification({ kind: 'order', status: 'preparing', order_id: o.id }, ctx()), { kind: 'order', status: 'preparing', order_id: o.id })
       }
@@ -115,10 +91,6 @@ function announceChanges() {
     }
   }
 
-  // Merchant: new paid orders appear on the live board directly (driven by the
-  // Supabase merchant-store realtime channel via useStoreOrdersLive), so we do
-  // NOT raise a notification/toast for them — the board is the single surface.
-  // (Decision 2b: merchant new order is realtime board-only, no notification.)
 }
 
 /* ---------- polling ---------- */
@@ -151,13 +123,7 @@ export async function refreshCatalog() {
 }
 
 /* ---------- start-up (called from App.vue / main.js) ---------- */
-// Returns the live timers/listeners so a caller (or test) can tear them down.
-//
-// The realtime subscriptions (useRealtimeNotifications / useLiveSync) are started
-// in App.vue's setup (once, during component setup so onBeforeUnmount can bind),
-// not here, so that App.vue's "Try again" button can re-invoke startApp() without
-// re-subscribing. The signed-in id they target comes from the session store,
-// which pushes it into the auth store on signIn/signOut. See App.vue.
+// Returns { stop, refresh, refreshCatalog }; stop() tears down the timers/listeners.
 export async function startApp() {
   const ui = useUiStore()
   const catalog = useCatalogStore()
@@ -182,10 +148,7 @@ export async function startApp() {
   // After signing in (or switching account), load that person's orders straight away
   const stopSessionWatch = watch(() => session.session.userId, (id) => { prev = null; if (id) refresh() })
 
-  // The clock (for countdowns). Live data refreshes are owned by useLiveSync
-  // (realtime-primary, polling-fallback), started in App.vue's setup — NOT a
-  // fixed interval here. The catalog (stores/menus/venues) changes rarely and is
-  // not covered by realtime, so it keeps its own slow poll.
+  // 1s clock for countdowns + a slow catalog poll (the catalog isn't realtime).
   const tickTimer = setInterval(() => ui.tick(), 1000)
   const catalogTimer = setInterval(refreshCatalog, cfg.catalogPollMs)
 

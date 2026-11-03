@@ -1,9 +1,5 @@
 <script setup>
-// Stores: every store on campus in one list (like Grab's restaurant list), with search,
-// quick filters by category and a sort. Uses the same cards as the venue sheet.
-//
-// Migrated from portals/student/StoresTab.vue. Renders in StudentLayout's persistent
-// KeepAlive tab layer. Behaviour unchanged.
+// Stores: every store on campus in one list, with search, category filters and a sort.
 import { computed, watch, onBeforeUnmount } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui.js'
@@ -19,7 +15,7 @@ const { ui: uiState } = storeToRefs(ui)
 const u = computed(() => uiState.value.student)
 const list = computed(() => u.value.list)
 
-// Live wait minutes per store from the single frontend engine (store:<id>), used
+// Live wait minutes per store (store:<id>), used
 // by the "Shortest wait" sort. The cards themselves render <WaitTimeEstimate>.
 const waitStores = new Set()
 const storeWaitMins = (storeId) => {
@@ -111,8 +107,6 @@ const openCount = computed(() => rows.value.filter((r) => r.open.open).length)
 </template>
 
 <style scoped>
-/* Stores list: filter chips + sort row (moved from the global stylesheet).
-   Kept global (shared): .stores-tab padding, .tab-title, .search. */
 .tab-sub {
   color: var(--muted);
   font-size: var(--fs-desc);

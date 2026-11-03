@@ -1,8 +1,5 @@
-// Walking time between two campus points, in seconds.
-//
-// The OrderTracking page needs a walking leg immediately, so it asks for a number
-// synchronously. Same model as the map's fallback (engine.walkEstimate): straight
-// line x 1.3 at 75 m/min. When the map has the real OSRM route it uses that instead.
+// Synchronous walking-time estimate (seconds) between two campus points, using the
+// same model as engine.walkEstimate (straight line x 1.3 at 75 m/min).
 import { distanceM } from '@/utils/engine.js'
 
 // Used when we don't know both points (e.g. before real coordinates arrive).

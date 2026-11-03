@@ -1,9 +1,6 @@
 <script setup>
-// Live tracking of one order: ready time from the kitchen queue, the courier, and every step.
-//
-// Migrated from portals/student/TrackPage.vue. The order id now comes from the
-// route param (:orderId) rather than S.ui.student.trackOrderId. The peer-delivery
-// walking leg still comes from the campus map's model (utils/mapApi.js), unchanged.
+// Live tracking of one order (id from the :orderId route param): ready-time from
+// the kitchen queue, the courier map, and the status timeline.
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
@@ -35,8 +32,8 @@ const confirmSwitch = ref(false)
 watch(orderId, () => { confirmSwitch.value = false })
 const drop = computed(() => d.value && catalog.dropoff(d.value.destination_id))
 
-// Live wait for THIS order from the single frontend engine (store:<id> realtime).
-// readyAt is derived on the frontend as now + seconds; `ahead` is the queue count.
+// Live wait for THIS order (store:<id> realtime).
+// readyAt is derived as now + seconds; `ahead` is the queue count.
 const wait = useStoreWait(
   computed(() => (order.value ? order.value.store_id : null)),
   orderId,
@@ -208,9 +205,6 @@ const courierLine = computed(() => {
 </template>
 
 <style scoped>
-/* Order tracking page (moved from the global stylesheet). Kept global: .page/.bar
-   chrome, @keyframes live (shared with the top-bar offline dot), the .meter base
-   (shared with the deliver tab) and .panel. */
 
 .bar-title small {
   color: var(--muted);

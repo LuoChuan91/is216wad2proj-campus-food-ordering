@@ -1,8 +1,5 @@
 <script setup>
-// Admin stores body: every store on campus.
-//
-// Migrated from the stores half of portals/admin/AdminApp.vue. The rail and header
-// live in the AdminView shell; this is the routed body for #/admin/stores.
+// Admin stores body: every store on campus. Routed body for #/admin/stores.
 import { computed, watch, onBeforeUnmount } from 'vue'
 import { useUiStore } from '@/stores/ui.js'
 import { useCatalogStore } from '@/stores/catalog.js'
@@ -41,8 +38,6 @@ onBeforeUnmount(() => { for (const id of waitStores) releaseStoreWait(id); waitS
 </template>
 
 <style scoped>
-/* Admin stores table (moved from the global prototype stylesheet).
-   The .adm wrapper + .scroll stay global (shared with the approvals view). */
 .table-wrap {
   margin-top: 12px;
   border: 1px solid var(--line);

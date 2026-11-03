@@ -1,17 +1,7 @@
-// vue-router is the navigation source of truth (replaces the hand-rolled hash
-// routing that used to live in app/live.js). We keep the #/... URL scheme with
-// createWebHashHistory so existing links and the prototype's address bar still work.
-//
-// Routes mirror the prototype's screens. The student TAB routes (explore/stores/
-// orders/deliver/me) render an invisible placeholder — the tab screens themselves
-// render in StudentLayout's persistent KeepAlive layer (so the Leaflet map survives
-// navigation). The student PAGE routes (store/checkout/track) render their real
-// page components as overlays (meta.page). The item/pay/venue SHEETS are NOT routes;
-// they stay as ui-store overlays.
-//
-// meta on each route lets the guard and the route->ui-store sync (syncRouteToUi)
-// translate the URL into the ui-store's tab/page fields, so every existing portal
-// component keeps working unchanged while vue-router owns the URL.
+// vue-router owns navigation (hash history). Student tabs render in StudentLayout's
+// persistent KeepAlive (so the Leaflet map survives navigation); store/checkout/
+// track are overlay routes; item/pay/venue sheets are ui-store overlays. Route
+// meta drives the guard and the route->ui-store sync (router/sync.js).
 import { createRouter, createWebHashHistory } from 'vue-router'
 import { useSessionStore } from '@/stores/session.js'
 import { useCatalogStore } from '@/stores/catalog.js'

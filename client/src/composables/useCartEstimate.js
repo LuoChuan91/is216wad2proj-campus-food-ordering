@@ -1,13 +1,6 @@
-// Checkout cart estimate — the pre-order "when would this cart be ready?" number,
-// computed entirely on the frontend. Same realtime engine as the rest of the
-// wait-time system (store:<id> / queue_change, polling fallback) via the shared
-// useRealtimeResource primitive, but instead of estimating the existing queue it
-// runs the fresh-order probe (estimateNewOrderWait) to schedule the NOT-YET-PLACED
-// cart behind that queue.
-//
-// Returns a reactive estimate: { seconds, ahead, readyAt } where readyAt is
-// derived on the frontend as now + seconds, or null when the cart is empty / the
-// store queue can't be loaded.
+// Checkout runs the fresh-order probe (estimateNewOrderWait) against the live store 
+// queue (store:<id> / 'queue_change') and returns a reactive { seconds, ahead, readyAt }, 
+// or null for an empty cart.
 import { ref, computed, toValue } from 'vue'
 import { estimateNewOrderWait } from '@/utils/waitTime.js'
 import { api as defaultApi } from '@/services/api.js'
@@ -45,8 +38,6 @@ export function useCartEstimate(storeId, cartLines, options = {}) {
       const payload = await api.ordersAhead(sid, null)
       const orders = Array.isArray(payload) ? payload : (payload?.orders ?? [])
       const cartList = lines.map((l) => ({ menu_item_id: l.menu_item_id, qty: l.qty }))
-      // Distinct item ids across the queue AND the cart (the cart's dishes need
-      // cooking details too, since the probe cooks them).
       const ids = [...new Set(
         orders.flatMap((o) => (o.order_items || []).map((oi) => oi.menu_item_id))
           .concat(cartList.map((l) => l.menu_item_id))

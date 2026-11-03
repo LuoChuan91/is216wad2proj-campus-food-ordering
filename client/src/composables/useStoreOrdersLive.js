@@ -1,14 +1,5 @@
-// useStoreOrdersLive — live-update layer for the MERCHANT order dashboard.
-//
-// Thin wrapper over the shared realtime engine (useRealtimeResource): it just
-// wires the merchant channel + fetch and maps the engine's generic `data` to the
-// public `orders`. All the subscribe/poll/teardown/debounce/keep-last-stale logic
-// lives in the primitive.
-//
-//   Channel: merchant-store:<storeId>   Event: 'order_change'
-//   Fires on: order becoming paid / ready / cancelled (see
-//   realtime_merchant_orders.sql). We deliberately do not act on a 'preparing'
-//   transition — it refetches on any order_change.
+// Live merchant order board (merchant-store:<storeId> / 'order_change') over the
+// realtime engine, mapping the engine's `data` to the public `orders`.
 import { ref, toValue } from 'vue'
 import { api } from '@/services/api.js'
 import { useRealtimeResource } from './realtime/useRealtimeResource.js'

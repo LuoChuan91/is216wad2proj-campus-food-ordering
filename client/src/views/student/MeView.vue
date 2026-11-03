@@ -1,8 +1,5 @@
 <script setup>
 // Your profile, stats and the "available for delivery jobs" switch.
-//
-// Migrated from portals/student/MeTab.vue. Renders in StudentLayout's persistent
-// KeepAlive tab layer. Behaviour unchanged.
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui.js'
@@ -37,8 +34,7 @@ const stats = computed(() => ({ orders: orders.ordersOf(me.value.id).length, ear
 </template>
 
 <style scoped>
-/* Me tab: profile card, stats and the switch list (moved from the global
-   stylesheet). The .me-tab padding + .panel stay global (shared). */
+
 .me-card {
   padding: 20px 10px;
 }

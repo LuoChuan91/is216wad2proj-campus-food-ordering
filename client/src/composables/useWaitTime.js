@@ -1,13 +1,6 @@
-// useWaitTime — the single source of truth for a live wait-time estimate.
-//
-// Thin wrapper over the shared realtime engine (useRealtimeResource): the engine
-// owns the fetch/subscribe/poll/teardown machinery; this wrapper adds the
-// wait-time-specific bits on top of the fetched queue — the pluggable strategy
-// (settings) and turning the queue into a reactive number of `seconds` + `ahead`.
-//
-// Returns a REACTIVE number of seconds plus status flags so different UIs can
-// consume it (WaitTimeEstimate.vue formats it; the tracking view turns it into an
-// ETA clock).
+// Live wait-time estimate (store:<id> / 'queue_change') over the realtime
+// engine: fetches the queue, then applies the store's strategy to produce reactive
+// `seconds` + `ahead`.
 import { ref, watch, toValue } from 'vue'
 import { estimateWaitTime } from '@/utils/waitTime.js'
 import { fetchQueue } from '@/utils/waitTimeApi.js'
@@ -58,12 +51,12 @@ export function useWaitTime(storeId, orderId = null, options = {}) {
       compute()
       ahead.value = Number(queue?.ahead) || 0
     },
-    // On a store/order switch the primitive resets; drop the cached queue too so a
+    // On a store/order switch the primitive resets; drop the cached queue so a
     // stale number can't linger before the new fetch resolves.
     onReset: () => { lastQueue = null },
   })
 
-  // Recompute (no refetch) when the resolved strategy/stations change.
+  // Recompute when the resolved strategy/stations change.
   watch(() => JSON.stringify(settings()), () => { compute() })
 
   return { seconds, ahead, loading, error, stale, liveConnected, refresh }

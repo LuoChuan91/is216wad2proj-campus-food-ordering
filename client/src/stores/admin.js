@@ -1,9 +1,5 @@
-// Admin store.
-//
-// Admin-only actions, split out of orders.js (where they never belonged): managing
-// student account status (approve / block / remove) and adding campus venues.
-// Behaviour is preserved exactly from the old orders-store versions — same api
-// calls, the same ui.run() busy-guard + error toast, and the same catalog updates.
+// Admin store: admin-only actions — student status (approve / block / remove) and
+// adding campus venues.
 import { defineStore } from "pinia";
 import { api } from "@/services/api.js";
 import { useUiStore } from "./ui.js";
@@ -23,7 +19,7 @@ export const useAdminStore = defineStore("admin", () => {
   const blockStudent = (id) => setStudentStatus(id, "blocked");
   const removeStudent = (id) => setStudentStatus(id, "removed");
 
-  /* venues: add one by clicking the map (draft lives in ui.ui.staff) */
+  /* venues: add one by clicking the map*/
   async function addVenue() {
     const ui = useUiStore();
     const catalog = useCatalogStore();

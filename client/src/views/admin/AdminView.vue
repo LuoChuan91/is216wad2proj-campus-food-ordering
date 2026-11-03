@@ -1,10 +1,6 @@
 <script setup>
-// Admin portal shell (campus dining office): the rail and the header.
-//
-// Migrated from portals/admin/AdminApp.vue. The shell (rail + header) stays here and
-// renders the active sub-section (approvals / venues / stores) through <RouterView>,
-// which vue-router selects from the URL (#/admin, #/admin/venues, #/admin/stores).
-// The pending count the rail badge needs is computed here and provided down.
+// Admin portal shell: rail + header, rendering the active sub-section (approvals /
+// venues / stores) via <RouterView>. The rail's pending count is provide()d down.
 import { computed, provide } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui.js'

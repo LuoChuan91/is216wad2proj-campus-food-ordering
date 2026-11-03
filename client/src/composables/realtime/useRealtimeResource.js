@@ -1,21 +1,7 @@
-// useRealtimeResource — the ONE shared realtime-primary / polling-fallback engine.
-//
-// Every realtime surface in the app (wait-time, merchant board, courier jobs,
-// the per-user live sync, notifications, the shared store-wait cache) is the same
-// machine with different wiring:
-//   - subscribe to a Supabase broadcast channel; on a broadcast, (debounced)
-//     either refetch data or hand the payload to a callback;
-//   - when the channel is SUBSCRIBED, stop the fast poll (optionally run a slow
-//     safety-net poll); when it's down / unavailable, poll as a fallback;
-//   - keep the last good data and flag `stale` on a failed refetch; surface an
-//     `error` only when the very first load fails with nothing to show;
-//   - tear everything down on unmount / when the re-wire `key` changes / when an
-//     `enabled` gate turns off.
-//
-// Consumers pass config and get back { data, loading, error, stale,
-// liveConnected, refresh, start, stop }. Thin wrapper composables map `data` to
-// their own public names (orders / deliveries / ...) so their public API is
-// unchanged.
+// The ONE shared realtime-primary / polling-fallback engine: subscribe to a
+// Supabase channel, (debounced) refetch or hand off each broadcast, poll as a
+// fallback when down, keep-last-stale on failure, and tear down on key/enabled
+// change or unmount. Consumers map the returned `data` to their own public names.
 import { ref, watch, onMounted, onBeforeUnmount, toValue } from 'vue'
 import defaultSupabase from '@/common/supabase.js'
 import {

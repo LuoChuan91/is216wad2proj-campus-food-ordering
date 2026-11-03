@@ -1,15 +1,5 @@
-// useLiveSync — the app-level liveness coordinator.
-//
-// Thin wrapper over the shared realtime engine (useRealtimeResource) in TRIGGER
-// mode: it owns no data. A broadcast on the signed-in user's channel (user:<id>)
-// means "your data changed" -> debounced refresh(); the injected refresh() is
-// also what the poll fires. Two-speed polling (the primitive's safetyMs option):
-// a long safety-net interval while realtime is connected, a fast poll while it's
-// down. No signed-in user -> the channel builder returns null, so the primitive
-// neither subscribes nor polls.
-//
-// `refresh` is injected (the app passes useAppBootstrap's refresh = loadLive +
-// announceChanges). `userId` is a ref/getter so the subscription follows sign-in.
+// App-level liveness: a broadcast on the user's channel (user:<id>) triggers the
+// injected refresh(); two-speed polling backs it up (slow safety net while connected, fast poll while down).
 import { toValue } from 'vue'
 import { config as cfg } from '@/config/index.js'
 import { useRealtimeResource } from './realtime/useRealtimeResource.js'

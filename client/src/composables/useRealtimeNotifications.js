@@ -1,12 +1,5 @@
-// Subscribe to the current user's realtime notification channel and feed every
-// incoming payload into the notifications store.
-//
-// Thin wrapper over the shared realtime engine (useRealtimeResource) in
-// SUBSCRIBE-ONLY mode: there is no polling and no data — each broadcast payload
-// is handed straight to notifications.receive(). The channel follows the SESSION
-// store's userId (the app's single source of truth; same as useLiveSync).
-//
-//   Channel: user:<userId>   Event: 'notification'   Payload: { kind, status, order_id, at }
+// Subscribe to the user's realtime channel (user:<id> / 'notification') and push
+// each payload into the notifications store; no polling or data (subscribe-only).
 import { toValue } from 'vue'
 import { useSessionStore } from '@/stores/session.js'
 import { useNotificationsStore } from '@/stores/notifications.js'
@@ -16,8 +9,6 @@ import { channels, NOTIFICATION } from './realtime/channels.js'
 export function useRealtimeNotifications(options = {}) {
   const notifications = useNotificationsStore()
 
-  // userId source: defaults to the session store, injectable (tests / future
-  // real-auth source) as a ref/getter/plain value.
   const session = useSessionStore()
   const userId = options.userId ?? (() => session.session.userId)
 
@@ -29,7 +20,7 @@ export function useRealtimeNotifications(options = {}) {
     event: NOTIFICATION,
     key: () => toValue(userId),
     supabaseClient: options.supabaseClient,
-    // Subscribe-only: no polling, no data — handle the payload directly.
+    // Subscribe-only: no polling, no data, handle the payload directly.
     onBroadcast: (message) => {
       // supabase delivers { event, type, payload }
       const payload = message?.payload ?? message
@@ -40,6 +31,5 @@ export function useRealtimeNotifications(options = {}) {
     onStatus: (connected) => notifications.setRealtimeConnected(connected),
   })
 
-  // Preserve the original public API.
   return { teardown: stop }
 }

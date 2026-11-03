@@ -1,21 +1,6 @@
-// Module-level, ref-counted, realtime per-store wait cache.
-//
-// Why this exists: most wait-time surfaces are Vue components that just mount
-// `useWaitTime` once (via WaitTimeEstimate.vue). But a few consumers are NOT
-// components — notably MapView's venueTip, which builds Leaflet tooltip HTML
-// imperatively — and a few want many stores at once (ExploreView's "best wait").
-// For those, this cache runs ONE realtime subscription per store (shared across
-// all callers) and exposes a reactive `{ seconds, ahead, liveConnected, loading,
-// stale }` entry per store id.
-//
-// It is the SAME engine as useWaitTime (store:<id> / queue_change realtime channel
-// with a polling fallback; fetchQueue -> estimateWaitTime), just shared and keyed
-// by storeId with reference counting so it tears down when the last caller leaves.
-//
-// Callers:
-//   const entry = acquireStoreWait(storeId)   // ref-count++, starts the engine
-//   entry.seconds / entry.ahead / entry.liveConnected (reactive)
-//   releaseStoreWait(storeId)                  // ref-count--, stops when it hits 0
+// Ref-counted shared wait cache: Multiple stores in MapView tooltips, ExploreView "best wait") 
+//   acquireStoreWait(storeId) -> reactive { seconds, ahead, loading, stale, liveConnected }
+//   releaseStoreWait(storeId)  // stops the engine at ref-count 0
 import { reactive, watch as watchSettings } from 'vue'
 import { estimateWaitTime } from '@/utils/waitTime.js'
 import { fetchQueue } from '@/utils/waitTimeApi.js'
@@ -24,9 +9,7 @@ import { waitSettings } from '@/utils/waitSettings.js'
 import { useRealtimeResource } from './realtime/useRealtimeResource.js'
 import { channels, QUEUE_CHANGE, STORE_POLL_MS } from './realtime/channels.js'
 
-// key "storeId|orderId" -> { refs, state, engine, ... }. orderId is optional:
-// omit it for a store-level "fresh order" estimate (badges, map tips), or pass it
-// for a specific order's position in the queue (tracking, deliver).
+
 const registry = new Map()
 
 const keyOf = (storeId, orderId) => `${storeId}|${orderId || ''}`
@@ -45,8 +28,7 @@ function startEngine(storeId, orderId, rec, supabase) {
     state.seconds = estimateWaitTime(lastQueue.orderItems, lastQueue.cookingDetails, waitSettings(storeId)).seconds
   }
 
-  // The shared realtime engine owns the channel/poll/debounce/teardown; we drive
-  // it manually (manageLifecycle:false) from the ref-counted acquire/release, and
+  // Drive realtime manually (manageLifecycle:false) from the ref-counted acquire/release, and
   // mirror its flags into the reactive `state` entry the cache hands out.
   const engine = useRealtimeResource({
     channel: () => channels.store(storeId),
@@ -72,7 +54,7 @@ function startEngine(storeId, orderId, rec, supabase) {
     ([loading, stale]) => { state.loading = loading; state.stale = stale },
   )
 
-  // Recompute (no refetch) when the resolved strategy/stations change.
+  // Recompute when the resolved strategy/stations change.
   rec.stopSettings = watchSettings(() => JSON.stringify(waitSettings(storeId)), () => {
     if (!rec.destroyed) compute()
   })
@@ -89,8 +71,8 @@ function teardownEngine(rec) {
 }
 
 /**
- * Acquire the live wait entry for a store (and optionally a specific order).
- * Starts the shared engine on first use. Omit orderId for a store-level estimate.
+ * Acquire the live wait entry for a store.
+ * Starts the engine on first use. Omit orderId for a store-level estimate.
  * @param {string} storeId
  * @param {string|null} [orderId]
  * @param {object} [supabase] injectable client (tests)
@@ -136,7 +118,7 @@ export function _resetStoreWaitCache() {
 }
 
 // ---------------------------------------------------------------------------
-// Component sugar: acquire on mount / setup, release on unmount. Returns the
+// Component: acquire on mount / setup, release on unmount. Returns the
 // reactive entry ({ seconds, ahead, loading, stale, liveConnected }). storeId /
 // orderId may be refs/getters; the wrapper re-acquires when they change.
 import { watch, onBeforeUnmount, toValue } from 'vue'

@@ -1,9 +1,5 @@
-// Orders store.
-//
-// The fast-changing, per-user data: a student's own orders (or a merchant's stores'
-// orders), the peer-delivery jobs, and the live wait times. Also the order/courier
-// actions and the checkout estimate, preserved exactly from the prototype.
-// (Admin actions — student status + addVenue — live in stores/admin.js.)
+// Orders store: a student's own orders (or a
+// merchant's stores' orders), peer-delivery jobs — plus the order/courier actions.
 import { defineStore } from "pinia";
 import { reactive } from "vue";
 import { api } from "@/services/api.js";
@@ -122,10 +118,7 @@ export const useOrdersStore = defineStore("orders", () => {
     };
   }
 
-  // Refetch ONE store's orders and merge them into db.orders (replacing that
-  // store's rows, keeping other stores untouched). Used by the merchant live
-  // layer so a realtime order_change updates the board without a whole-app poll.
-  // Returns the normalised rows for the store.
+  // Refetch ONE store's orders and merge them into db.orders
   async function loadStoreOrders(storeId) {
     if (!storeId) return [];
     const list = (await api.storeOrders(storeId)).map(normaliseOrder);
@@ -248,9 +241,6 @@ export const useOrdersStore = defineStore("orders", () => {
     if (saved) await loadLive().catch(() => {});
   }
 
-  // Ask the server's wait-time engine when the current cart would be ready
-  // (removed: checkout now computes this on the frontend via useCartEstimate).
-  // Admin actions (approve/block/remove students, addVenue) moved to stores/admin.js.
 
   return {
     db,

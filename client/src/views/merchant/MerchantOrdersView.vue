@@ -1,10 +1,6 @@
 <script setup>
-// Merchant order board body (New → Cooking → Ready).
-//
-// Migrated from the orders half of portals/merchant/MerchantApp.vue. The rail, the
-// store header and the realtime layer live in the MerchantView shell; this is the
-// routed body for #/merchant. The active store and the gone() helper come from the
-// shell via inject. The store's live wait estimates still feed each card.
+// Merchant order board body (New → Cooking → Ready). Routed body for #/merchant;
+// the active store + gone() helper are injected from the MerchantView shell.
 import { computed, inject, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useOrdersStore } from '@/stores/orders.js'
@@ -92,8 +88,6 @@ const cols = computed(() => [
 </template>
 
 <style scoped>
-/* Kitchen order board (moved from the global prototype stylesheet).
-   .col-empty stays global — it is shared with the admin lists. */
 .orders {
   min-height: 0;
 }

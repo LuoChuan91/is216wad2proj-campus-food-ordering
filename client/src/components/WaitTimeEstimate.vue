@@ -18,8 +18,7 @@ const props = defineProps({
   stations: { type: Number, default: null },
   pollMs: { type: Number, default: 60000 },
   supabaseClient: { type: Object, default: () => defaultSupabase },
-  // When true, append "· N ahead" to the label. Default off so existing usages
-  // (store badges) look exactly as before.
+  // When true, append "· N ahead" to the label (off by default).
   showAhead: { type: Boolean, default: false },
 })
 

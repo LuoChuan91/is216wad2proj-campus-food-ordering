@@ -2,11 +2,6 @@
 // The receipt panel on the order-tracking page: each line (qty, name, options,
 // line total), an optional discount row, the amount paid, and the payment
 // reference line (with a "fee waived" note when the delivery fell back to pickup).
-//
-// Extracted from views/student/TrackView.vue. Each line is { qty, name,
-// option_names, unit_price }. `discount`, `paid` and `feeWaived` are numbers;
-// `fallback` toggles the fee-waived note; `payment` is { reference, method } or
-// null. Values are formatted here with engine.money, exactly as before.
 import * as E from '@/utils/engine.js'
 
 defineProps({
@@ -40,8 +35,6 @@ const money = E.money
 </template>
 
 <style scoped>
-/* Order receipt (moved from the global stylesheet). .co-line/.co-qty/.co-what
-   are shared with checkout and stay global; .panel stays global. */
 .receipt {
   padding: 8px 12px;
 }

@@ -1,12 +1,5 @@
-// useOpenDeliveriesLive — live-update layer for the COURIER open delivery jobs list.
-//
-// Thin wrapper over the shared realtime engine (useRealtimeResource). It wires the
-// shared `courier-jobs` channel + fetch and maps the engine's generic `data` to
-// the public `deliveries`. The `enabled` gate (courier "Open to Jobs" switch) is
-// handled by the primitive, which clears the list when turned off.
-//
-//   Channel: courier-jobs   Event: 'delivery_change'
-//   Fires on: delivery becoming open (see the deliveries SQL trigger).
+// Live courier open-jobs list (courier-jobs / 'delivery_change') over the
+// realtime engine; the `enabled` gate is the courier's "Open to Jobs" switch.
 import { ref } from 'vue'
 import { api } from '@/services/api.js'
 import { useRealtimeResource } from './realtime/useRealtimeResource.js'

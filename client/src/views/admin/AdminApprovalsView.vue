@@ -1,8 +1,5 @@
 <script setup>
-// Admin approvals body: approve or block student accounts.
-//
-// Migrated from the approvals half of portals/admin/AdminApp.vue. The rail and header
-// live in the AdminView shell; this is the routed body for #/admin.
+// Admin approvals body: approve or block student accounts. Routed body for #/admin.
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui.js'

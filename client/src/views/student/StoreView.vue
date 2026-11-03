@@ -1,10 +1,6 @@
 <script setup>
-// One store's page: open status, wait, discount, and its menu by category.
-//
-// Migrated from portals/student/StorePage.vue. The store id now comes from the
-// route param (:storeId) rather than S.ui.student.storeId — vue-router owns the
-// URL. Everything else (open status, the live WaitTimeEstimate, the cart bar) is
-// unchanged and reads the Pinia stores directly.
+// One store's page (id from the :storeId route param): open status, wait, discount,
+// and its menu by category.
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
@@ -74,8 +70,6 @@ const cartTotal = computed(() => u.value.cart.lines.reduce((s, l) => s + l.unit_
 </template>
 
 <style scoped>
-/* Store page: open/wait/discount row + menu (moved from the global stylesheet).
-   .page/.scroll/.empty-note stay global (shared chrome). */
 .store-info {
   padding: 12px 14px 4px;
   flex: none;

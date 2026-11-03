@@ -1,15 +1,9 @@
-// Single source of truth for the realtime layer's channel names, broadcast event
-// names, status sets and timing constants.
-//
-// All realtime composables (useRealtimeResource and the thin wrappers that use
-// it) read from here so the strings match the Postgres triggers exactly and the
-// timing is standardised app-wide. The channel/event names below MUST stay in
-// step with the SQL that broadcasts them:
-//   - user:<id>            -> realtime_notifications.sql  (per-user notifications)
-//                             + realtime_wait_time.sql / general per-user data
-//   - store:<id>           -> realtime_wait_time.sql       (queue_change)
-//   - merchant-store:<id>  -> realtime_merchant_orders.sql (order_change)
-//   - courier-jobs         -> delivery trigger             (delivery_change)
+// Realtime channel/event names, status sets and timing constants. 
+// Channel/event names and Supabase broadcast:
+//   - user:<id>            -> per-user
+//   - store:<id>           -> queue_change
+//   - merchant-store:<id>  -> order_change
+//   - courier-jobs         -> delivery_change
 
 // ---- timing (ms) ----------------------------------------------------------
 // Debounce window that collapses a burst of broadcasts into a single refetch.

@@ -1,10 +1,6 @@
 <script setup>
-// Explore: the campus map, search, and the venues near you.
-//
-// Migrated from portals/student/ExploreTab.vue. Renders in StudentLayout's
-// persistent KeepAlive tab layer (so the Leaflet map survives navigation). The
-// venue sheet it shows is driven by S.ui.student (a UI-store overlay, not a route),
-// kept in sync with #/student/venue/:venueId by router/sync.js.
+// Explore: the campus map, search, and the venues near you. Renders in
+// StudentLayout's persistent KeepAlive (so the Leaflet map survives navigation).
 import { computed, watch, onBeforeUnmount, onMounted, ref, reactive, nextTick } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui.js'

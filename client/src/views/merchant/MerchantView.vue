@@ -1,16 +1,6 @@
 <script setup>
-// Merchant portal shell: the rail, the store header, and the realtime order layer.
-//
-// Migrated from portals/merchant/MerchantApp.vue. The shell (rail + header) stays
-// here and renders the active sub-section (orders board / menu) through <RouterView>,
-// which vue-router selects from the URL (#/merchant, #/merchant/menu). The store and
-// its live wait-time map are PROVIDED down to the body views via provide/inject so the
-// board and the menu read the same selection.
-//
-// CRITICAL (preserved exactly): Angel's merchant live layer — useStoreOrdersLive on
-// merchant-store:<id> — is mounted here at the shell level, so it stays connected while
-// switching between the Orders and Menu tabs, and the header's "Updates: Live/Polling"
-// chip reflects its connection on both tabs, identical to the prototype.
+// Merchant portal shell: rail + store header, rendering the active sub-section
+// (orders board / menu) via <RouterView>.
 import { computed, provide, watch, onBeforeUnmount } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui.js'
@@ -39,11 +29,8 @@ const doneToday = computed(() => ordersStore.db.orders.filter((o) => o.store_id 
 const gone = (o) => o.type === 'delivery' && o.delivery && ['picked_up', 'delivered'].includes(o.delivery.status)
 const kitchenSlots = computed(() => (store.value ? waitSettings(store.value.id).stations : ''))
 
-// Merchant live layer: the merchant-store:<id> channel ('order_change') fires
-// whenever this store's orders change. We refetch JUST this store's orders (via
-// the shared api) and merge them into S.db.orders so the board updates — without
-// the global 4s poll (which useLiveSync now owns as a fallback). This removes the
-// old double-refetch where realtime triggered a whole-app refresh.
+// On an 'order_change' broadcast, refetch just this store's orders and merge them
+// into the orders store so the board updates without a whole-app poll.
 const liveStoreId = computed(() => (store.value ? store.value.id : ''))
 const { liveConnected } = useStoreOrdersLive(liveStoreId, {
   fetchOrders: async (sid) => {

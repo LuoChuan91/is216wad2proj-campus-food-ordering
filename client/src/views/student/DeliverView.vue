@@ -1,8 +1,5 @@
 <script setup>
 // Deliver & earn: student couriers see open jobs, accept one, pick it up and deliver it.
-//
-// Migrated from portals/student/DeliverTab.vue. Renders in StudentLayout's persistent
-// KeepAlive tab layer. Behaviour unchanged.
 import { computed, watch, onBeforeUnmount } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui.js'
@@ -23,9 +20,7 @@ const { courierOn, now, busy } = storeToRefs(ui)
 const money = E.money
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`
 
-// Live per-order ready time from the single frontend engine (store:<id>). We
-// ref-count the jobs currently on screen so each order's queue estimate stays
-// live, and derive readyAt on the frontend as now + seconds.
+
 const waitKeys = new Set()
 const keyStr = (storeId, orderId) => `${storeId}|${orderId}`
 function jobReadyAt(storeId, orderId) {
@@ -196,9 +191,7 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-/* Deliver tab (moved from the global prototype stylesheet).
-   Shared bits kept global: .deliver padding, .meter*,
-   .panel, .sec, .count, .empty/.empty-note. */
+
 .dl-head p {
   color: var(--ink-2);
   font-size: var(--fs-desc);
