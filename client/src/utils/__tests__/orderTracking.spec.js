@@ -3,6 +3,7 @@ import { toOrderReference } from '../orderReference.js'
 import { estimateWalkingSeconds, DEFAULT_WALK_SECONDS } from '../mapApi.js'
 import { computeEta } from '../eta.js'
 
+// TODO is this used
 describe('toOrderReference', () => {
   it('derives an uppercased 6-hex reference with default prefix', () => {
     expect(toOrderReference('3f2a1b9c-dead-beef-0000-111122223333')).toBe('ORD-3F2A1B')

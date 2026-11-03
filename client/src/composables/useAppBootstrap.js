@@ -82,9 +82,13 @@ function announceChanges() {
           deliveryWindowMin: cfg.deliveryWindowMin,
         }
       }
-      // order paid -> preparing: the "cooking" line (realtime fires on paid).
+      // order paid -> preparing: the kitchen has started cooking. There is no
+      // realtime 'preparing' broadcast (the SQL trigger only fires on paid/ready/
+      // completed), so this poll-diff notification has no realtime twin and won't
+      // double up. The "Order submitted" (paid) notification is delivered once by
+      // the realtime INSERT trigger at order creation.
       if (p.status === 'paid' && o.status === 'preparing') {
-        ui.notifyView(buildNotification({ kind: 'order', status: 'paid', order_id: o.id }, ctx()), { kind: 'order', status: 'paid', order_id: o.id })
+        ui.notifyView(buildNotification({ kind: 'order', status: 'preparing', order_id: o.id }, ctx()), { kind: 'order', status: 'preparing', order_id: o.id })
       }
       if (p.status !== 'ready' && o.status === 'ready') {
         ui.notifyView(buildNotification({ kind: 'order', status: 'ready', order_id: o.id }, ctx()), { kind: 'order', status: 'ready', order_id: o.id })

@@ -53,12 +53,14 @@ describe('announceChanges (poll-diff notifications)', () => {
     expect(notes.items).toHaveLength(0)
   })
 
-  it('announces the cooking line when an order moves paid -> preparing', () => {
+  it('announces the "kitchen preparing" line when an order moves paid -> preparing', () => {
     orders.db.orders = [{ id: 'o1', store_id: 's1', code: 'E287', status: 'paid', delivery: null }]
     announceChanges() // snapshot 1: paid
     orders.db.orders[0].status = 'preparing'
     announceChanges() // snapshot 2: preparing
-    expect(byTitle(notes, 'Order submitted')).toBeTruthy()
+    expect(byTitle(notes, 'Kitchen is preparing your order')).toBeTruthy()
+    // It must NOT re-emit the realtime-owned "Order submitted" (paid) line.
+    expect(byTitle(notes, 'Order submitted')).toBeFalsy()
   })
 
   it('announces "ready" when an order becomes ready', () => {

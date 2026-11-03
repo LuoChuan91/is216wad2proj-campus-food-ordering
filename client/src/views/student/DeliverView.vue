@@ -187,7 +187,7 @@ onBeforeUnmount(() => {
         <div class="meter late flex-grow-1"><i style="width:0"></i></div><small>Expired at {{ E.clock(j.d.expires_at) }}</small>
       </div>
       <p class="aj-line warn d-flex align-items-center gap-2 m-0">
-        <Icon name="bag" :size="14" />Nobody accepted in {{ cfg.deliveryWindowMin }} min. Switched to pickup.
+        <Icon name="bag" :size="14" />Switched to pickup.
       </p>
     </div>
     </div>

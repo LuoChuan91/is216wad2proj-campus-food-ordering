@@ -14,6 +14,7 @@
 //
 // `toast` (pop-up vs list-only) policy — from the spec / realtime SQL:
 //   order    paid       -> list only
+//   order    preparing  -> list only  (poll-diff only; no realtime broadcast)
 //   order    ready      -> toast
 //   order    completed  -> toast
 //   delivery accepted   -> toast
@@ -22,7 +23,7 @@
 //   delivery expired    -> toast  (switched to pickup)
 
 const TOAST = {
-  order: { paid: false, ready: true, completed: true },
+  order: { paid: false, preparing: false, ready: true, completed: true },
   delivery: { accepted: true, picked_up: true, delivered: false, expired: true },
 };
 
@@ -81,6 +82,13 @@ export function buildNotification(payload, ctx = {}) {
       // announceChanges surfaces the "cooking" line; keep that richer wording.
       title = `Order submitted`;
       body = `Your order reference is ${codeTag}`;
+      variant = 'info';
+    } else if (payload.status === 'preparing') {
+      // Fired by the poll-diff path on paid -> preparing (the kitchen started
+      // cooking). There is no realtime 'preparing' broadcast, so this is the sole
+      // source and cannot double up with a realtime copy.
+      title = 'Kitchen is preparing your order';
+      body = code ? `Order #${code} is being cooked at ${store}` : `Your order is being cooked at ${store}`;
       variant = 'info';
     } else if (payload.status === 'ready') {
       title = 'Your food is ready';
