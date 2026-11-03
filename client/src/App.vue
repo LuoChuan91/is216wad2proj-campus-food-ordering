@@ -3,7 +3,7 @@
 // layout for /student, /merchant, /admin). This component keeps the chrome that
 // sits around every screen: the boot (loading / can't-reach-server) states, the
 // role class on the outer <div>, the top bar (only when signed in), the toaster,
-// and the realtime bridges (unchanged — they must still mount here so "Try again"
+// and the realtime subscriptions (they must still mount here so "Try again"
 // can re-run startApp() without re-subscribing).
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
@@ -12,7 +12,6 @@ import { useSessionStore } from '@/stores/session.js'
 import { useOrdersStore } from '@/stores/orders.js'
 import { useUiStore } from '@/stores/ui.js'
 import { startApp, refresh } from './composables/useAppBootstrap.js'
-import { startRealtimeAuthBridge } from '@/composables/realtimeAuthBridge.js'
 import { useRealtimeNotifications } from '@/composables/useRealtimeNotifications.js'
 import { useLiveSync } from '@/composables/useLiveSync.js'
 import { useOpenDeliveriesLive } from '@/composables/useOpenDeliveries.js'
@@ -30,8 +29,9 @@ const route = useRoute()
 // The top bar shows on portal screens, not on the sign-in page or before load.
 const showChrome = computed(() => !!me.value && route.name !== 'signin' && route.name !== 'reset-password')
 
-// realtime: feed auth store the signed-in id, then subscribe to user:<id>.
-startRealtimeAuthBridge()
+// realtime: the session store is the single source of truth for who's signed in;
+// it pushes the id into the auth store (session.signIn/out -> auth.setUserId), so
+// this subscription targets user:<id>
 useRealtimeNotifications()
 
 // Liveness coordinator: Supabase realtime drives refreshes of the signed-in

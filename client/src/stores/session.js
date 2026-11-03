@@ -13,6 +13,7 @@ import { useCatalogStore } from "./catalog.js";
 import { useOrdersStore } from "./orders.js";
 import { useUiStore, studentUi, staffUi } from "./ui.js";
 import { useNotificationsStore } from "./notifications.js";
+import { useAuthStore } from "./auth.js";
 import { go, replace, HOME } from "@/router/nav.js";
 import { setActor } from "@/services/api.js";
 
@@ -64,7 +65,6 @@ export const useSessionStore = defineStore("session", () => {
     openDelivery: false,
   });
 
-  // TODO sign-in is simulated: pick an account from the database. Supabase Auth replaces this later.
   // navigate=false during restoreSession so a reload keeps the URL the user was on.
   // fresh=false during restoreSession so a page refresh PRESERVES the courier flag
   // and REHYDRATES the notification history (a brand-new sign-in resets both).
@@ -73,12 +73,16 @@ export const useSessionStore = defineStore("session", () => {
     const orders = useOrdersStore();
     const ui = useUiStore();
     const notes = useNotificationsStore();
+    const auth = useAuthStore();
     const p = catalog.user(userId);
     if (!p) return;
 
     // initialise session
     session$.userId = userId;
     setActor(userId);
+    // Realtime targets the user channel off the auth store; session is the single
+    // source of truth and pushes the id there directly (no bridge/watch).
+    auth.setUserId(userId);
     session.save(userId, p.role, { fresh });
 
     // Notifications: a fresh sign-in starts clean (and wipes stale stored
@@ -105,6 +109,7 @@ export const useSessionStore = defineStore("session", () => {
     const ui = useUiStore();
     session$.userId = null;
     setActor(null);
+    useAuthStore().setUserId(null);
     session.save(null);
     useNotificationsStore().clear();
     replace("/");

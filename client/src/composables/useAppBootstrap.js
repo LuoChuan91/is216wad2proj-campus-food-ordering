@@ -150,10 +150,11 @@ export async function refreshCatalog() {
 /* ---------- start-up (called from App.vue / main.js) ---------- */
 // Returns the live timers/listeners so a caller (or test) can tear them down.
 //
-// The realtime bridges (realtimeAuthBridge + useRealtimeNotifications) are started
+// The realtime subscriptions (useRealtimeNotifications / useLiveSync) are started
 // in App.vue's setup (once, during component setup so onBeforeUnmount can bind),
 // not here, so that App.vue's "Try again" button can re-invoke startApp() without
-// re-subscribing. See App.vue.
+// re-subscribing. The signed-in id they target comes from the session store,
+// which pushes it into the auth store on signIn/signOut. See App.vue.
 export async function startApp() {
   const ui = useUiStore()
   const catalog = useCatalogStore()

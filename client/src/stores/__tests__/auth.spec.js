@@ -1,67 +1,50 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useAuthStore } from '../auth.js'
 
-// Build a fake Supabase auth client.
-function makeClient({ userId = null } = {}) {
-  const subscription = { unsubscribe: vi.fn() }
-  return {
-    _cb: null,
-    auth: {
-      getUser: vi.fn().mockResolvedValue({ data: { user: userId ? { id: userId } : null } }),
-      onAuthStateChange: vi.fn(function (cb) {
-        this._cb = cb
-        return { data: { subscription } }
-      }),
-    },
-    _subscription: subscription,
-  }
-}
-
+// The auth store is the READ side of auth: it just mirrors the signed-in user id
+// that the session store pushes in via setUserId(). There is no Supabase session
+// plumbing here any more (the session store is the single source of truth, and it
+// calls setUserId on signIn/signOut — see stores/session.js). These tests cover
+// that mirror behaviour directly.
 describe('auth store', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
   })
 
-  it('loads the current user id from the session', async () => {
+  it('starts empty and not ready', () => {
     const store = useAuthStore()
-    await store.init(makeClient({ userId: 'user-123' }))
+    expect(store.userId).toBeNull()
+    expect(store.ready).toBe(false)
+  })
+
+  it('setUserId stores the id and marks the session resolved', () => {
+    const store = useAuthStore()
+    store.setUserId('user-123')
     expect(store.userId).toBe('user-123')
     expect(store.ready).toBe(true)
   })
 
-  it('sets userId null when there is no session', async () => {
+  it('setUserId(null) clears the id but stays resolved (sign-out)', () => {
     const store = useAuthStore()
-    await store.init(makeClient({ userId: null }))
+    store.setUserId('user-1')
+    store.setUserId(null)
     expect(store.userId).toBeNull()
     expect(store.ready).toBe(true)
   })
 
-  it('updates userId on auth state change', async () => {
+  it('setUserId(undefined) is treated as null', () => {
     const store = useAuthStore()
-    const client = makeClient({ userId: 'user-1' })
-    await store.init(client)
+    store.setUserId(undefined)
+    expect(store.userId).toBeNull()
+    expect(store.ready).toBe(true)
+  })
+
+  it('reflects successive sign-ins (account switch)', () => {
+    const store = useAuthStore()
+    store.setUserId('user-1')
     expect(store.userId).toBe('user-1')
-    // Simulate a logout then login via the registered callback.
-    client.auth._cb('SIGNED_OUT', null)
-    expect(store.userId).toBeNull()
-    client.auth._cb('SIGNED_IN', { user: { id: 'user-2' } })
+    store.setUserId('user-2')
     expect(store.userId).toBe('user-2')
-  })
-
-  it('stop() unsubscribes from auth changes', async () => {
-    const store = useAuthStore()
-    const client = makeClient({ userId: 'user-1' })
-    await store.init(client)
-    store.stop()
-    expect(client._subscription.unsubscribe).toHaveBeenCalled()
-  })
-
-  it('ready becomes true even if getUser throws', async () => {
-    const store = useAuthStore()
-    const client = { auth: { getUser: vi.fn().mockRejectedValue(new Error('no net')) } }
-    await store.init(client)
-    expect(store.userId).toBeNull()
-    expect(store.ready).toBe(true)
   })
 })
