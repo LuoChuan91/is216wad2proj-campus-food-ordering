@@ -40,7 +40,7 @@ function validate(fields, { creating = false } = {}) {
   }
   if ('image_url' in fields) {
     const url = fields.image_url;
-    if (url && (typeof url !== 'string' || !/^https?:\/\//.test(url))) throw httpError(400, 'Image URL must start with http:// or https://');
+    if (url && (typeof url !== 'string' || !/^(https?:\/\/|\/\S)/.test(url))) throw httpError(400, 'Image URL must start with https:// or be a site path like /images/menu/photo.webp');
     out.image_url = url || null;
   }
   if ('available' in fields) {
