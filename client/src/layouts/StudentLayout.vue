@@ -1,20 +1,7 @@
 <script setup>
-// Student portal shell. vue-router owns the URL and the guard; this layout renders
-// the same DOM the prototype did, so behaviour is byte-identical.
-//
-// Why the tab screens are NOT rendered straight from <RouterView>: the prototype
-// kept the tab layer MOUNTED underneath a full page (the Leaflet map on Explore
-// must survive opening a store and coming back). A single <RouterView> would
-// unmount the tab when a page route is active. So:
-//   * the active tab renders in a persistent <KeepAlive> layer, driven by the
-//     ui-store tab (which the router keeps in sync with the URL);
-//   * <RouterView> renders ONLY the full-page overlays (store / checkout / track),
-//     sliding in over the tab layer exactly as before. On a tab route it renders
-//     an invisible placeholder, so the tab layer alone shows.
-// The item/pay/venue sheets stay UI-store overlays (not routes).
-//
-// Students whose account isn't active see the pending screen (the guard sends them
-// here and this component renders it).
+// Student portal shell: the active tab renders in a persistent <KeepAlive> (so the
+// Explore Leaflet map survives navigation); <RouterView> renders the full-page
+// overlays (store/checkout/track) on top. Inactive students see the pending screen.
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui.js'

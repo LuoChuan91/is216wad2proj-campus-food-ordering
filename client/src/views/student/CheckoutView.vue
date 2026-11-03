@@ -1,16 +1,11 @@
 <script setup>
 // Checkout: the cart, pickup or peer delivery, the ready time and the price.
-//
-// Migrated from portals/student/CheckoutPage.vue. The cart's store comes from the
-// cart itself (S.ui.student.cart.storeId), which the server-priced order needs; the
-// route for this page carries no param. Behaviour unchanged.
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui.js'
 import { useCatalogStore } from '@/stores/catalog.js'
 import * as E from '@/utils/engine.js'
 import { config as cfg } from '@/config/index.js'
-import { shortName } from '@/utils/landmarks.js'
 import { useCartEstimate } from '@/composables/useCartEstimate.js'
 import SegToggle from '@/components/SegToggle.vue'
 import DropoffPicker from '@/components/DropoffPicker.vue'
@@ -27,7 +22,7 @@ const venue = computed(() => catalog.venue(store.value.venue_id))
 const lines = computed(() => u.value.cart.lines.map((l) => ({ ...l, item: catalog.item(l.menu_item_id), snap: E.snapshot(catalog.groups(l.menu_item_id), catalog.options(l.menu_item_id), l.selected) })))
 const t = computed(() => E.totals(u.value.cart.lines, store.value, u.value.checkout.type, cfg.deliveryFee))
 
-// Ready-time estimate computed entirely on the frontend (D1): the fresh-order
+// Ready-time estimate compute: the fresh-order
 // probe schedules this cart behind the store's live queue (store:<id> realtime).
 // readyAt is derived here as now + seconds.
 const { estimate: est } = useCartEstimate(
@@ -47,7 +42,7 @@ const drops = computed(() => {
       <div class="container px-0">
       <div class="row g-2">
       <div class="col-12 col-lg-7 d-flex flex-column gap-2">
-      <div class="panel co-store d-flex align-items-center gap-3"><Mono :store="store" :size="38" /><div><strong>{{ store.name }}</strong><small class="d-block">{{ venue ? shortName(venue.name) : '' }} · {{ store.unit_no }}</small></div></div>
+      <div class="panel co-store d-flex align-items-center gap-3"><Mono :store="store" :size="38" /><div><strong>{{ store.name }}</strong><small class="d-block">{{ E.venueLabel(venue) }} · {{ store.unit_no }}</small></div></div>
       <div class="panel co-lines">
         <div v-for="l in lines" :key="l.key" class="co-line d-flex align-items-center gap-2">
           <div class="qty mini d-inline-flex align-items-center gap-1 flex-shrink-0"><button class="icon-btn" aria-label="One fewer" @click="ui.setLineQty(l.key, l.qty - 1)"><Icon name="minus" :size="13" /></button><b>{{ l.qty }}</b><button class="icon-btn" aria-label="One more" @click="ui.setLineQty(l.key, l.qty + 1)"><Icon name="plus" :size="13" /></button></div>
@@ -89,9 +84,6 @@ const drops = computed(() => {
 </template>
 
 <style scoped>
-/* Checkout page (moved from the global stylesheet). Shared bits kept global:
-   .page/.bar, .co-line/.co-qty/.co-what (also used by the receipt), the .seg and
-   drop-off styles (now in SegToggle/DropoffPicker). */
 .checkout-body {
   flex: 1;
   padding: 12px 14px 20px;

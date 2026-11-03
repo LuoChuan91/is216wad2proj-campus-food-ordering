@@ -73,13 +73,13 @@ async function save() {
 
     <div v-if="!ready && !done" class="alert alert-warning">
       This reset link is invalid or has expired.
-      <div class="mt-2"><RouterLink to="/forgot-password">Request a new one</RouterLink></div>
+      <div class="mt-2"><RouterLink to="/">Request a new one</RouterLink></div>
     </div>
 
     <div v-else-if="done" class="alert alert-success">
       Password saved.
       <button v-if="me" class="btn btn-sm btn-primary ms-2" @click="router.push(HOME[me.role] || '/')">Continue</button>
-      <button v-else class="btn btn-sm btn-primary ms-2" @click="router.push('/login')">Go to sign in</button>
+      <button v-else class="btn btn-sm btn-primary ms-2" @click="router.push('/')">Go to sign in</button>
     </div>
 
     <form v-else @submit.prevent="save">

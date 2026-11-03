@@ -9,7 +9,6 @@
 import { computed, ref, reactive, watch, onMounted, onBeforeUnmount } from 'vue'
 import gsap from 'gsap'
 import * as E from '@/utils/engine.js'
-import { LANDMARKS, shortName } from '@/utils/landmarks.js'
 import { getRoute, ensureRoute } from '@/utils/routing.js'
 import { riderEstimate, pathLength } from '@/utils/riderPosition.js'
 import { useRiderLocation } from '@/composables/useRiderLocation.js'
@@ -24,7 +23,6 @@ const props = defineProps({
 })
 
 const catalog = useCatalogStore()
-const first = (name) => (name || 'Courier').split(' ')[0]
 const active = computed(() => ['accepted', 'picked_up'].includes(props.delivery.status))
 const carrying = computed(() => props.delivery.status === 'picked_up')
 const { fix } = useRiderLocation(() => props.delivery.id, active, { fetchLocation: props.fetchLocation })
@@ -43,11 +41,12 @@ watch(() => est.value.metresLeft, (m) => { if (m != null) gsap.to(shown, { metre
 const root = ref(null), box = ref(null), bar = ref(null)
 const failed = ref(false)
 
-// Every SMU building once: the map's landmarks plus the database's venues, minus any venue
-// within 50 m of one already listed (the same building under another name)
+// Every SMU building once: the database's venues (each carries its own 'short'
+// label), minus any venue within 50 m of one already listed (the same building
+// under another name).
 function campusBuildings() {
   const list = []
-  for (const b of [...LANDMARKS, ...catalog.db.venues.map((v) => ({ ...v, short: shortName(v.name) }))]) {
+  for (const b of catalog.db.venues.map((v) => ({ ...v, short: E.venueLabel(v) }))) {
     if (!list.some((x) => pathLength([[x.lat, x.lng], [b.lat, b.lng]]) < 50)) list.push(b)
   }
   return list
@@ -65,6 +64,9 @@ watch(() => est.value.progress, (p) => { if (bar.value) gsap.to(bar.value, { sca
 // rebuild the route only when the points change (the real route arrives after an estimate)
 watch(() => route.value.coords.flat().join(','), () => scene && scene.setRoute(route.value.coords))
 watch(() => [est.value.lat, est.value.lng, est.value.progress], () => scene && scene.setRider(est.value))
+// Self-heal: while the trail is still the straight-line estimate (OSRM was slow or
+// briefly unreachable), keep asking for the real route as the clock ticks.
+watch(() => props.now, () => { if (route.value.source !== 'osrm') ensureRoute(props.from, props.to) })
 
 onMounted(async () => {
   ensureRoute(props.from, props.to)
@@ -79,16 +81,17 @@ onMounted(async () => {
     if (gone) return
     scene = createRiderMap(box.value, {
       from: props.from, to: props.to, coords: route.value.coords, reducedMotion,
-      riderName: first(props.delivery.courier_name), buildings: campusBuildings(), stores: campusStores(),
+      riderName: E.firstName(props.delivery.courier_name) || 'Courier', buildings: campusBuildings(), stores: campusStores(),
     })
+    scene.setRider(est.value)
+    if (typeof ResizeObserver !== 'undefined') {
+      observer = new ResizeObserver(() => scene.resize())
+      observer.observe(box.value)
+    }
   } catch (e) {
     console.warn('[rider] map unavailable, showing the plain card:', e.message)
     failed.value = true
-    return
   }
-  scene.setRider(est.value)
-  observer = new ResizeObserver(() => scene.resize())
-  observer.observe(box.value)
 })
 
 onBeforeUnmount(() => {
@@ -121,11 +124,11 @@ onBeforeUnmount(() => {
         <div class="flex-grow-1 overflow-hidden">
           <template v-if="carrying">
             <div class="big"><span>{{ Math.round(shown.metres) }}</span><small> m away</small></div>
-            <p class="sub m-0">{{ first(delivery.courier_name) }} is walking to {{ to.name }}<template v-if="arriveAt">, arrives about <b>{{ E.clock(arriveAt) }}</b></template></p>
+            <p class="sub m-0">{{ E.firstName(delivery.courier_name) || 'Courier' }} is walking to {{ to.name }}<template v-if="arriveAt">, arrives about <b>{{ E.clock(arriveAt) }}</b></template></p>
           </template>
           <template v-else>
             <div class="big big-sm">Collecting your food</div>
-            <p class="sub m-0">{{ first(delivery.courier_name) }} is picking it up from {{ from.name }}</p>
+            <p class="sub m-0">{{ E.firstName(delivery.courier_name) || 'Courier' }} is picking it up from {{ from.name }}</p>
           </template>
         </div>
       </div>

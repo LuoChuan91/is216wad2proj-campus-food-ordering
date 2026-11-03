@@ -68,19 +68,6 @@ exports.findAll = async ({ storeId } = {}) => {
   return data.map(({ menu_category, ...item }) => ({ ...item, store_id: menu_category.store_id, category: menu_category.name }));
 };
 
-// What the wait-time engine needs for every dish: how long one batch takes and how many fit in a batch.
-// Returns [{ id, store_id, cook_time_sec, max_at_once, available }]
-exports.findCookDetails = async () => {
-  const { data, error } = await supabase
-    .from('menu_items')
-    .select('id, cook_time_sec, max_at_once, available, menu_category!inner(store_id)')
-    .eq('is_archived', false)
-    .order('name');
-
-  if (error) throw error;
-  return data.map(({ menu_category, ...item }) => ({ ...item, store_id: menu_category.store_id }));
-};
-
 // Change a dish, e.g. { available: false } when it sells out. Returns the saved row, or null.
 exports.updateItem = async (itemId, changes) => {
   const { data, error } = await supabase.from('menu_items').update(changes).eq('id', itemId).select().maybeSingle();
@@ -101,14 +88,12 @@ exports.findOptionNames = async (optionIds) => {
   return data;
 };
 
-// Angel: cooking details (cook time, max at once) for the given dishes
+// Cooking details (cook time, max at once) for the given dishes, used by the wait-time engine.
 exports.itemsCookingDetails = async (item_ids) => {
-  // retrieve orders from a store that is created earlier then requested order
-  // retrieve all if requested order is null
   const { data, error } = await supabase
-    .from("menu_items")
+    .from('menu_items')
     .select('id,cook_time_sec,max_at_once')
-    .in("id", item_ids);
+    .in('id', item_ids);
 
   if (error) throw error;
   return data;

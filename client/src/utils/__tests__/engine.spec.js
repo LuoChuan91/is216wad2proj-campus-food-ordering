@@ -33,6 +33,29 @@ describe('money / round2 / sum', () => {
   })
 })
 
+describe('firstName', () => {
+  it('returns the first word of a name', () => {
+    expect(E.firstName('Mingli Tan')).toBe('Mingli')
+    expect(E.firstName('Aiden')).toBe('Aiden')
+  })
+  it('returns empty string for missing names', () => {
+    expect(E.firstName(null)).toBe('')
+    expect(E.firstName(undefined)).toBe('')
+    expect(E.firstName('')).toBe('')
+  })
+})
+
+describe('venueLabel', () => {
+  it('prefers the short label, falls back to the full name', () => {
+    expect(E.venueLabel({ short: 'LKS Library', name: 'Li Ka Shing Library' })).toBe('LKS Library')
+    expect(E.venueLabel({ name: 'School of Business' })).toBe('School of Business')
+  })
+  it('returns empty string for a missing venue', () => {
+    expect(E.venueLabel(null)).toBe('')
+    expect(E.venueLabel(undefined)).toBe('')
+  })
+})
+
 describe('rule', () => {
   it('single groups always allow exactly one, required ones need one', () => {
     expect(E.rule(singleRequired)).toEqual({ min: 1, max: 1 })

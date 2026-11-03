@@ -1,9 +1,6 @@
 <script setup>
-// Your orders: active ones first, then earlier ones.
-//
-// Migrated from portals/student/OrdersTab.vue. Renders in StudentLayout's persistent
-// KeepAlive tab layer. Behaviour unchanged. Each row is an <OrderRow> (which owns the
-// status-label logic); this view just splits the orders into active vs earlier.
+// Your orders: active ones first, then earlier ones. Each row is an <OrderRow>
+// (which owns the status-label logic); this view just splits active vs earlier.
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui.js'

@@ -41,5 +41,5 @@ export const config = {
   },
   // Walking routes (OSRM, foot profile). If it can't be reached, a straight-line estimate is used.
   routingUrl: 'https://routing.openstreetmap.de/routed-foot/route/v1/driving/',
-  routingTimeoutMs: 2500,
+  routingTimeoutMs: 6000,
 }

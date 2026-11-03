@@ -1,9 +1,5 @@
-// UI store.
-//
-// Everything that is purely about what THIS tab is showing and doing: the student's
-// tab/page/sheet, the cart, checkout, item draft, the staff tabs, the busy map (so a
-// button can't fire twice), the top-bar dropdown, and this tab's own toasts and
-// notification history. Also notify() and the run() busy wrapper, preserved exactly from the prototype.
+// UI store: this tab's view state — student tab/page/sheet, cart, checkout, item
+// draft, staff tabs, the busy map — plus notify() and the run() busy wrapper.
 import { defineStore } from "pinia";
 import { reactive, ref } from "vue";
 import * as E from "@/utils/engine.js";
@@ -94,8 +90,7 @@ export const useUiStore = defineStore("ui", () => {
     try {
       const store = useNotificationsStore();
       // One surface, one de-dup gate: the store collapses an event that the
-      // realtime channel also delivers (matched by kind/status/order via meta),
-      // so we no longer special-case realtimeConnected here.
+      // realtime channel also delivers (matched by kind/status/order via meta)
       store.pushLocal({
         title: view.title,
         body: view.body,

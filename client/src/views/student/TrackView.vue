@@ -1,9 +1,6 @@
 <script setup>
-// Live tracking of one order: ready time from the kitchen queue, the courier, and every step.
-//
-// Migrated from portals/student/TrackPage.vue. The order id now comes from the
-// route param (:orderId) rather than S.ui.student.trackOrderId. The peer-delivery
-// walking leg still comes from the campus map's model (utils/mapApi.js), unchanged.
+// Live tracking of one order (id from the :orderId route param): ready-time from
+// the kitchen queue, the courier map, and the status timeline.
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
@@ -12,7 +9,6 @@ import { useCatalogStore } from '@/stores/catalog.js'
 import { useOrdersStore } from '@/stores/orders.js'
 import * as E from '@/utils/engine.js'
 import { config as cfg } from '@/config/index.js'
-import { shortName } from '@/utils/landmarks.js'
 import { estimateWalkingSeconds } from '@/utils/mapApi.js'
 import { useStoreWait } from '@/composables/storeWaitCache.js'
 import ReceiptPanel from '@/components/ReceiptPanel.vue'
@@ -24,13 +20,11 @@ const catalog = useCatalogStore()
 const orders = useOrdersStore()
 const { now, busy } = storeToRefs(ui)
 
-const first = (name) => (name || '').split(' ')[0]
-const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`
 const orderId = computed(() => route.params.orderId)
 const order = computed(() => orders.order(orderId.value))
 const store = computed(() => (order.value ? catalog.store(order.value.store_id) : null))
 const venue = computed(() => (store.value ? catalog.venue(store.value.venue_id) : null))
-const venueName = computed(() => (venue.value ? shortName(venue.value.name) : ''))
+const venueName = computed(() => E.venueLabel(venue.value))
 const lines = computed(() => order.value.items)
 const d = computed(() => order.value.delivery)
 // "Collect it myself instead": a second tap confirms, since it can't be undone
@@ -38,8 +32,8 @@ const confirmSwitch = ref(false)
 watch(orderId, () => { confirmSwitch.value = false })
 const drop = computed(() => d.value && catalog.dropoff(d.value.destination_id))
 
-// Live wait for THIS order from the single frontend engine (store:<id> realtime).
-// readyAt is derived on the frontend as now + seconds; `ahead` is the queue count.
+// Live wait for THIS order (store:<id> realtime).
+// readyAt is derived as now + seconds; `ahead` is the queue count.
 const wait = useStoreWait(
   computed(() => (order.value ? order.value.store_id : null)),
   orderId,
@@ -67,7 +61,7 @@ const walkSeconds = computed(() => {
 
 const phase = computed(() => {
   const o = order.value, dl = d.value, s = store.value
-  const cn = dl ? first(dl.courier_name) : ''
+  const cn = dl ? E.firstName(dl.courier_name) : ''
   if (o.status === 'paid') return { tone: 'info', title: 'In the queue' }
   if (o.status === 'preparing') return { tone: 'brand', title: 'Being prepared' }
   if (o.status === 'ready' && o.type === 'pickup') return { tone: 'ok', title: 'Ready for pickup', big: 'Collect now', sub: `At ${s.name}, ${venueName.value}${o.ready_at ? ' · ready since ' + E.clock(o.ready_at) : ''}` }
@@ -122,8 +116,7 @@ const courierLine = computed(() => {
       <div class="row g-2">
       <div class="col-12 col-lg-7 d-flex flex-column gap-2">
       <div v-if="order.fallback" class="fallback-note d-flex align-items-start gap-2">
-        <Icon name="bag" :size="16" /><span><strong>Switched to pickup.</strong> No courier accepted within {{
-          cfg.deliveryWindowMin }} min, so the delivery fee was waived.</span>
+        <Icon name="bag" :size="16" /><span><strong>Switched to pickup.</strong> No courier accepted your order, so the delivery fee was waived.</span>
       </div>
       <div class="status-card" :class="'tone-' + phase.tone">
         <small class="eyebrow">{{ phase.title }}</small>
@@ -212,9 +205,6 @@ const courierLine = computed(() => {
 </template>
 
 <style scoped>
-/* Order tracking page (moved from the global stylesheet). Kept global: .page/.bar
-   chrome, @keyframes live (shared with the top-bar offline dot), the .meter base
-   (shared with the deliver tab) and .panel. */
 
 .bar-title small {
   color: var(--muted);

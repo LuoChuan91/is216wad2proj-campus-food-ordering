@@ -1,7 +1,8 @@
 // Store unit tests for the action flows in stores/orders.js: merchant order
-// transitions, courier job actions, admin student status, availability toggle and
-// the addVenue validation. The api is mocked; we assert the server call, the
-// local update, the busy-guard clearing, and the error-toast behaviour of run().
+// transitions, courier job actions, and the courier availability toggle. The api
+// is mocked; we assert the server call, the local update, the busy-guard
+// clearing, and the error-toast behaviour of run(). (Admin actions moved to
+// stores/admin.js — see admin.spec.js.)
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 
@@ -107,80 +108,5 @@ describe('orders store: courier actions', () => {
     expect(session._loadCourier('stu')).toBe(true)
     orders.setAvailable(false)
     expect(ui.courierOn).toBe(false)
-  })
-})
-
-describe('orders store: admin student status', () => {
-  beforeEach(() => {
-    setActivePinia(createPinia())
-    vi.clearAllMocks()
-    seedCatalog()
-  })
-
-  it('approveStudent patches the profile and merges the result into the catalog', async () => {
-    const orders = useOrdersStore()
-    const catalog = useCatalogStore()
-    api.setProfileStatus.mockResolvedValue({ id: 'stu', status: 'active' })
-    catalog.user('stu').status = 'inactive'
-
-    await orders.approveStudent('stu')
-
-    expect(api.setProfileStatus).toHaveBeenCalledWith('stu', 'active')
-    expect(catalog.user('stu').status).toBe('active')
-  })
-
-  it('blockStudent and removeStudent send the matching status', async () => {
-    const orders = useOrdersStore()
-    api.setProfileStatus.mockResolvedValue({ id: 'stu', status: 'blocked' })
-    await orders.blockStudent('stu')
-    expect(api.setProfileStatus).toHaveBeenLastCalledWith('stu', 'blocked')
-    api.setProfileStatus.mockResolvedValue({ id: 'stu', status: 'removed' })
-    await orders.removeStudent('stu')
-    expect(api.setProfileStatus).toHaveBeenLastCalledWith('stu', 'removed')
-  })
-})
-
-describe('orders store: addVenue validation', () => {
-  beforeEach(() => {
-    setActivePinia(createPinia())
-    vi.clearAllMocks()
-    seedCatalog()
-  })
-
-  function draft(ui, { name = 'New Venue', lat = '1.30', lng = '103.85' } = {}) {
-    ui.ui.staff.venueDraft = { name, lat, lng }
-  }
-
-  it('rejects an empty name without calling the server', async () => {
-    const orders = useOrdersStore()
-    const ui = useUiStore()
-    draft(ui, { name: '  ' })
-    await orders.addVenue()
-    expect(ui.ui.staff.formError).toMatch(/name/i)
-    expect(api.addVenue).not.toHaveBeenCalled()
-  })
-
-  it('rejects a pin outside Singapore', async () => {
-    const orders = useOrdersStore()
-    const ui = useUiStore()
-    draft(ui, { lat: '48.85', lng: '2.35' }) // Paris
-    await orders.addVenue()
-    expect(ui.ui.staff.formError).toMatch(/Singapore/i)
-    expect(api.addVenue).not.toHaveBeenCalled()
-  })
-
-  it('saves a valid venue and pushes it into the catalog, resetting the draft', async () => {
-    const orders = useOrdersStore()
-    const ui = useUiStore()
-    const catalog = useCatalogStore()
-    draft(ui, { name: 'LKS Steps', lat: '1.2966', lng: '103.85' })
-    api.addVenue.mockResolvedValue({ id: 'v2', name: 'LKS Steps', lat: 1.2966, lng: 103.85, type: 'eatery' })
-
-    await orders.addVenue()
-
-    expect(api.addVenue).toHaveBeenCalledWith({ name: 'LKS Steps', lat: 1.2966, lng: 103.85, type: 'eatery' })
-    expect(catalog.venue('v2')).toBeTruthy()
-    expect(ui.ui.staff.venueDraft).toEqual({ name: '', lat: '', lng: '' })
-    expect(ui.ui.staff.saving).toBe(false)
   })
 })

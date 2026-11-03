@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-import { defineComponent, h } from 'vue'
+import { defineComponent, h, ref } from 'vue'
 
 // Mock the default supabase import so importing modules needs no env vars.
 vi.mock('@/common/supabase.js', () => ({ default: {} }))
 
 import { useRealtimeNotifications } from '../useRealtimeNotifications.js'
-import { useAuthStore } from '@/stores/auth.js'
+import { useSessionStore } from '@/stores/session.js'
 import { useNotificationsStore } from '@/stores/notifications.js'
 
 // Fake Supabase client capturing the broadcast handler and channel topic.
@@ -34,11 +34,12 @@ function makeClient() {
   return { client, state }
 }
 
-// Host component that activates the composable with an injected client.
-function mountHost(client) {
+// Host component that activates the composable with an injected client. A userId
+// source (ref/getter/value) can be injected; otherwise it follows the session store.
+function mountHost(client, userId) {
   const Host = defineComponent({
     setup() {
-      useRealtimeNotifications({ supabaseClient: client })
+      useRealtimeNotifications({ supabaseClient: client, userId })
       return () => h('div')
     },
   })
@@ -50,10 +51,10 @@ describe('useRealtimeNotifications', () => {
     setActivePinia(createPinia())
   })
 
-  it('subscribes to user:<id> once a user id is known', async () => {
+  it('subscribes to user:<id> from the session store', async () => {
     const { client, state } = makeClient()
-    const auth = useAuthStore()
-    auth.userId = 'user-9'
+    // The session store is the single source of truth for who's signed in.
+    useSessionStore().session.userId = 'user-9'
     mountHost(client)
     await flushPromises()
     expect(client.channel).toHaveBeenCalledWith('user:user-9')
@@ -62,9 +63,8 @@ describe('useRealtimeNotifications', () => {
 
   it('routes an incoming broadcast payload into the notifications store', async () => {
     const { client, state } = makeClient()
-    const auth = useAuthStore()
     const notifications = useNotificationsStore()
-    auth.userId = 'user-9'
+    useSessionStore().session.userId = 'user-9'
     mountHost(client)
     await flushPromises()
 
@@ -77,13 +77,12 @@ describe('useRealtimeNotifications', () => {
 
   it('re-subscribes when the user id changes and tears down the old channel', async () => {
     const { client } = makeClient()
-    const auth = useAuthStore()
-    auth.userId = 'user-1'
-    mountHost(client)
+    const userId = ref('user-1')
+    mountHost(client, userId)
     await flushPromises()
     expect(client.channel).toHaveBeenLastCalledWith('user:user-1')
 
-    auth.userId = 'user-2'
+    userId.value = 'user-2'
     await flushPromises()
     expect(client.removeChannel).toHaveBeenCalled() // old channel removed
     expect(client.channel).toHaveBeenLastCalledWith('user:user-2')
@@ -91,8 +90,7 @@ describe('useRealtimeNotifications', () => {
 
   it('does not subscribe when there is no user', async () => {
     const { client } = makeClient()
-    const auth = useAuthStore()
-    auth.userId = null
+    useSessionStore().session.userId = null
     mountHost(client)
     await flushPromises()
     expect(client.channel).not.toHaveBeenCalled()
@@ -100,9 +98,7 @@ describe('useRealtimeNotifications', () => {
 
   it('tears down the channel on unmount', async () => {
     const { client } = makeClient()
-    const auth = useAuthStore()
-    auth.userId = 'user-1'
-    const wrapper = mountHost(client)
+    const wrapper = mountHost(client, ref('user-1'))
     await flushPromises()
     wrapper.unmount()
     expect(client.removeChannel).toHaveBeenCalled()

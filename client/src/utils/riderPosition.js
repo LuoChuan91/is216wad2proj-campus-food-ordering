@@ -1,8 +1,5 @@
-// "Where is my rider": where the courier is on the walk from the store to the drop-off.
-// From their phone's GPS when we have a recent fix, otherwise an estimate along the
-// walking route from the time they picked the food up (same walking speed as utils/mapApi.js).
-//
-// Routes are arrays of [lat, lng] points, the shape utils/routing.js returns.
+// Where the courier is on the walk to the drop-off: from a recent GPS fix, else an
+// estimate along the walking route. Routes are [lat, lng] arrays (from utils/routing.js).
 
 const M_PER_DEG = 111320
 const WALK_M_PER_S = 75 / 60

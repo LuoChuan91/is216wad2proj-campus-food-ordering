@@ -58,6 +58,3 @@ export const api = {
   markPasswordSet: (id) => http.patch(`/profiles/${id}/password-set`),
   addVenue: (venue) => http.post('/venues', venue),
 }
-
-// The shared axios instance, exported for the rare caller that needs raw access.
-export { http }

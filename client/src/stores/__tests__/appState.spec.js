@@ -1,9 +1,6 @@
-// Tests for the Pinia stores ported from the old app/state.js.
-//
-// They cover the behaviour that used to live in state.js and must be preserved:
-// the catalog getters + decorateStores, the cart/option/validate logic, the
-// busy-wrapped run(), notify()/toasts, session sign-in resetting per-user state,
-// and the checkout estimate. The api service is mocked so no network is touched.
+// Pinia store tests: catalog getters + decorateStores, the cart/option/validate
+// logic, the busy-wrapped run(), notify()/toasts, session sign-in resetting
+// per-user state, and the order query helpers. The api service is mocked.
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 

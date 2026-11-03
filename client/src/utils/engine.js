@@ -1,6 +1,5 @@
-// Pure logic from the prototype: option rules, pricing, time and distance helpers. No Vue in here.
-// The server checks the same rules again and works out the real price (services/orders.service.js),
-// so these are only for showing things on screen before the order is sent.
+// Pure display logic: option rules, pricing, time and distance helpers (no Vue).
+// The server re-checks these and sets the real price; these are for the UI only.
 
 const SGT_OFFSET = 8 * 3600e3;
 const DAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
@@ -10,6 +9,11 @@ export const round2 = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
 export const money = (n) => "$" + round2(Number(n) || 0).toFixed(2);
 export const sum = (arr, f) => arr.reduce((s, x) => s + f(x), 0);
 const singular = (w) => (w.endsWith("s") ? w.slice(0, -1) : w);
+
+// First word of a name (e.g. a courier's given name), '' when missing.
+export const firstName = (name) => (name || "").split(" ")[0];
+// A venue's short map/label name from the DB ('short'), falling back to its full name.
+export const venueLabel = (venue) => (venue && (venue.short || venue.name)) || "";
 
 /* ---------- Option groups ---------- */
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildNotification, shouldToast } from '../notificationMessages.js'
+import { buildNotification } from '../notificationMessages.js'
 
 // A pickup order and a delivery order to exercise the order-aware wording.
 const pickup = { code: 'E287', type: 'pickup' }
@@ -94,24 +94,26 @@ describe('buildNotification (shared, order-aware wording)', () => {
     expect(v).toMatchObject({ kind: 'order', status: 'ready', order_id: 'o1', at: 't' })
   })
 
+  it('order preparing -> "Kitchen is preparing" with code + store, list-only', () => {
+    const v = buildNotification(
+      { kind: 'order', status: 'preparing', order_id: 'o1' },
+      { order: pickup, storeName: 'Hawker Corner' }
+    )
+    expect(v).toMatchObject({ title: 'Kitchen is preparing your order', variant: 'info', toast: false })
+    expect(v.body).toBe('Order #E287 is being cooked at Hawker Corner')
+  })
+
+  it('order preparing falls back gracefully without a store name', () => {
+    const v = buildNotification({ kind: 'order', status: 'preparing', order_id: 'abcd1234' })
+    expect(v.title).toBe('Kitchen is preparing your order')
+    expect(v.body).toBe('Order #ABCD is being cooked at the store')
+  })
+
   it('returns null for unknown / unmapped statuses', () => {
-    expect(buildNotification({ kind: 'order', status: 'preparing' })).toBeNull()
+    expect(buildNotification({ kind: 'order', status: 'pending' })).toBeNull()
     expect(buildNotification({ kind: 'delivery', status: 'open' })).toBeNull()
     expect(buildNotification({ kind: 'nope', status: 'ready' })).toBeNull()
     expect(buildNotification(null)).toBeNull()
     expect(buildNotification({})).toBeNull()
-  })
-})
-
-describe('shouldToast', () => {
-  it('is true only for the toast statuses', () => {
-    expect(shouldToast({ kind: 'order', status: 'ready' })).toBe(true)
-    expect(shouldToast({ kind: 'order', status: 'completed' })).toBe(true)
-    expect(shouldToast({ kind: 'delivery', status: 'accepted' })).toBe(true)
-    expect(shouldToast({ kind: 'delivery', status: 'picked_up' })).toBe(true)
-    expect(shouldToast({ kind: 'delivery', status: 'expired' })).toBe(true)
-    expect(shouldToast({ kind: 'order', status: 'paid' })).toBe(false)
-    expect(shouldToast({ kind: 'delivery', status: 'delivered' })).toBe(false)
-    expect(shouldToast({ kind: 'order', status: 'preparing' })).toBe(false)
   })
 })

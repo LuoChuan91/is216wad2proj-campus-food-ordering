@@ -1,30 +1,11 @@
-// Pure, framework-free wait-time estimation.
-//
-// Given the order-items in the queue ahead of you and each menu item's cooking
-// details (cook_time_sec, max_at_once = batch size), estimate how many seconds
-// until the kitchen clears that queue.
-//
-// Per dish:
-//   batches   = ceil(totalQty / max_at_once)   (how many back-to-back batches)
-//   itemTime  = batches * cook_time_sec        (seconds to cook all of that dish)
-//
-// Each dish therefore expands into a list of BATCHES, every batch taking
-// cook_time_sec seconds (a half-full final batch still occupies the station for a
-// full cook_time_sec). Example: 3 batches of A (180s) + 4 batches of B (120s)
-// expands to [180,180,180,120,120,120,120].
-//
-// How those times combine depends on the strategy, because a real kitchen is
-// somewhere between "one serial line" and "many parallel stations":
-//   - 'serial'     : sum(itemTime)                  one line, cook dishes one after another (upper bound)
-//   - 'bottleneck' : max(itemTime)                  unlimited parallel stations, limited by the busiest dish
-//   - 'factor'     : max(bottleneck, sum/stations)  rough division of total work across n stations
-//   - 'scheduled'  : LPT list-scheduling of BATCHES across n stations -> makespan
-//                    Sort batches longest-first, assign each to the station that
-//                    is free earliest, and return when the last station finishes.
-//                    This models a fixed number of stations more faithfully than
-//                    'factor' (two long batches can't share one station).
-//
-// The strategy is pluggable so the formula can be swapped without touching the UI.
+// Pure, framework-free wait-time estimation: given the queue's order-items and each
+// dish's cooking details (cook_time_sec, max_at_once), estimate seconds to clear it.
+// Each dish = ceil(qty / max_at_once) batches of cook_time_sec. Strategies combine
+// those batch times differently (pluggable, so the formula is swappable):
+//   - 'serial'     : sum of all dish times (one line, upper bound)
+//   - 'bottleneck' : max dish time (unlimited parallel stations); explored but will not use
+//   - 'factor'     : max(bottleneck, sum/stations) (rough n-station split); explored but will not use
+//   - 'scheduled'  : LPT list-scheduling of batches across n stations -> makespan
 
 // serial/bottleneck/factor work on PER-DISH totals (itemTimes).
 // scheduled works on the expanded PER-BATCH list (batchTimes).
@@ -74,10 +55,7 @@ const STRATEGIES = {
  * @returns {{ seconds: number, perItem: Array<{menuItemId: string, qty: number, batches: number, seconds: number}>, missing: string[] }}
  */
 export function estimateWaitTime(orderItems, cookingDetails, options = {}) {
-  // Intrinsic library defaults (used only if a caller omits options). Real app
-  // callers always pass resolved { strategy, stations } from waitSettings(),
-  // whose fallback is config.wait — the single source of truth for the store
-  // default. These intrinsic defaults are deliberately the safe upper bound.
+  // Intrinsic library defaults (used only if a caller omits options).
   const { strategy = 'serial', stations = 2 } = options;
   const aggregate = STRATEGIES[strategy];
   if (!aggregate) {
@@ -144,23 +122,10 @@ export function formatWaitTime(seconds) {
 
 export const WAIT_TIME_STRATEGIES = Object.keys(STRATEGIES);
 
-// ---------------------------------------------------------------------------
-// Fresh-order probe (ported from the server's common/engine.js scheduleKitchen /
-// estimateNew). Used by checkout: "when would THIS cart be ready, given the store
-// queue ahead of it?" The server version returned absolute readyAt timestamps;
-// here we return a relative wait in SECONDS plus the orders-ahead count, so the
-// frontend stays the single wait-time machine (readyAt = now + seconds).
-//
-// Kitchen model (identical to the server):
-//   - a store cooks `stations` batches at the same time;
-//   - each order line becomes ceil(qty / max_at_once) batches of cook_time_sec;
-//   - orders already 'preparing' keep the slot they started on;
-//   - waiting ('placed') orders take the earliest free slot, FCFS.
-//
-// `orders`: [{ id, status:'placed'|'preparing', created_at, preparing_at, items:[{menu_item_id, qty}] }]
-//           times in MILLISECONDS (matching the server shape).
-// `menuById`: { [menuItemId]: { cook_time_sec, max_at_once } }
-
+// Fresh-order probe for checkout: when would THIS cart be ready behind the store's
+// current queue? Schedules `stations` parallel slots FCFS (preparing orders keep
+// their slot) and returns a relative wait in seconds + the orders-ahead count.
+// Times are in MILLISECONDS; menuById = { [id]: { cook_time_sec, max_at_once } }.
 function scheduleKitchen(stations, orders, menuById, now) {
   const slotCount = Math.max(1, stations | 0);
   const slots = new Array(slotCount).fill(-Infinity);
@@ -210,14 +175,6 @@ function scheduleKitchen(stations, orders, menuById, now) {
  * store's current queue. Returns a relative wait in whole seconds and how many
  * orders are ahead of it.
  *
- * Both DB-stored store settings are honoured:
- *   - `stations`  ← stores.workstations (how many batches cook in parallel)
- *   - `strategy`  ← stores.wait_strategy
- *       'scheduled' : batches run across `stations` parallel slots (default).
- *       'serial'    : one serial line — every batch runs one after another,
- *                     so the station count is forced to 1 (matching the
- *                     'serial' behaviour of estimateWaitTime).
- *
  * @param {Array<{id:string,status:string,created_at:number,preparing_at?:number,items:Array<{menu_item_id:string,qty:number}>}>} queueOrders
  *        the store's active orders (ms timestamps), as returned by the queue API.
  * @param {Array<{menu_item_id:string,qty:number}>} cartLines  the new cart's items.
@@ -255,5 +212,3 @@ export function estimateNewOrderWait(queueOrders, cartLines, cookingDetails, opt
     ahead: queue.length,
   };
 }
-
-export { scheduleKitchen };
