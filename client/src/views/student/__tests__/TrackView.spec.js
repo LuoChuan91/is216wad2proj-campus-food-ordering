@@ -45,7 +45,7 @@ function seed() {
   setActivePinia(pinia)
   const catalog = useCatalogStore()
   catalog.db.profiles = [{ id: 'mer', role: 'merchant', name: 'Mei Lin', status: 'active' }]
-  catalog.db.venues = [{ id: 'v1', name: 'SMU Labs', lat: 1.2966, lng: 103.85, address: 'Level 1' }]
+  catalog.db.venues = [{ id: 'v1', name: 'SMU Labs', lat: 1.2966, lng: 103.85, address: 'Level 1', type: 'school' }]
   catalog.db.stores = [{ id: 's1', venue_id: 'v1', merchant_id: 'mer', name: 'Bento Bar', is_open: true, description: '' }]
   catalog.db.menu = [{ id: 'm1', store_id: 's1', category: 'Bento', name: 'Chicken Teriyaki', price: 6, available: true, cook_time_sec: 60, max_at_once: 2, option_groups: [] }]
   catalog.decorateStores()
