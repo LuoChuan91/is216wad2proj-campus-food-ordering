@@ -83,14 +83,15 @@ onMounted(async () => {
       from: props.from, to: props.to, coords: route.value.coords, reducedMotion,
       riderName: E.firstName(props.delivery.courier_name) || 'Courier', buildings: campusBuildings(), stores: campusStores(),
     })
+    scene.setRider(est.value)
+    if (typeof ResizeObserver !== 'undefined') {
+      observer = new ResizeObserver(() => scene.resize())
+      observer.observe(box.value)
+    }
   } catch (e) {
     console.warn('[rider] map unavailable, showing the plain card:', e.message)
     failed.value = true
-    return
   }
-  scene.setRider(est.value)
-  observer = new ResizeObserver(() => scene.resize())
-  observer.observe(box.value)
 })
 
 onBeforeUnmount(() => {
