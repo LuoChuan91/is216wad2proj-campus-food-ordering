@@ -7,7 +7,7 @@ import { useOrdersStore } from '@/stores/orders.js'
 import { useMerchantStore } from '@/stores/merchant.js'
 import MenuItemAdminCard from '@/portals/merchant/MenuItemAdminCard.vue'
 
-const URL_RE = /^https?:\/\/\S+$/
+const URL_RE = /^(https?:\/\/|\/)\S+$/ // a full link, or a photo in client/public (e.g. /images/menu/x.webp)
 
 const ui = useUiStore()
 const catalog = useCatalogStore()
@@ -51,7 +51,7 @@ const errors = computed(() => {
   const price = Number(draft.price)
   if (draft.price === '' || !Number.isFinite(price) || price < 0 || price > 1000) e.price = 'Enter a price from $0 to $1000.'
   if (String(draft.description || '').length > 300) e.description = 'Keep it to 300 characters or fewer.'
-  if (draft.image_url && !URL_RE.test(String(draft.image_url).trim())) e.image_url = 'Use a full link starting with http:// or https://.'
+  if (draft.image_url && !URL_RE.test(String(draft.image_url).trim())) e.image_url = 'Use a full link starting with https://, or a site path like /images/menu/photo.webp.'
   const cook = Number(draft.cook_min)
   if (!Number.isFinite(cook) || cook <= 0 || cook > 120) e.cook_min = 'Cook time must be more than 0 and at most 120 minutes.'
   if (!Number.isInteger(Number(draft.max_at_once)) || Number(draft.max_at_once) < 1 || Number(draft.max_at_once) > 100) e.max_at_once = 'Batch size must be a whole number from 1 to 100.'

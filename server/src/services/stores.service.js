@@ -76,7 +76,7 @@ function validate(changes) {
     if (out.description.length > 500) throw httpError(400, 'Description must be 500 characters or fewer');
   }
   if ('image_url' in out && out.image_url !== null && out.image_url !== '') {
-    if (typeof out.image_url !== 'string' || !/^https?:\/\//.test(out.image_url)) throw httpError(400, 'Image URL must start with http:// or https://');
+    if (typeof out.image_url !== 'string' || !/^(https?:\/\/|\/\S)/.test(out.image_url)) throw httpError(400, 'Image URL must start with https:// or be a site path like /images/menu/photo.webp');
   }
   if (out.image_url === '') out.image_url = null;
   if ('is_open' in out && typeof out.is_open !== 'boolean') throw httpError(400, 'is_open must be true or false');
