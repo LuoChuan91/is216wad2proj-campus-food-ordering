@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+﻿import { test, expect } from '@playwright/test'
 import { ACCOUNTS } from '../accounts.js'
 import { signIn } from '../fixtures/auth.js'
 import { rest, findDishId } from '../fixtures/db.js'
@@ -16,7 +16,7 @@ test.describe('error states', () => {
       await storesTab(page).click()
       await page.getByRole('button', { name: /E2E Test Kitchen/ }).click()
 
-      const dish = page.getByRole('button', { name: /E2E Test Dish/ })
+      const dish = page.locator('button.menu-item').filter({ hasText: /E2E Test Dish/ }).first()
       await expect(dish).toBeVisible()
       await expect(dish).toBeDisabled()
       await expect(page.getByText(/Sold out/i).first()).toBeVisible()

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+﻿import { test, expect } from '@playwright/test'
 import { ACCOUNTS } from '../accounts.js'
 import { signIn } from '../fixtures/auth.js'
 
@@ -22,7 +22,7 @@ test.describe('student browsing', () => {
     await expect(page.getByRole('heading', { name: /All stores/i })).toBeVisible()
 
     // Use the seeded test store: it is always open, unlike the real stores at night
-    const card = page.getByRole('button', { name: /E2E Test Kitchen/ })
+    const card = page.locator('button.store-card').filter({ hasText: /E2E Test Kitchen/ }).first()
     await expect(card).toBeVisible()
     const name = 'E2E Test Kitchen'
 

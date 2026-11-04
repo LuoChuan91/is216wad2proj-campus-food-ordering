@@ -10,10 +10,10 @@ export const BASE_URL = 'http://localhost:5173'
 export async function addE2EDishToCart(page) {
   await storesTab(page).click()
 
-  await page.getByRole('button', { name: /E2E Test Kitchen/ }).click()
+  await page.locator('button.store-card').filter({ hasText: /E2E Test Kitchen/ }).first().click()
   await expect(page).toHaveURL(/\/student\/store\//)
 
-  await page.getByRole('button', { name: /E2E Test Dish/ }).click()
+  await page.locator('button.menu-item').filter({ hasText: /E2E Test Dish/ }).first().click()
   await page.getByRole('button', { name: /Add to cart/i }).click()
   await page.getByRole('button', { name: /View cart/i }).click()
   await expect(page).toHaveURL(/\/student\/checkout/)
