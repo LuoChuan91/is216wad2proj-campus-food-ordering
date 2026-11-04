@@ -131,3 +131,33 @@ test('switch to pickup: too late once a courier has accepted', async () => {
   await assert.rejects(service.switchToPickup('job-1', 'stu-amy'), (err) => err.status === 409);
   assert.equal(orderChanges, null);
 });
+
+test('chat: the customer and the courier get the same channel, with their own roles', async () => {
+  Object.assign(job, { status: 'accepted', courier_id: 'stu-ben' });
+  const customer = await service.getChat('job-1', 'stu-amy');
+  const courier = await service.getChat('job-1', 'stu-ben');
+  assert.equal(customer.channel, courier.channel);
+  assert.match(customer.channel, /^chat:[0-9a-f]{32}$/);
+  assert.ok(!customer.channel.includes('job-1'));
+  assert.equal(customer.role, 'customer');
+  assert.equal(courier.role, 'courier');
+  assert.equal(customer.closes_at, null);
+});
+
+test('chat: nobody else can join', async () => {
+  Object.assign(job, { status: 'picked_up', courier_id: 'stu-ben' });
+  await assert.rejects(service.getChat('job-1', 'stu-blocked'), (err) => err.status === 403);
+  await assert.rejects(service.getChat('job-1', undefined), (err) => err.status === 401);
+});
+
+test('chat: not open until a courier accepts', async () => {
+  await assert.rejects(service.getChat('job-1', 'stu-amy'), (err) => err.status === 409);
+});
+
+test('chat: stays open 15 minutes after delivery, then closes', async () => {
+  const deliveredAt = Date.parse('2026-11-04T12:00:00Z');
+  Object.assign(job, { status: 'delivered', courier_id: 'stu-ben', delivered_at: new Date(deliveredAt).toISOString() });
+  const chat = await service.getChat('job-1', 'stu-amy', deliveredAt + 14 * 60e3);
+  assert.equal(chat.closes_at, '2026-11-04T12:15:00.000Z');
+  await assert.rejects(service.getChat('job-1', 'stu-amy', deliveredAt + 15 * 60e3), (err) => err.status === 410);
+});

@@ -10,6 +10,7 @@ export const config = {
 
   deliveryFee: 0.8, // mirror of server DELIVERY_FEE (keep in sync)
   deliveryWindowMin: 10, // no courier within this many minutes -> the order switches to pickup
+  chatOpenAfterDeliveryMin: 15,
 
   // How many dishes a kitchen cooks at once (mirror of the server's KITCHEN_SLOTS).
   // The frontend wait-time engine uses this as its number of parallel stations.

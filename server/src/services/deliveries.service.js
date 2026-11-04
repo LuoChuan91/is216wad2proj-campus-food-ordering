@@ -1,6 +1,8 @@
+const crypto = require('crypto');
 const repository = require('../models/deliveries.repository');
 const ordersRepository = require('../models/orders.repository');
 const profilesRepository = require('../models/profiles.repository');
+const { CHAT_OPEN_AFTER_DELIVERY_MIN } = require('../common/config');
 
 // A courier can carry several deliveries at once (pick up along the way).
 const MAX_ACTIVE_JOBS = 4;
@@ -145,4 +147,33 @@ exports.getLocation = async (deliveryId) => {
     return { status: d.status, location: null };
   }
   return { status: d.status, location: locations.get(deliveryId) || null };
+};
+
+const CHAT_STATUSES = ['accepted', 'picked_up', 'delivered'];
+
+function chatSecret() {
+  const secret = process.env.CHAT_SECRET || process.env.SUPABASE_SECRET_KEY;
+  if (!secret) throw httpError(503, 'Chat is not configured');
+  return secret;
+}
+
+exports.getChat = async (deliveryId, profileId, now = Date.now()) => {
+  if (!profileId) throw httpError(401, 'Sign in to chat');
+
+  const d = await repository.findById(deliveryId);
+  if (!d) throw httpError(404, 'Delivery not found');
+  const isCourier = !!d.courier_id && d.courier_id === profileId;
+  const isCustomer = !!d.orders && d.orders.student_id === profileId;
+  if (!isCourier && !isCustomer) throw httpError(403, 'This is not your delivery');
+  if (!d.courier_id || !CHAT_STATUSES.includes(d.status)) throw httpError(409, 'Chat opens once a courier accepts the job');
+
+  const closesAt = d.delivered_at ? Date.parse(d.delivered_at) + CHAT_OPEN_AFTER_DELIVERY_MIN * 60e3 : null;
+  if (closesAt && now >= closesAt) throw httpError(410, 'This chat has closed');
+
+  const key = crypto.createHmac('sha256', chatSecret()).update(`chat:${deliveryId}`).digest('hex').slice(0, 32);
+  return {
+    channel: `chat:${key}`,
+    role: isCourier ? 'courier' : 'customer',
+    closes_at: closesAt ? new Date(closesAt).toISOString() : null,
+  };
 };

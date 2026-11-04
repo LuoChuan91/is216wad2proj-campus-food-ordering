@@ -39,6 +39,7 @@ export const api = {
   expiredJobs: () => http.get('/deliveries', { params: { status: 'expired' } }),
   myJobs: (courierId) => http.get('/deliveries', { params: { courier_id: courierId } }),
   riderLocation: (jobId) => http.get(`/deliveries/${jobId}/location`),
+  deliveryChat: (jobId) => http.get(`/deliveries/${jobId}/chat`),
 
   // wait-time estimate engine (used by useWaitTime / waitTimeApi)
   ordersAhead: (storeId, orderId) =>

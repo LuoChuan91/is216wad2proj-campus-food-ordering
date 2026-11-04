@@ -13,6 +13,8 @@ import { estimateWalkingSeconds } from '@/utils/mapApi.js'
 import { useStoreWait } from '@/composables/storeWaitCache.js'
 import ReceiptPanel from '@/components/ReceiptPanel.vue'
 import RiderTracker from '@/components/rider/RiderTracker.vue'
+import DeliveryChat from '@/components/DeliveryChat.vue'
+import { chatAvailable } from '@/utils/chat.js'
 
 const route = useRoute()
 const ui = useUiStore()
@@ -48,6 +50,7 @@ const delivering = computed(() => !!d.value && !order.value.fallback)
 // "Where is my rider" map, while a courier has the job (accepted or picked up)
 const riderFrom = computed(() => (venue.value && store.value ? { lat: venue.value.lat, lng: venue.value.lng, name: store.value.name } : null))
 const showRider = computed(() => delivering.value && !!riderFrom.value && !!drop.value && ['accepted', 'picked_up'].includes(d.value.status))
+const showChat = computed(() => delivering.value && chatAvailable(d.value, now.value))
 
 // The walking leg for peer delivery, from the campus map's model (utils/mapApi.js):
 // straight-line distance x 1.3, walking at 75 m/min.
@@ -179,6 +182,9 @@ const courierLine = computed(() => {
           <Icon name="pin" :size="14" />{{ drop.name }}<template v-if="d.note"> · “{{ d.note }}”</template>
         </div>
       </div>
+
+      <DeliveryChat v-if="showChat" :delivery-id="d.id" :delivered-at="d.delivered_at" me="customer"
+        title="Chat with your courier" />
 
       <ol class="steps list-unstyled m-0">
         <li v-for="s in steps" :key="s.k" class="d-flex align-items-center gap-2" :class="s.state"><i></i><span>{{ s.label }}</span><time v-if="s.at">{{

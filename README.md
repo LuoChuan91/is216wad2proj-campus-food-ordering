@@ -197,6 +197,8 @@ AI assistance was used on this project for:
   both client and server.
 - **Maps & realtime** — implementing the Leaflet campus map, live rider tracking, and
   the Supabase Realtime features (orders, wait times, notifications).
+- **Delivery chat** — the customer–courier chat over Supabase Realtime Broadcast
+  (`useDeliveryChat`, `DeliveryChat.vue`, `GET /api/deliveries/:id/chat`).
 - **Comments & cleanup** — writing code comments and refactoring/cleaning up the
   codebase.
 - **Tests** — creating the unit, component and integration test suites.

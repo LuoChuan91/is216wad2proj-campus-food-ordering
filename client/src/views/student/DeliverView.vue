@@ -11,6 +11,8 @@ import { acquireStoreWait, releaseStoreWait, peekStoreWait } from '@/composables
 import StatusTag from '@/components/StatusTag.vue'
 import { useSessionStore } from '@/stores/session.js'
 import { useCourierBeacon } from '@/composables/useRiderLocation.js'
+import DeliveryChat from '@/components/DeliveryChat.vue'
+import { chatAvailable } from '@/utils/chat.js'
 
 const ui = useUiStore()
 const catalog = useCatalogStore()
@@ -45,6 +47,9 @@ const atLimit = computed(() => activeList.value.length >= MAX_JOBS)
 const jobs = computed(() => (on.value ? orders.openJobs().map(jobView) : []))
 const expired = computed(() => (on.value ? orders.db.expiredJobs.map(jobView) : []))
 const earn = computed(() => orders.earnings())
+const justDelivered = computed(() =>
+  orders.db.myJobs.filter((d) => d.status === 'delivered' && chatAvailable(d, now.value)).map(jobView),
+)
 
 // Share this phone's GPS with the customers of the jobs in progress ("Where is my rider")
 const session = useSessionStore()
@@ -135,6 +140,25 @@ onBeforeUnmount(() => {
         <button v-else class="btn btn-success w-100" :disabled="busy[active.d.id]"
           @click="orders.deliver(active.d.id)">Mark as
           delivered</button>
+        <DeliveryChat :delivery-id="active.d.id" :delivered-at="active.d.delivered_at" me="courier"
+          title="Chat with customer" class="job-chat" />
+      </div>
+      </div>
+      </div>
+    </template>
+
+    <template v-if="justDelivered.length">
+      <h4 class="sec">Just delivered</h4>
+      <div class="row g-2">
+      <div v-for="j in justDelivered" :key="j.d.id" class="col-12 col-md-6 col-lg-4">
+      <div class="panel job d-grid gap-2 h-100 align-content-start">
+        <div class="d-flex align-items-center gap-2">
+          <Mono :store="j.s" :size="36" />
+          <div class="job-route flex-grow-1 overflow-hidden"><strong class="d-block">{{ j.s.name }}</strong><small>#{{ j.o.code }} · {{ j.drop.name }} · {{ E.clock(j.d.delivered_at) }}</small></div>
+          <StatusTag tone="ok">Delivered</StatusTag>
+        </div>
+        <DeliveryChat :delivery-id="j.d.id" :delivered-at="j.d.delivered_at" me="courier"
+          title="Chat with customer" class="job-chat" />
       </div>
       </div>
       </div>
@@ -298,5 +322,9 @@ onBeforeUnmount(() => {
 
 .aj-line.warn {
   color: var(--warn);
+}
+
+.job-chat {
+  padding: 10px;
 }
 </style>
