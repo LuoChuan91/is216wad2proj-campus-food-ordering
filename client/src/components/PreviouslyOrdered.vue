@@ -38,7 +38,7 @@ const count = (order) => order.items.reduce((n, i) => n + i.qty, 0)
         <button
           type="button"
           class="reorder-card w-100 h-100 d-flex align-items-center gap-2 text-start p-2 rounded-3"
-          :aria-label="`Add ${order.store_name || 'this'} order to cart: ${summary(order)}`"
+          :aria-label="`Order again from ${order.store_name || 'this store'} and go to checkout: ${summary(order)}`"
           @click="ui.reorder(order)"
         >
           <span class="flex-grow-1 overflow-hidden">

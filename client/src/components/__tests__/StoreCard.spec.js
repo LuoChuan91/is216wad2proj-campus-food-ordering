@@ -8,6 +8,14 @@ import { setActivePinia, createPinia } from 'pinia'
 
 vi.mock('@/services/api.js', () => ({ api: {}, setActor: vi.fn() }))
 vi.mock('@/common/supabase.js', () => ({ default: {} }))
+const waitEntry = { ahead: 0, loading: false }
+const waitFor = vi.fn()
+vi.mock('@/composables/storeWaitCache.js', () => ({
+  useStoreWait: (storeId) => {
+    waitFor(typeof storeId === 'function' ? storeId() : storeId)
+    return { entry: waitEntry }
+  },
+}))
 
 import StoreCard from '../StoreCard.vue'
 import WaitTimeEstimate from '../WaitTimeEstimate.vue'
@@ -24,7 +32,12 @@ function mountCard(props = {}, slot = '') {
 }
 
 describe('StoreCard', () => {
-  beforeEach(() => setActivePinia(createPinia()))
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    waitEntry.ahead = 0
+    waitEntry.loading = false
+    waitFor.mockClear()
+  })
 
   it('renders the store name and a slot', () => {
     const w = mountCard({ open: true, available: true }, '<span class="cuisine">Japanese</span>')
@@ -61,5 +74,30 @@ describe('StoreCard', () => {
     expect(openCard.findComponent(WaitTimeEstimate).exists()).toBe(true)
     const closedCard = mountCard({ open: false, available: true })
     expect(closedCard.findComponent(WaitTimeEstimate).exists()).toBe(false)
+  })
+
+  it('shows how many orders are ahead when the store is taking orders', () => {
+    waitEntry.ahead = 3
+    expect(mountCard({ open: true, available: true }).text()).toContain('3 orders before you')
+    waitEntry.ahead = 1
+    expect(mountCard({ open: true, available: true }).text()).toContain('1 order before you')
+    waitEntry.ahead = 0
+    expect(mountCard({ open: true, available: true }).text()).toContain('No orders before you')
+  })
+
+  it('hides the queue while loading, and for closed or unavailable stores', () => {
+    waitEntry.ahead = 3
+    waitEntry.loading = true
+    expect(mountCard({ open: true, available: true }).text()).not.toContain('before you')
+    waitEntry.loading = false
+    expect(mountCard({ open: false, available: true }).text()).not.toContain('before you')
+    expect(mountCard({ open: true, available: false }).text()).not.toContain('before you')
+  })
+
+  it('does not watch the queue of a closed store', () => {
+    mountCard({ open: false, available: true })
+    expect(waitFor).toHaveBeenLastCalledWith(null)
+    mountCard({ open: true, available: true })
+    expect(waitFor).toHaveBeenLastCalledWith('s1')
   })
 })

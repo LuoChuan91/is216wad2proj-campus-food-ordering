@@ -348,15 +348,17 @@ export const useUiStore = defineStore("ui", () => {
       notify("Can't order again", "None of these items are available any more", "warn");
       return;
     }
-    if (u.cart.storeId && u.cart.storeId !== order.store_id) u.cart.lines = [];
-    u.cart.storeId = order.store_id;
-    u.cart.lines.push(...lines);
+    u.cart = { storeId: order.store_id, lines };
+    u.storeId = order.store_id;
     const skipped = order.items.length - lines.length;
-    notify(
-      "Added to cart",
-      skipped ? `${skipped} item${skipped === 1 ? " is" : "s are"} no longer available and ${skipped === 1 ? "was" : "were"} left out` : `${order.store_name || "Your"} order is in your cart`,
-      skipped ? "warn" : "ok",
-    );
+    if (skipped) {
+      notify(
+        "Some items left out",
+        `${skipped} item${skipped === 1 ? " is" : "s are"} no longer available and ${skipped === 1 ? "was" : "were"} left out`,
+        "warn",
+      );
+    }
+    openCheckout();
   }
   function setLineQty(key, qty) {
     const u = ui.student;
