@@ -28,7 +28,7 @@ export default defineConfig({
   /* Retry on CI only */
   retries: 2, // sign-in bursts can hit Supabase rate limits
   /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
+  workers: 1,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
@@ -45,24 +45,13 @@ export default defineConfig({
     headless: !!process.env.CI,
   },
 
-  /* Configure projects for major browsers */
+  /* Chromium only. Firefox and WebKit are not installed, and running all three
+     multiplies the sign-ins by 3, which hits the Supabase auth rate limit. */
   projects: [
     {
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
-      },
-    },
-    {
-      name: 'firefox',
-      use: {
-        ...devices['Desktop Firefox'],
-      },
-    },
-    {
-      name: 'webkit',
-      use: {
-        ...devices['Desktop Safari'],
       },
     },
 

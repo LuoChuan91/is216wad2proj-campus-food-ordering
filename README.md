@@ -157,8 +157,12 @@ everything it created. It needs `server/.env` and `client/.env` filled in (see
 
 ```bash
 cd client
-pnpm exec playwright test --project=chromium --workers=1
+pnpm test:e2e
 ```
+
+It runs in **Chromium only**. Running several browsers multiplies the sign-ins
+and hits the Supabase auth rate limit, so the other browser projects are not
+enabled.
 
 What it covers:
 
