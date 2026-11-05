@@ -17,7 +17,7 @@ import { useUiStore } from '@/stores/ui.js'
 import { useCatalogStore } from '@/stores/catalog.js'
 import { useOrdersStore } from '@/stores/orders.js'
 import * as E from '@/utils/engine.js'
-import { config as cfg } from '@/config/index.js'
+import { waitSettings } from '@/utils/waitSettings.js'
 import { shortName } from '@/utils/landmarks.js'
 import { useStoreOrdersLive } from '@/composables/useStoreOrdersLive.js'
 import { acquireStoreWait, releaseStoreWait, peekStoreWait } from '@/composables/storeWaitCache.js'
@@ -38,8 +38,7 @@ const open = computed(() => ui.open(store.value))
 const doneToday = computed(() => ordersStore.db.orders.filter((o) => o.store_id === store.value.id && (o.status === 'completed' || (o.status === 'ready' && gone(o))) && E.sameDay(o.created_at, now.value)).length)
 // A delivery order leaves the board once the courier has picked it up
 const gone = (o) => o.type === 'delivery' && o.delivery && ['picked_up', 'delivered'].includes(o.delivery.status)
-// Cooks at once: the frontend engine's number of parallel stations (D3).
-const kitchenSlots = cfg.kitchenSlots
+const kitchenSlots = computed(() => (store.value ? waitSettings(store.value.id).stations : ''))
 
 // Merchant live layer: the merchant-store:<id> channel ('order_change') fires
 // whenever this store's orders change. We refetch JUST this store's orders (via
@@ -104,20 +103,21 @@ onBeforeUnmount(() => {
     <nav class="rail" aria-label="Merchant sections">
       <button :class="{ on: t.merchantTab === 'orders' }" @click="ui.setMerchantTab('orders')"><Icon name="receipt" :size="20" /><span>Orders</span></button>
       <button :class="{ on: t.merchantTab === 'menu' }" @click="ui.setMerchantTab('menu')"><Icon name="menu" :size="20" /><span>Menu</span></button>
+      <button :class="{ on: t.merchantTab === 'store' }" @click="ui.setMerchantTab('store')"><Icon name="store" :size="20" /><span>Store</span></button>
     </nav>
     <div v-if="!store" class="m-main"><p class="col-empty">This account doesn't run any stores yet. An admin links stores to merchant accounts.</p></div>
     <div v-else class="m-main">
-      <header class="m-top">
+      <header class="m-top d-flex align-items-center flex-wrap gap-3">
         <Mono :store="store" :size="36" />
-        <div class="m-title">
+        <div class="m-title d-flex flex-column flex-grow-1 overflow-hidden">
           <select v-if="stores.length > 1" class="form-select form-select-sm m-store" aria-label="Store" :value="store.id" @change="ui.setMerchantStore($event.target.value)">
             <option v-for="x in stores" :key="x.s.id" :value="x.s.id">{{ x.s.name }}{{ x.waiting ? ' (' + x.waiting + ' waiting)' : '' }}</option>
           </select>
           <strong v-else>{{ store.name }}</strong>
           <small>{{ venue ? shortName(venue.name) : '' }} · {{ store.unit_no }} · {{ open.label }}</small>
         </div>
-        <label class="form-switch m-open"><input class="form-check-input" type="checkbox" role="switch" :checked="store.is_open" :disabled="busy[store.id]" @change="ordersStore.setStoreOpen(store.id, $event.target.checked)"><span>{{ store.is_open ? 'Taking orders' : 'Paused' }}</span></label>
-        <StatCard cap label="Cooks at once" :value="kitchenSlots" title="Set on the server (KITCHEN_SLOTS); mirrored in the client config" />
+        <label class="form-check form-switch mb-0 small fw-bold text-nowrap"><input class="form-check-input" type="checkbox" role="switch" :checked="store.is_open" :disabled="busy[store.id]" @change="ordersStore.setStoreOpen(store.id, $event.target.checked)"><span class="form-check-label">{{ store.is_open ? 'Taking orders' : 'Paused' }}</span></label>
+        <StatCard cap label="Workstations" :value="kitchenSlots" title="Change it above the order board" />
         <StatCard label="Done today" :value="doneToday" />
         <StatCard label="Updates" :value="liveConnected ? 'Live' : 'Polling'" :title="liveConnected ? 'Realtime is connected' : 'Polling for updates'" />
       </header>

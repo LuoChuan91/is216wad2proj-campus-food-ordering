@@ -15,6 +15,7 @@ import { acquireStoreWait, releaseStoreWait } from '@/composables/storeWaitCache
 
 const ui = useUiStore()
 const catalog = useCatalogStore()
+const emit = defineEmits(['map-click', 'map-interact'])
 
 // Live wait-time cache: one shared realtime engine per store (store:<id> /
 // queue_change), so the imperative venueTip HTML reads the SAME live number the
@@ -99,7 +100,7 @@ function landmarkTip(l) {
 function upsert(id, latlng, html, tip, opts) {
   const m = markers[id]
   if (!m) {
-    const mk = L.marker(latlng, { icon: L.divIcon({ className: opts.className, html, iconSize: null }), keyboard: false, riseOnHover: true, zIndexOffset: opts.z || 0 })
+    const mk = L.marker(latlng, { icon: L.divIcon({ className: opts.className, html, iconSize: null }), keyboard: false, riseOnHover: true, zIndexOffset: opts.z || 0, bubblingMouseEvents: false })
     mk.bindTooltip(tip, { direction: 'top', offset: [0, opts.tipOffset], className: 'map-tip', opacity: 1 })
     // Near the top of the map the search bar would cover the pop-up, so show it below the marker there
     mk.on('tooltipopen', (e) => {
@@ -185,6 +186,10 @@ function fetchRoutes() {
 onMounted(() => {
   map = L.map(el.value, { zoomControl: false, attributionControl: true, keyboard: false, zoomSnap: 0.25, zoomDelta: 0.5, tap: false })
   map.attributionControl.setPrefix('<a href="https://leafletjs.com">Leaflet</a>')
+  // A real click on the map (not a pan) tells the Explore screen to drop its sheet.
+  map.on('click', () => emit('map-click'))
+  // Panning the map also drops the sheet, like Google Maps.
+  map.on('dragstart', () => emit('map-interact'))
   const tiles = L.tileLayer(cfg.tiles.url, { attribution: cfg.tiles.attribution, maxZoom: cfg.tiles.maxZoom }).addTo(map)
   // No map tiles at all (offline, or a network that blocks them)? Draw a simple campus outline instead.
   let loaded = 0, failed = 0

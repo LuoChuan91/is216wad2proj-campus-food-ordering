@@ -14,6 +14,7 @@ import { useOrdersStore } from "./orders.js";
 import { useUiStore, studentUi, staffUi } from "./ui.js";
 import { useNotificationsStore } from "./notifications.js";
 import { go, replace, HOME } from "@/router/nav.js";
+import { setActor } from "@/services/api.js";
 
 const SESSION_KEY = "campus-delights-session";
 const session = {
@@ -77,12 +78,12 @@ export const useSessionStore = defineStore("session", () => {
 
     // initialise session
     session$.userId = userId;
+    setActor(userId);
     session.save(userId, p.role, { fresh });
 
     // Notifications: a fresh sign-in starts clean (and wipes stale stored
     // history); a refresh restores the history.
     notes.hydrate(userId, { fresh });
-    ui.menu = null;
 
     orders.db.orders = [];
     orders.db.jobs = [];
@@ -103,9 +104,9 @@ export const useSessionStore = defineStore("session", () => {
   function signOut() {
     const ui = useUiStore();
     session$.userId = null;
+    setActor(null);
     session.save(null);
     useNotificationsStore().clear();
-    ui.menu = null;
     replace("/");
   }
 

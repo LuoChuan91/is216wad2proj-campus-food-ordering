@@ -12,6 +12,6 @@ exports.getStore = async (req, res) => {
 };
 
 exports.updateStore = async (req, res) => {
-  const store = await service.updateStore(req.params.id, req.body);
+  const store = await service.updateStore(req.params.id, req.body, req.get('x-user-id'));
   res.json(store);
 };

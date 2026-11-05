@@ -16,8 +16,22 @@ defineProps({
 </script>
 
 <template>
-  <div class="m-stat" :class="{ cap }" :title="title || undefined">
+  <div class="m-stat d-flex flex-column align-items-start align-items-md-end" :class="{ cap }" :title="title || undefined">
     <small>{{ label }}</small>
     <b><slot>{{ value }}</slot></b>
   </div>
 </template>
+
+<style scoped>
+.m-stat small {
+  color: var(--muted);
+  font-size: var(--fs-micro);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.m-stat b {
+  font-size: var(--fs-heading);
+  font-variant-numeric: tabular-nums;
+}
+</style>

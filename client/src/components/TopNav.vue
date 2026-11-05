@@ -10,11 +10,13 @@ import { config as cfg } from '@/config/index.js'
 import { ROLE } from '@/composables/useAppBootstrap.js'
 import { useNotificationsStore } from '@/stores/notifications.js'
 import NotificationPanel from '@/components/NotificationPanel.vue'
+import StatusTag from '@/components/StatusTag.vue'
+import TabBar from '@/portals/student/TabBar.vue'
 
 const ui = useUiStore()
 const orders = useOrdersStore()
 const session = useSessionStore()
-const { online, now, menu } = storeToRefs(ui)
+const { online, now } = storeToRefs(ui)
 
 const me = computed(() => orders.me())
 
@@ -27,32 +29,34 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
 <template>
   <header class="topnav">
     <div class="tn-brand">
-      <AppMark :size="28" /><b>{{ cfg.appName }}</b><span class="tn-portal">{{ ROLE[me.role] }}</span>
+      <AppMark :size="28" /><b>{{ cfg.appName }}</b><span class="tn-portal d-none d-lg-inline">{{ ROLE[me.role] }}</span>
+    </div>
+    <div class="flex-grow-1 d-flex">
+      <TabBar v-if="me.role === 'student' && me.status === 'active'" top class="d-none d-md-flex" />
     </div>
     <span v-if="!online" class="tn-offline" role="status"><i></i>Reconnecting…</span>
     <span class="tn-clock">
-      <Icon name="clock" :size="14" /><span class="tn-date">{{ E.dateLabel(now) }},</span>{{ E.clock(now) }}
+      <Icon name="clock" :size="14" /><span class="tn-date d-none d-xl-inline">{{ E.dateLabel(now) }},</span>{{ E.clock(now) }}
     </span>
-    <div class="tn-menu">
-      <button type="button" class="tn-btn" aria-label="Notifications" :aria-expanded="menu === 'bell'"
-        @click.stop="ui.toggleMenu('bell')">
+    <div class="tn-menu dropdown">
+      <button type="button" class="tn-btn" aria-label="Notifications" aria-expanded="false"
+        data-bs-toggle="dropdown" data-bs-auto-close="outside" data-bs-offset="0,8">
         <Icon name="bell" :size="20" /><b v-if="unread" class="tn-dot">{{ unread }}</b>
       </button>
-      <div v-if="menu === 'bell'" class="tn-drop tn-bell">
+      <div class="tn-drop tn-bell dropdown-menu dropdown-menu-end border-0">
         <h6>Notifications</h6>
         <NotificationPanel />
       </div>
     </div>
-    <div class="tn-menu">
-      <button type="button" class="tn-acct" aria-label="Account menu" :aria-expanded="menu === 'account'"
-        @click.stop="ui.toggleMenu('account')">
-        <Avatar :name="me.name" :size="30" :tone="me.role === 'student' ? 'brand' : 'navy'" /><span class="tn-name">{{
+    <div class="tn-menu dropdown">
+      <button type="button" class="tn-acct" aria-label="Account menu" aria-expanded="false"
+        data-bs-toggle="dropdown" data-bs-offset="0,8">
+        <Avatar :name="me.name" :size="30" :tone="me.role === 'student' ? 'brand' : 'navy'" /><span class="tn-name d-none d-lg-inline">{{
           me.name }}</span>
         <Icon name="chevD" :size="16" />
       </button>
-      <div v-if="menu === 'account'" class="tn-drop">
-        <div class="tn-me"><strong>{{ me.name }}</strong><small>{{ me.email }}</small><span class="tag">{{ ROLE[me.role]
-        }}</span></div>
+      <div class="tn-drop dropdown-menu dropdown-menu-end border-0">
+        <div class="tn-me"><strong>{{ me.name }}</strong><small>{{ me.email }}</small><StatusTag>{{ ROLE[me.role] }}</StatusTag></div>
         <button type="button" class="tn-item" @click="session.signOut()">
           <Icon name="logout" :size="18" /><span>Log Out<small>Back to the sign-in page</small></span>
         </button>
@@ -83,13 +87,12 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
   display: flex;
   align-items: center;
   gap: 9px;
-  margin-right: auto;
   min-width: 0;
 }
 
 .tn-brand b {
   font-family: var(--font-display);
-  font-size: 21px;
+  font-size: var(--fs-title);
   font-weight: 800;
   letter-spacing: -0.01em;
   white-space: nowrap;
@@ -98,7 +101,7 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
 }
 
 .tn-portal {
-  font-size: 12px;
+  font-size: var(--fs-caption);
   font-weight: 700;
   padding: 2px 9px;
   border-radius: 999px;
@@ -110,7 +113,7 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 13px;
+  font-size: var(--fs-desc);
   font-weight: 600;
   color: #cfd6f1;
   font-variant-numeric: tabular-nums;
@@ -121,7 +124,7 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: var(--fs-caption);
   font-weight: 700;
   color: #ffd8cc;
 }
@@ -160,7 +163,7 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
 .tn-acct {
   padding: 4px 8px 4px 4px;
   font-weight: 700;
-  font-size: 14px;
+  font-size: var(--fs-body);
 }
 
 .tn-acct :deep(.avatar.av-navy) {
@@ -190,16 +193,13 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
   border-radius: 9px;
   background: var(--brand);
   color: #fff;
-  font-size: 11px;
+  font-size: var(--fs-micro);
   display: grid;
   place-items: center;
   box-shadow: 0 0 0 2px var(--navy);
 }
 
 .tn-drop {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 8px);
   width: min(300px, calc(100vw - 20px));
   max-height: calc(100vh - var(--nav-h) - 24px);
   overflow-y: auto;
@@ -210,11 +210,11 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
     0 18px 50px rgba(20, 24, 40, 0.28),
     0 0 0 1px rgba(20, 24, 40, 0.06);
   padding: 8px;
-  font-size: 13.5px;
+  font-size: var(--fs-desc);
 }
 
 .tn-drop h6 {
-  font-size: 12px;
+  font-size: var(--fs-caption);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--muted);
@@ -261,18 +261,18 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
 
 .tn-note strong {
   display: block;
-  font-size: 13.5px;
+  font-size: var(--fs-desc);
 }
 
 .tn-note span {
   display: block;
   color: var(--ink-2);
-  font-size: 12.5px;
+  font-size: var(--fs-desc);
 }
 
 .tn-note small {
   color: var(--muted);
-  font-size: 11.5px;
+  font-size: var(--fs-caption);
 }
 
 .tn-me {
@@ -283,7 +283,7 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
 
 .tn-me strong {
   display: block;
-  font-size: 15px;
+  font-size: var(--fs-subheading);
 }
 
 .tn-me small {
@@ -317,7 +317,7 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
   display: block;
   color: var(--muted);
   font-weight: 500;
-  font-size: 12px;
+  font-size: var(--fs-caption);
 }
 
 .tn-item:hover {
@@ -331,5 +331,22 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
 
 .tn-item.danger :deep(.ic) {
   color: var(--late);
+}
+@media (max-width: 720px) {
+  .topnav {
+    gap: 6px;
+    padding: 0 6px 0 12px;
+  }
+  .tn-clock {
+    font-size: var(--fs-caption);
+  }
+  .tn-brand b {
+    font-size: var(--fs-heading);
+  }
+}
+@media (max-width: 400px) {
+  .tn-clock {
+    display: none;
+  }
 }
 </style>

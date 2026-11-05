@@ -29,6 +29,7 @@ vi.mock('@/services/api.js', () => ({
     setProfileStatus: vi.fn(),
     addVenue: vi.fn(),
   },
+  setActor: vi.fn(),
 }))
 
 import { useSessionStore } from '../session.js'

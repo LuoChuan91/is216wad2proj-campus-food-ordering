@@ -3,6 +3,13 @@ import axios from 'axios'
 
 const http = axios.create({ baseURL: '/api', timeout: 10000 })
 
+let actorId = null
+export const setActor = (id) => { actorId = id || null }
+http.interceptors.request.use((req) => {
+  if (actorId) req.headers['X-User-Id'] = actorId
+  return req
+})
+
 // Turn the server's { error: "..." } into a normal Error with that message
 http.interceptors.response.use(
   (res) => res.data,
@@ -40,8 +47,12 @@ export const api = {
   setOrderStatus: (orderId, status) => http.patch(`/orders/${orderId}`, { status }),
   setItemAvailable: (itemId, available) => http.patch(`/menu/${itemId}`, { available }),
   updateStore: (storeId, changes) => http.patch(`/stores/${storeId}`, changes),
+  updateMenuItem: (itemId, changes) => http.patch(`/menu/${itemId}`, changes),
+  addMenuItem: (item) => http.post('/menu', item),
+  removeMenuItem: (itemId) => http.delete(`/menu/${itemId}`),
   delivery: (jobId, action, courierId) => http.patch(`/deliveries/${jobId}`, { action, courier_id: courierId }),
   setProfileStatus: (id, status) => http.patch(`/profiles/${id}`, { status }),
+  markPasswordSet: (id) => http.patch(`/profiles/${id}/password-set`),
   addVenue: (venue) => http.post('/venues', venue),
 }
 

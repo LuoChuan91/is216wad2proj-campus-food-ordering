@@ -1,18 +1,19 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '@/common/supabase.js'
 import * as auth from '@/services/authService.js'
-<<<<<<< Updated upstream
-=======
 import { api } from '@/services/api.js'
 import { useSessionStore } from '@/stores/session.js'
 import { useCatalogStore } from '@/stores/catalog.js'
 import { HOME } from '@/router/nav.js'
 import { config as cfg } from '@/config/index.js'
->>>>>>> Stashed changes
 
 const router = useRouter()
+const session = useSessionStore()
+const catalog = useCatalogStore()
+const me = computed(() => catalog.user(session.session.userId))
+const invited = computed(() => !!me.value && me.value.password_set === false)
 const password = ref('')
 const confirm = ref('')
 const error = ref('')
@@ -51,6 +52,12 @@ async function save() {
   busy.value = true
   try {
     await auth.setNewPassword(password.value)
+    if (invited.value) {
+      const saved = await api.markPasswordSet(me.value.id)
+      Object.assign(me.value, saved)
+      router.push(HOME[me.value.role] || '/')
+      return
+    }
     done.value = true
   } catch (e) {
     error.value = e.message
@@ -66,35 +73,6 @@ function signOutAndLeave() {
 </script>
 
 <template>
-<<<<<<< Updated upstream
-  <div class="container py-5" style="max-width: 420px">
-    <h1 class="h3 mb-3">Set new password</h1>
-
-    <div v-if="!ready && !done" class="alert alert-warning">
-      This reset link is invalid or has expired.
-      <div class="mt-2"><RouterLink to="/forgot-password">Request a new one</RouterLink></div>
-    </div>
-
-    <div v-else-if="done" class="alert alert-success">
-      Password saved.
-      <button class="btn btn-sm btn-primary ms-2" @click="router.push('/login')">Go to sign in</button>
-    </div>
-
-    <form v-else @submit.prevent="save">
-      <div v-if="error" class="alert alert-danger">{{ error }}</div>
-      <div class="mb-3">
-        <label class="form-label">New password</label>
-        <input v-model="password" type="password" class="form-control" required />
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Confirm new password</label>
-        <input v-model="confirm" type="password" class="form-control" required />
-      </div>
-      <button class="btn btn-primary w-100" :disabled="busy">
-        {{ busy ? 'Saving...' : 'Save password' }}
-      </button>
-    </form>
-=======
   <div class="reset">
     <span class="blob b1" aria-hidden="true"></span>
     <span class="blob b2" aria-hidden="true"></span>
@@ -156,7 +134,6 @@ function signOutAndLeave() {
         </button>
       </template>
     </section>
->>>>>>> Stashed changes
   </div>
 </template>
 

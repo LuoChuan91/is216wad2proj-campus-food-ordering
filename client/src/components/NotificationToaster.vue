@@ -113,7 +113,7 @@ onBeforeUnmount(() => {
     0 12px 34px rgba(20, 24, 40, 0.24),
     0 0 0 1px rgba(20, 24, 40, 0.06);
   font-family: var(--font-ui);
-  font-size: 13px;
+  font-size: var(--fs-desc);
   line-height: 1.3;
   pointer-events: auto;
 }
@@ -129,7 +129,7 @@ onBeforeUnmount(() => {
 }
 .toast-text strong {
   display: block;
-  font-size: 13.5px;
+  font-size: var(--fs-desc);
 }
 .toast-text span {
   color: var(--ink-2);
@@ -138,7 +138,7 @@ onBeforeUnmount(() => {
   border: 0;
   background: none;
   color: var(--muted);
-  font-size: 18px;
+  font-size: var(--fs-heading);
   line-height: 1;
   cursor: pointer;
   padding: 0 2px;

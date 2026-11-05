@@ -84,7 +84,7 @@ function announceChanges() {
       }
       // order paid -> preparing: the "cooking" line (realtime fires on paid).
       if (p.status === 'paid' && o.status === 'preparing') {
-        ui.notifyView(buildNotification({ kind: 'order', status: 'paid', order_id: o.id }, ctx()))
+        ui.notifyView(buildNotification({ kind: 'order', status: 'paid', order_id: o.id }, ctx()), { kind: 'order', status: 'paid', order_id: o.id })
       }
       if (p.status !== 'ready' && o.status === 'ready') {
         ui.notifyView(buildNotification({ kind: 'order', status: 'ready', order_id: o.id }, ctx()), { kind: 'order', status: 'ready', order_id: o.id })
@@ -185,15 +185,12 @@ export async function startApp() {
   const tickTimer = setInterval(() => ui.tick(), 1000)
   const catalogTimer = setInterval(refreshCatalog, cfg.catalogPollMs)
 
-  // Close menus on outside click; Escape closes menus and sheets
-  const onClick = (e) => { if (ui.menu && !e.target.closest('.tn-menu')) ui.menu = null }
+  // Escape closes sheets
   const onKeydown = (e) => {
     if (e.key !== 'Escape') return
-    if (ui.menu) { ui.menu = null; return }
     const me = orders.me()
     if (me && me.role === 'student' && ui.ui.student.sheet) ui.closeSheet()
   }
-  document.addEventListener('click', onClick)
   document.addEventListener('keydown', onKeydown)
 
   // The tab title shows who's signed in, so several tabs are easy to tell apart
@@ -206,7 +203,6 @@ export async function startApp() {
   function stop() {
     clearInterval(tickTimer)
     clearInterval(catalogTimer)
-    document.removeEventListener('click', onClick)
     document.removeEventListener('keydown', onKeydown)
     stopSessionWatch()
     stopTitleWatch()

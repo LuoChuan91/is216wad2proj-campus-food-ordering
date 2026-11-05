@@ -23,17 +23,17 @@ const money = E.money
 
 <template>
   <div class="panel receipt">
-    <div v-for="l in lines" :key="l.id" class="co-line">
+    <div v-for="l in lines" :key="l.id" class="co-line d-flex align-items-center gap-2">
       <span class="co-qty">{{ l.qty }}×</span>
-      <div class="co-what">
-        <strong>{{ l.name }}</strong>
+      <div class="co-what flex-grow-1 overflow-hidden">
+        <strong class="d-block">{{ l.name }}</strong>
         <small v-if="l.option_names && l.option_names.length">{{ l.option_names.join(', ') }}</small>
       </div>
       <b>{{ money(l.unit_price * l.qty) }}</b>
     </div>
-    <div v-if="discount" class="rc-row disc"><span>Discount</span><b>−{{ money(discount) }}</b></div>
-    <div class="rc-row"><span>Paid</span><b>{{ money(paid) }}</b></div>
-    <small v-if="payment" class="rc-ref">
+    <div v-if="discount" class="rc-row disc d-flex justify-content-between"><span>Discount</span><b>−{{ money(discount) }}</b></div>
+    <div class="rc-row d-flex justify-content-between"><span>Paid</span><b>{{ money(paid) }}</b></div>
+    <small v-if="payment" class="rc-ref d-block mt-1">
       {{ payment.reference }} · {{ payment.method }}<template v-if="fallback"> · {{ money(feeWaived) }} fee waived</template>
     </small>
   </div>
@@ -46,8 +46,6 @@ const money = E.money
   padding: 8px 12px;
 }
 .rc-row {
-  display: flex;
-  justify-content: space-between;
   border-top: 1px dashed var(--line);
   padding-top: 8px;
   margin-top: 4px;
@@ -60,10 +58,8 @@ const money = E.money
   font-weight: 700;
 }
 .rc-ref {
-  display: block;
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 11px;
-  margin-top: 4px;
+  font-size: var(--fs-micro);
 }
 </style>
