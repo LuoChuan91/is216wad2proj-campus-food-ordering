@@ -84,6 +84,7 @@ are in `.gitignore`.
 ## 2. Live application
 
 **Landing page:** `https://campus-delights.vercel.app/#/`  
+**Demo video:** `https://www.youtube.com/watch?v=SH-AreINMc8`
 
 ---
 
@@ -105,8 +106,10 @@ already approved.
 | Merchant (Supergreen) | Kitchen order board, menu & sold‑out switches, analytics | `hello@greenbowl.sg` | `123456` |
 | Admin | Approve/block students, manage venues *(not part of the main flow)* | `priya.nair@smu.edu.sg` | `123456` |
 
-> The courier is just a student account with "available for jobs" switched on — any
-> student can deliver, as long as it isn't their own order.
+The courier is just a student account with "available for jobs" switched on, any
+student can deliver, as long as it isn't their own order.
+
+**Email limit.** Sign‑up needs email confirmation. Password‑reset and sign-up emails are sent by Supabase's built‑in email service, which allows only about **2 emails per hour** for the whole project. If you see "email rate limit exceeded", wait up to an hour or use the dummy accounts above.
 
 ---
 
