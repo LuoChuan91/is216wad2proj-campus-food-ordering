@@ -54,7 +54,7 @@ const unread = computed(() => items.value.filter((n) => !n.read).length)
         <div class="tn-me"><strong>{{ me.name }}</strong><small>{{ me.email }}</small><span class="tag">{{ ROLE[me.role]
         }}</span></div>
         <button type="button" class="tn-item" @click="session.signOut()">
-          <Icon name="logout" :size="18" /><span>Switch account<small>Back to the sign-in page</small></span>
+          <Icon name="logout" :size="18" /><span>Log Out<small>Back to the sign-in page</small></span>
         </button>
       </div>
     </div>
