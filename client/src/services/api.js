@@ -32,10 +32,14 @@ export const api = {
 
   // live data
   studentOrders: (studentId) => http.get('/orders', { params: { student_id: studentId } }),
+  previousOrders: (studentId) => http.get('/orders/previous', { params: { student_id: studentId } }),
   storeOrders: (storeId) => http.get('/orders', { params: { store_id: storeId } }),
+  storeAnalytics: (storeId, from, to) => http.get(`/stores/${storeId}/analytics`, { params: { from, to } }),
   openJobs: () => http.get('/deliveries', { params: { status: 'open' } }),
   expiredJobs: () => http.get('/deliveries', { params: { status: 'expired' } }),
   myJobs: (courierId) => http.get('/deliveries', { params: { courier_id: courierId } }),
+  riderLocation: (jobId) => http.get(`/deliveries/${jobId}/location`),
+  deliveryChat: (jobId) => http.get(`/deliveries/${jobId}/chat`),
 
   // wait-time estimate engine (used by useWaitTime / waitTimeApi)
   ordersAhead: (storeId, orderId) =>
@@ -51,10 +55,9 @@ export const api = {
   addMenuItem: (item) => http.post('/menu', item),
   removeMenuItem: (itemId) => http.delete(`/menu/${itemId}`),
   delivery: (jobId, action, courierId) => http.patch(`/deliveries/${jobId}`, { action, courier_id: courierId }),
+  switchToPickup: (jobId, studentId) => http.patch(`/deliveries/${jobId}`, { action: 'switch_to_pickup', student_id: studentId }),
+  shareLocation: (jobId, courierId, fix) => http.put(`/deliveries/${jobId}/location`, { courier_id: courierId, ...fix }),
   setProfileStatus: (id, status) => http.patch(`/profiles/${id}`, { status }),
   markPasswordSet: (id) => http.patch(`/profiles/${id}/password-set`),
   addVenue: (venue) => http.post('/venues', venue),
 }
-
-// The shared axios instance, exported for the rare caller that needs raw access.
-export { http }

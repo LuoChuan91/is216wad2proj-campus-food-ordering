@@ -1,14 +1,8 @@
 import { useCatalogStore } from '@/stores/catalog.js'
 import { config as cfg } from '@/config/index.js'
 
-// ---------------------------------------------------------------------------
-// Wait-time settings resolver.
-//
-// Every store row from the server carries its own `workstations` and
-// `wait_strategy` (the DB columns, always non-null). We read those DIRECTLY off
-// the loaded store record. The DEFAULTS below are used ONLY when a store record
-// isn't loaded yet / a value is missing, and they come from ONE place:
-// config.wait (client/src/config/index.js). Edit the default kitchen there.
+// Resolve a store's wait settings (workstations / wait_strategy) from its loaded
+// record, falling back to config.wait defaults when the store or a column is missing.
 export const MERCHANT_STRATEGIES = ['serial', 'scheduled']
 
 // The default settings object the estimators fall back to (frozen copy of the
@@ -17,8 +11,6 @@ export const DEFAULT_WAIT = Object.freeze({
   stations: cfg.wait?.stations ?? 2,
   strategy: cfg.wait?.strategy ?? 'scheduled',
 })
-export const DEFAULT_STRATEGY = DEFAULT_WAIT.strategy
-export const DEFAULT_STATIONS = DEFAULT_WAIT.stations
 
 /**
  * Resolve a store's wait-time settings, taken DIRECTLY from the server-provided

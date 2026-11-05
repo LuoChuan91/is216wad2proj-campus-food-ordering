@@ -1,16 +1,13 @@
 <script setup>
-// Stores: every store on campus in one list (like Grab's restaurant list), with search,
-// quick filters by category and a sort. Uses the same cards as the venue sheet.
-//
-// Migrated from portals/student/StoresTab.vue. Renders in StudentLayout's persistent
-// KeepAlive tab layer. Behaviour unchanged.
+// Stores: every store on campus in one list, with search, category filters and a sort.
 import { computed, watch, onBeforeUnmount } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui.js'
 import { useCatalogStore } from '@/stores/catalog.js'
-import { shortName } from '@/utils/landmarks.js'
+import { venueLabel } from '@/utils/engine.js'
 import { acquireStoreWait, releaseStoreWait, peekStoreWait } from '@/composables/storeWaitCache.js'
 import StoreCard from '@/components/StoreCard.vue'
+import PreviouslyOrdered from '@/components/PreviouslyOrdered.vue'
 
 const ui = useUiStore()
 const catalog = useCatalogStore()
@@ -19,7 +16,7 @@ const { ui: uiState } = storeToRefs(ui)
 const u = computed(() => uiState.value.student)
 const list = computed(() => u.value.list)
 
-// Live wait minutes per store from the single frontend engine (store:<id>), used
+// Live wait minutes per store (store:<id>), used
 // by the "Shortest wait" sort. The cards themselves render <WaitTimeEstimate>.
 const waitStores = new Set()
 const storeWaitMins = (storeId) => {
@@ -84,6 +81,7 @@ const openCount = computed(() => rows.value.filter((r) => r.open.open).length)
     <div class="container px-0">
     <h2 class="tab-title">All stores</h2>
     <p class="tab-sub">{{ catalog.db.stores.length }} stores on campus · {{ openCount }} taking orders</p>
+    <PreviouslyOrdered />
     <label class="search d-flex align-items-center gap-2"><Icon name="search" :size="16" /><input type="search" placeholder="Search stores, dishes or buildings" aria-label="Search stores" :value="list.search" @input="ui.setListSearch($event.target.value)">
       <button v-if="list.search" type="button" class="icon-btn sm" aria-label="Clear search" @click="ui.setListSearch('')"><Icon name="close" :size="12" /></button></label>
     <div class="filter-row scroll" role="group" aria-label="Filter stores">
@@ -101,7 +99,7 @@ const openCount = computed(() => rows.value.filter((r) => r.open.open).length)
       <div v-for="r in shown" :key="r.s.id" class="col-12 col-md-6 col-lg-4">
       <StoreCard class="h-100" :store="r.s" :open="r.open.open" :available="r.available">
         <small class="text-body-secondary">{{ r.s.cuisine }}</small>
-        <small v-if="r.v" class="d-inline-flex align-items-center gap-1 text-body-secondary"><Icon name="walk" :size="12" />{{ r.walk.minutes }} min · {{ shortName(r.v.name) }}</small>
+        <small v-if="r.v" class="d-inline-flex align-items-center gap-1 text-body-secondary"><Icon name="walk" :size="12" />{{ r.walk.minutes }} min · {{ venueLabel(r.v) }}</small>
       </StoreCard>
       </div>
       <p v-if="!shown.length" class="empty-note col-12">No stores match. Try another filter.</p>
@@ -111,8 +109,6 @@ const openCount = computed(() => rows.value.filter((r) => r.open.open).length)
 </template>
 
 <style scoped>
-/* Stores list: filter chips + sort row (moved from the global stylesheet).
-   Kept global (shared): .stores-tab padding, .tab-title, .search. */
 .tab-sub {
   color: var(--muted);
   font-size: var(--fs-desc);

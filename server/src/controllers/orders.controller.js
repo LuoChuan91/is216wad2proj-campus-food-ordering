@@ -16,6 +16,11 @@ exports.getOrderList = async (req, res) => {
   res.json(orders);
 };
 
+exports.getPreviousOrders = async (req, res) => {
+  const orders = await service.listPreviousOrders(req.query.student_id);
+  res.json(orders);
+};
+
 exports.getOrder = async (req, res) => {
   await deliveriesService.expireOverdue();
   const order = await service.getOrder(req.params.id);

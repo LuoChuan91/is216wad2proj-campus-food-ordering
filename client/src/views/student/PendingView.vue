@@ -1,15 +1,12 @@
 <script setup>
 // Shown to students whose account isn't active (waiting for an admin, or blocked).
-//
-// Migrated from portals/student/PendingScreen.vue. Rendered by StudentLayout when
-// the signed-in student's status isn't 'active'. Behaviour unchanged.
 import { computed } from 'vue'
 import { useOrdersStore } from '@/stores/orders.js'
+import { firstName as first } from '@/utils/engine.js'
 
 const orders = useOrdersStore()
 const me = computed(() => orders.me())
 const waiting = computed(() => me.value.status === 'inactive')
-const first = (name) => name.split(' ')[0]
 </script>
 
 <template>

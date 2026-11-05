@@ -1,8 +1,5 @@
-// Orders store.
-//
-// The fast-changing, per-user data: a student's own orders (or a merchant's stores'
-// orders), the peer-delivery jobs, and the live wait times. Also the order/courier/
-// admin actions and the checkout estimate, preserved exactly from the prototype.
+// Orders store: a student's own orders (or a
+// merchant's stores' orders), peer-delivery jobs — plus the order/courier actions.
 import { defineStore } from "pinia";
 import { reactive } from "vue";
 import { api } from "@/services/api.js";
@@ -10,6 +7,7 @@ import * as E from "@/utils/engine.js";
 import { useSessionStore } from "./session.js";
 import { useCatalogStore } from "./catalog.js";
 import { useUiStore } from "./ui.js";
+import { markSwitchedToPickup } from "@/utils/pickupSwitch.js";
 
 const ACTIVE = ["paid", "preparing", "ready"];
 
@@ -120,10 +118,7 @@ export const useOrdersStore = defineStore("orders", () => {
     };
   }
 
-  // Refetch ONE store's orders and merge them into db.orders (replacing that
-  // store's rows, keeping other stores untouched). Used by the merchant live
-  // layer so a realtime order_change updates the board without a whole-app poll.
-  // Returns the normalised rows for the store.
+  // Refetch ONE store's orders and merge them into db.orders
   async function loadStoreOrders(storeId) {
     if (!storeId) return [];
     const list = (await api.storeOrders(storeId)).map(normaliseOrder);
@@ -233,54 +228,19 @@ export const useOrdersStore = defineStore("orders", () => {
   const pickUp = (jobId) => courierAction(jobId, "pickup");
   const deliver = (jobId) => courierAction(jobId, "deliver");
 
-  /* admin */
-  // TODO: should not be under orders.js
-  async function setStudentStatus(userId, status) {
+  /* student: stop waiting for a courier and collect the order yourself */
+  async function switchToPickup(orderId) {
     const ui = useUiStore();
-    const catalog = useCatalogStore();
-    const saved = await ui.run(userId, () =>
-      api.setProfileStatus(userId, status),
+    const o = order(orderId);
+    if (!o || !o.delivery || o.delivery.status !== "open") return;
+    // remembered first: the "Switched to pickup" message can arrive before the reply does
+    markSwitchedToPickup(orderId);
+    const saved = await ui.run(`switch:${orderId}`, () =>
+      api.switchToPickup(o.delivery.id, useSessionStore().session.userId),
     );
-    if (saved) Object.assign(catalog.user(userId), saved);
-  }
-  const approveStudent = (id) => setStudentStatus(id, "active");
-  const blockStudent = (id) => setStudentStatus(id, "blocked");
-  const removeStudent = (id) => setStudentStatus(id, "removed");
-
-  async function addVenue() {
-    const ui = useUiStore();
-    const catalog = useCatalogStore();
-    const t = ui.ui.staff;
-    const d = t.venueDraft;
-    const lat = parseFloat(d.lat);
-    const lng = parseFloat(d.lng);
-    if (!d.name.trim()) {
-      t.formError = "Give the venue a name.";
-      return;
-    }
-    if (!(lat > 1.15 && lat < 1.48 && lng > 103.6 && lng < 104.1)) {
-      t.formError = "Click the map to place the pin inside Singapore.";
-      return;
-    }
-    t.saving = true;
-    try {
-      const v = await api.addVenue({
-        name: d.name.trim(),
-        lat,
-        lng,
-        type: "eatery",
-      });
-      catalog.db.venues.push(v);
-      t.venueDraft = { name: "", lat: "", lng: "" };
-    } catch (err) {
-      t.formError = err.message;
-    } finally {
-      t.saving = false;
-    }
+    if (saved) await loadLive().catch(() => {});
   }
 
-  // Ask the server's wait-time engine when the current cart would be ready
-  // (removed: checkout now computes this on the frontend via useCartEstimate).
 
   return {
     db,
@@ -305,12 +265,7 @@ export const useOrdersStore = defineStore("orders", () => {
     acceptJob,
     pickUp,
     deliver,
-    setStudentStatus,
-    approveStudent,
-    blockStudent,
-    removeStudent,
-    // rejectStudent,
-    addVenue,
+    switchToPickup,
     _normaliseOrder: normaliseOrder,
     _normaliseJob: normaliseJob,
   };

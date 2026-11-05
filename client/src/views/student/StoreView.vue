@@ -1,17 +1,12 @@
 <script setup>
-// One store's page: open status, wait, discount, and its menu by category.
-//
-// Migrated from portals/student/StorePage.vue. The store id now comes from the
-// route param (:storeId) rather than S.ui.student.storeId — vue-router owns the
-// URL. Everything else (open status, the live WaitTimeEstimate, the cart bar) is
-// unchanged and reads the Pinia stores directly.
+// One store's page (id from the :storeId route param): open status, wait, discount,
+// and its menu by category.
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui.js'
 import { useCatalogStore } from '@/stores/catalog.js'
 import * as E from '@/utils/engine.js'
-import { shortName } from '@/utils/landmarks.js'
 import WaitTimeEstimate from '@/components/WaitTimeEstimate.vue'
 import StoreHero from '@/components/StoreHero.vue'
 import StatusTag from '@/components/StatusTag.vue'
@@ -41,7 +36,7 @@ const cartTotal = computed(() => u.value.cart.lines.reduce((s, l) => s + l.unit_
 
 <template>
   <section v-if="store" class="page store-page">
-    <StoreHero :store="store" :venue-name="venue ? shortName(venue.name) : ''" @back="ui.back()" />
+    <StoreHero :store="store" :venue-name="E.venueLabel(venue)" @back="ui.back()" />
     <div v-if="!available" class="menu scroll">
       <p class="empty-note">This store is currently unavailable.</p>
     </div>
@@ -75,8 +70,6 @@ const cartTotal = computed(() => u.value.cart.lines.reduce((s, l) => s + l.unit_
 </template>
 
 <style scoped>
-/* Store page: open/wait/discount row + menu (moved from the global stylesheet).
-   .page/.scroll/.empty-note stay global (shared chrome). */
 .store-info {
   padding: 12px 14px 4px;
   flex: none;

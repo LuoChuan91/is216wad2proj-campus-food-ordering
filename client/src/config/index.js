@@ -10,6 +10,7 @@ export const config = {
 
   deliveryFee: 0.8, // mirror of server DELIVERY_FEE (keep in sync)
   deliveryWindowMin: 10, // no courier within this many minutes -> the order switches to pickup
+  chatOpenAfterDeliveryMin: 15,
 
   // How many dishes a kitchen cooks at once (mirror of the server's KITCHEN_SLOTS).
   // The frontend wait-time engine uses this as its number of parallel stations.
@@ -30,7 +31,7 @@ export const config = {
 
   // false: a store takes orders whenever its "Taking orders" switch is on, and its opening hours are
   // only shown. true: it also has to be inside its opening hours (the prototype's behaviour).
-  enforceOpeningHours: false,
+  enforceOpeningHours: true,
 
   // Map tiles: OpenStreetMap's own tile server needs no API key (CARTO's now does).
   // Keep the attribution: OpenStreetMap requires it.
@@ -41,5 +42,5 @@ export const config = {
   },
   // Walking routes (OSRM, foot profile). If it can't be reached, a straight-line estimate is used.
   routingUrl: 'https://routing.openstreetmap.de/routed-foot/route/v1/driving/',
-  routingTimeoutMs: 2500,
+  routingTimeoutMs: 6000,
 }

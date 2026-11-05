@@ -6,7 +6,7 @@ import { useOrdersStore } from '@/stores/orders.js'
 import { useMerchantStore } from '@/stores/merchant.js'
 
 const DAYS = [['mon', 'Monday'], ['tue', 'Tuesday'], ['wed', 'Wednesday'], ['thu', 'Thursday'], ['fri', 'Friday'], ['sat', 'Saturday'], ['sun', 'Sunday']]
-const URL_RE = /^https?:\/\/\S+$/
+const URL_RE = /^(https?:\/\/|\/)\S+$/ // a full link, or a photo in client/public (e.g. /images/menu/x.webp)
 
 const ui = useUiStore()
 const orders = useOrdersStore()
@@ -38,7 +38,7 @@ const errors = computed(() => {
   if (!draft.name.trim()) e.name = 'Store name is required.'
   else if (draft.name.trim().length > 80) e.name = 'Keep the name to 80 characters or fewer.'
   if (draft.description.length > 500) e.description = 'Keep the description to 500 characters or fewer.'
-  if (draft.image_url && !URL_RE.test(draft.image_url.trim())) e.image_url = 'Use a full link starting with http:// or https://.'
+  if (draft.image_url && !URL_RE.test(draft.image_url.trim())) e.image_url = 'Use a full link starting with https://, or a site path like /images/menu/photo.webp.'
   for (const [d, label] of DAYS) {
     const h = draft.hours[d]
     if (h.open && (!h.from || !h.to)) e[d] = `Set both times for ${label}.`

@@ -1,20 +1,13 @@
-// Frontend data-access for the wait-time engine.
-//
-// Uses the shared services/api.js layer (one axios instance + interceptor), so
-// the whole app has a SINGLE HTTP layer. The interceptor already unwraps the
-// server's { error } into an Error with .status; here we re-wrap those into a
-// normalized ApiError with a friendly, action-specific message for the UI.
+// Frontend data-access for the wait-time engine (via services/api.js), re-wrapping
+// the api's errors into an ApiError with a friendly, action-specific message.
 //
 // Two API calls:
 //   api.ordersAhead(storeId, orderId) -> GET  /orders/orderAhead
 //   api.itemCookingDetails(ids)       -> POST /menu/itemCookingDetails
 import { api as defaultApi } from '@/services/api.js'
 
-/**
- * A normalized error for any wait-time API failure.
- * `status` is the HTTP status when the server responded, or null for a
- * network/offline/timeout error. `cause` is the original error.
- */
+
+ // normalized error for any wait-time API failure.
 export class ApiError extends Error {
   constructor(message, { status = null, cause = null } = {}) {
     super(message)
@@ -24,8 +17,6 @@ export class ApiError extends Error {
   }
 }
 
-// Turn a thrown error from the shared api (interceptor sets .status; 0 = no
-// response) into an ApiError with a friendly, action-specific message.
 function toApiError(err, action) {
   const status = err && typeof err.status === 'number' ? err.status : null
   let message

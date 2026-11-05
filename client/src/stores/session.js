@@ -1,12 +1,5 @@
-// Session store.
-//
-// Which account THIS browser tab is signed in as. Each tab keeps its own id in
-// sessionStorage, so you can be a student in one tab and the merchant in another.
-// Sign-in is simulated for now: pick an account from the database (Supabase Auth
-// replaces this later).
-//
-// signIn/signOut/restoreSession reset the other stores' per-user state exactly as
-// the prototype's store.js did, so behaviour is unchanged.
+// Session store: which account THIS browser tab is signed in as (kept per-tab in
+// sessionStorage). signIn/signOut/restoreSession reset the other stores' per-user state.
 import { defineStore } from "pinia";
 import { reactive } from "vue";
 import { useCatalogStore } from "./catalog.js";
@@ -29,8 +22,7 @@ const session = {
     try {
       if (id) {
         sessionStorage.setItem(SESSION_KEY, id);
-        // Only a brand-new sign-in resets "available for jobs" to off; a page
-        // refresh (restore) must keep whatever the courier had toggled.
+        // page refresh (restore) keep whatever the courier had toggled.
         if (fresh && role === "student") sessionStorage.setItem(courierKey(id), "0");
       } else {
         sessionStorage.clear()
@@ -64,7 +56,6 @@ export const useSessionStore = defineStore("session", () => {
     openDelivery: false,
   });
 
-  // TODO sign-in is simulated: pick an account from the database. Supabase Auth replaces this later.
   // navigate=false during restoreSession so a reload keeps the URL the user was on.
   // fresh=false during restoreSession so a page refresh PRESERVES the courier flag
   // and REHYDRATES the notification history (a brand-new sign-in resets both).

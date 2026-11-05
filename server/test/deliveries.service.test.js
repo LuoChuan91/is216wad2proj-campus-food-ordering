@@ -88,3 +88,76 @@ test('10-minute rule: an overdue open job expires and the order becomes a pickup
   assert.equal(job.status, 'expired');
   assert.deepEqual(orderChanges, { type: 'pickup', delivery_fee: null });
 });
+
+test('rider location: the courier shares a fix and the student reads it back', async () => {
+  Object.assign(job, { status: 'picked_up', courier_id: 'stu-ben' });
+  const fix = await service.saveLocation('job-1', { courier_id: 'stu-ben', lat: 1.2966, lng: 103.85, accuracy: 8.4 });
+  assert.equal(fix.accuracy, 8);
+  const seen = await service.getLocation('job-1');
+  assert.equal(seen.status, 'picked_up');
+  assert.deepEqual([seen.location.lat, seen.location.lng], [1.2966, 103.85]);
+});
+
+test("rider location: only the job's courier can share, and only with valid coordinates", async () => {
+  Object.assign(job, { status: 'accepted', courier_id: 'stu-ben' });
+  await assert.rejects(service.saveLocation('job-1', { courier_id: 'stu-amy', lat: 1.3, lng: 103.8 }), (err) => err.status === 403);
+  await assert.rejects(service.saveLocation('job-1', { courier_id: 'stu-ben', lat: 'x', lng: 103.8 }), (err) => err.status === 400);
+  await assert.rejects(service.saveLocation('job-1', { courier_id: 'stu-ben', lat: 91, lng: 103.8 }), (err) => err.status === 400);
+});
+
+test('rider location: sharing stops once the delivery is done', async () => {
+  Object.assign(job, { status: 'picked_up', courier_id: 'stu-ben' });
+  await service.saveLocation('job-1', { courier_id: 'stu-ben', lat: 1.2966, lng: 103.85 });
+  job.status = 'delivered';
+  assert.equal((await service.getLocation('job-1')).location, null);
+  await assert.rejects(service.saveLocation('job-1', { courier_id: 'stu-ben', lat: 1.2966, lng: 103.85 }), (err) => err.status === 409);
+});
+
+test('switch to pickup: the student stops waiting for a courier; order becomes a pickup, fee waived', async () => {
+  const view = await service.switchToPickup('job-1', 'stu-amy');
+  assert.equal(view.status, 'expired');
+  assert.ok(Date.parse(job.expires_at) <= Date.now());
+  assert.deepEqual(orderChanges, { type: 'pickup', delivery_fee: null });
+});
+
+test('switch to pickup: only the student who placed the order can do it', async () => {
+  await assert.rejects(service.switchToPickup('job-1', 'stu-ben'), (err) => err.status === 403);
+  await assert.rejects(service.switchToPickup('job-1', undefined), (err) => err.status === 400);
+  assert.equal(job.status, 'open');
+});
+
+test('switch to pickup: too late once a courier has accepted', async () => {
+  Object.assign(job, { status: 'accepted', courier_id: 'stu-ben' });
+  await assert.rejects(service.switchToPickup('job-1', 'stu-amy'), (err) => err.status === 409);
+  assert.equal(orderChanges, null);
+});
+
+test('chat: the customer and the courier get the same channel, with their own roles', async () => {
+  Object.assign(job, { status: 'accepted', courier_id: 'stu-ben' });
+  const customer = await service.getChat('job-1', 'stu-amy');
+  const courier = await service.getChat('job-1', 'stu-ben');
+  assert.equal(customer.channel, courier.channel);
+  assert.match(customer.channel, /^chat:[0-9a-f]{32}$/);
+  assert.ok(!customer.channel.includes('job-1'));
+  assert.equal(customer.role, 'customer');
+  assert.equal(courier.role, 'courier');
+  assert.equal(customer.closes_at, null);
+});
+
+test('chat: nobody else can join', async () => {
+  Object.assign(job, { status: 'picked_up', courier_id: 'stu-ben' });
+  await assert.rejects(service.getChat('job-1', 'stu-blocked'), (err) => err.status === 403);
+  await assert.rejects(service.getChat('job-1', undefined), (err) => err.status === 401);
+});
+
+test('chat: not open until a courier accepts', async () => {
+  await assert.rejects(service.getChat('job-1', 'stu-amy'), (err) => err.status === 409);
+});
+
+test('chat: stays open 15 minutes after delivery, then closes', async () => {
+  const deliveredAt = Date.parse('2026-11-04T12:00:00Z');
+  Object.assign(job, { status: 'delivered', courier_id: 'stu-ben', delivered_at: new Date(deliveredAt).toISOString() });
+  const chat = await service.getChat('job-1', 'stu-amy', deliveredAt + 14 * 60e3);
+  assert.equal(chat.closes_at, '2026-11-04T12:15:00.000Z');
+  await assert.rejects(service.getChat('job-1', 'stu-amy', deliveredAt + 15 * 60e3), (err) => err.status === 410);
+});

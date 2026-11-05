@@ -101,8 +101,11 @@ describe('WaitTimeEstimate', () => {
     expect(fetchQueue).toHaveBeenCalledTimes(1)
 
     // New queue after the broadcast: more burgers -> longer wait.
+    // 6 burgers, batch size 2 -> 3 batches of 60s. With the default resolved
+    // settings (scheduled strategy, 2 stations) the 3 batches run across 2
+    // parallel stations for a makespan of 120s -> "~2 min".
     fetchQueue.mockResolvedValue({
-      orderItems: [{ menu_item_id: 'burger', qty: 6 }], // ceil(6/2)=3 * 60 = 180 -> ~3 min
+      orderItems: [{ menu_item_id: 'burger', qty: 6 }],
       cookingDetails: queue.cookingDetails,
     })
 
@@ -113,7 +116,7 @@ describe('WaitTimeEstimate', () => {
     await flushPromises()
 
     expect(fetchQueue).toHaveBeenCalledTimes(2)
-    expect(wrapper.text()).toContain('~3 min')
+    expect(wrapper.text()).toContain('~2 min')
   })
 
   it('shows the error message when the first load fails and there is no estimate', async () => {

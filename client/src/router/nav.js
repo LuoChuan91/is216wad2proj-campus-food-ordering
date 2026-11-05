@@ -1,14 +1,6 @@
-// A tiny seam between the ui-store nav actions and vue-router.
-//
-// The nav actions (setTab/openStore/…) call go()/replace() here instead of
-// importing the router directly. main.js attaches the real router with
-// setRouter(router) at start-up. Until then — and in unit tests, which create a
-// bare Pinia with no router — go()/replace() are harmless no-ops, so the actions
-// still mutate ui-store state exactly as the prototype did and every existing test
-// keeps passing without a router.
-//
-// This also keeps the store free of a static router import (no import cycle:
-// router -> session/catalog stores -> ... ; the store -> nav.js has no store deps).
+// A tiny seam between the ui-store nav actions and vue-router: the actions call
+// go()/replace() here instead of importing the router, which main.js attaches via
+// setRouter().
 let _router = null
 
 // Where each role lands after sign-in.

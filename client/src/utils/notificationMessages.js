@@ -1,32 +1,15 @@
-// Single source of truth for notification text.
-//
-// Both notification paths funnel through here so the wording is identical:
-//   - realtime  : the Supabase broadcast { kind, status, order_id } ->
-//                 notifications.receive() resolves the order/store/dropoff from
-//                 the stores and calls buildNotification().
-//   - poll-diff : useAppBootstrap.announceChanges() already has the order and
-//                 its lookups, so it calls buildNotification() directly.
-//
-// The wording below is the richer, order-aware copy that used to live inline in
-// announceChanges() (e.g. "Collect order #E287 at Hawker Corner"). When the
-// context (order/store/etc.) is missing we fall back to a short generic line so a
-// very-early or orphaned event still reads sensibly.
-//
-// `toast` (pop-up vs list-only) policy — from the spec / realtime SQL:
-//   order    paid       -> list only
-//   order    ready      -> toast
-//   order    completed  -> toast
-//   delivery accepted   -> toast
-//   delivery picked_up  -> toast
-//   delivery delivered  -> list only
-//   delivery expired    -> toast  (switched to pickup)
+// Single source of truth for notification text: both the realtime and poll-diff
+// paths call buildNotification() so the wording is identical. Falls back to a
+// short generic line when order/store context is missing.
 
+// Which (kind, status) pairs pop up as a toast vs. go to the list only.
 const TOAST = {
-  order: { paid: false, ready: true, completed: true },
+  order: { paid: false, preparing: false, ready: true, completed: true },
   delivery: { accepted: true, picked_up: true, delivered: false, expired: true },
 };
 
-const first = (name) => (name || '').split(' ')[0];
+import { wasSwitchedToPickup } from './pickupSwitch.js';
+import { firstName as first } from './engine.js';
 
 /**
  * @typedef {Object} NotificationPayload
@@ -60,9 +43,6 @@ export function buildNotification(payload, ctx = {}) {
 
   const order = ctx.order || null;
   // Code: prefer the loaded order's code; otherwise derive it from order_id the
-  // same way the server does (first 4 chars, upper-cased), so a brand-new order's
-  // notification (fired by realtime before the order is in the store) still shows
-  // a real code instead of "#—". When neither is available, we omit the fragment.
   const code = order?.code || (payload.order_id ? String(payload.order_id).slice(0, 4).toUpperCase() : null);
   const codeTag = code ? ` #${code}` : '';
   const store = ctx.storeName || 'the store';
@@ -79,6 +59,10 @@ export function buildNotification(payload, ctx = {}) {
       // announceChanges surfaces the "cooking" line; keep that richer wording.
       title = `Order submitted`;
       body = `Your order reference is ${codeTag}`;
+      variant = 'info';
+    } else if (payload.status === 'preparing') {
+      title = 'Kitchen is preparing your order';
+      body = code ? `Order #${code} is being cooked at ${store}` : `Your order is being cooked at ${store}`;
       variant = 'info';
     } else if (payload.status === 'ready') {
       title = 'Your food is ready';
@@ -111,11 +95,16 @@ export function buildNotification(payload, ctx = {}) {
       body = `Dropped at ${drop}`;
       variant = 'success';
     } else {
-      // expired -> switched to pickup
+      // expired -> switched to pickup (by the 10-minute rule, or by the student themselves)
       title = 'Switched to pickup';
-      const mins = ctx.deliveryWindowMin != null ? `${ctx.deliveryWindowMin} min` : 'time';
-      body = `No courier took your order in ${mins}. Collect it at ${store}. Delivery fee waived.`;
-      variant = 'warning';
+      if (wasSwitchedToPickup(payload.order_id)) {
+        body = `Collect it at ${store}. Delivery fee waived.`;
+        variant = 'success';
+      } else {
+        const mins = ctx.deliveryWindowMin != null ? `${ctx.deliveryWindowMin} min` : 'time';
+        body = `No courier took your order in ${mins}. Collect it at ${store}. Delivery fee waived.`;
+        variant = 'warning';
+      }
     }
   }
 
@@ -127,11 +116,3 @@ export function buildNotification(payload, ctx = {}) {
     toast: toastByStatus[payload.status],
   };
 }
-
-/** True when the payload should pop up as a toast. */
-export function shouldToast(payload) {
-  const by = TOAST[payload?.kind];
-  return !!by && !!by[payload?.status];
-}
-
-export { TOAST };

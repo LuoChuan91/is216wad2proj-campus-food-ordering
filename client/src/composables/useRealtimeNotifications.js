@@ -1,74 +1,34 @@
-// Subscribe to the current user's realtime notification channel and feed every
-// incoming payload into the notifications store.
-//
-// Channel: user:<userId>   Event: 'notification'   Payload: { kind, status, order_id, at }
-//
-// The subscription follows the auth store's userId: it (re)subscribes whenever a
-// user logs in / changes, and tears down on logout or unmount.
-import { watch, onBeforeUnmount } from 'vue'
-import { storeToRefs } from 'pinia'
-import defaultSupabase from '@/common/supabase.js'
-import { useAuthStore } from '@/stores/auth.js'
+// Subscribe to the user's realtime channel (user:<id> / 'notification') and push
+// each payload into the notifications store; no polling or data (subscribe-only).
+import { toValue } from 'vue'
+import { useSessionStore } from '@/stores/session.js'
 import { useNotificationsStore } from '@/stores/notifications.js'
+import { useRealtimeResource } from './realtime/useRealtimeResource.js'
+import { channels, NOTIFICATION } from './realtime/channels.js'
 
 export function useRealtimeNotifications(options = {}) {
-  const supabase = options.supabaseClient || defaultSupabase
-  const auth = useAuthStore()
   const notifications = useNotificationsStore()
-  const { userId } = storeToRefs(auth)
 
-  let channel = null
+  const session = useSessionStore()
+  const userId = options.userId ?? (() => session.session.userId)
 
-  function teardown() {
-    if (channel && supabase?.removeChannel) {
-      try {
-        supabase.removeChannel(channel)
-      } catch (e) {
-        console.warn('[notifications] teardown failed:', e)
-      }
-    }
-    channel = null
-    notifications.setRealtimeConnected(false)
-  }
-
-  function subscribe(id) {
-    teardown()
-    if (!id || !supabase || typeof supabase.channel !== 'function') {
-      notifications.setRealtimeConnected(false)
-      return
-    }
-    try {
-      channel = supabase
-        .channel(`user:${id}`)
-        .on('broadcast', { event: 'notification' }, (message) => {
-          // supabase delivers { event, type, payload }
-          const payload = message?.payload ?? message
-          notifications.receive(payload)
-        })
-        .subscribe((status) => {
-          // Tell the poll-diff fallback whether realtime is live, so it knows
-          // whether to suppress or mirror status/delivery notifications.
-          notifications.setRealtimeConnected(status === 'SUBSCRIBED')
-        })
-    } catch (e) {
-      console.warn('[notifications] subscribe failed:', e)
-      channel = null
-      notifications.setRealtimeConnected(false)
-    }
-  }
-
-  // Follow the logged-in user. immediate so we attach as soon as a user is known.
-  const stopWatch = watch(
-    userId,
-    (id) => subscribe(id),
-    { immediate: true }
-  )
-
-  onBeforeUnmount(() => {
-    stopWatch()
-    teardown()
+  const { stop } = useRealtimeResource({
+    channel: () => {
+      const id = toValue(userId)
+      return id ? channels.user(id) : null
+    },
+    event: NOTIFICATION,
+    key: () => toValue(userId),
+    supabaseClient: options.supabaseClient,
+    // Subscribe-only: no polling, no data, handle the payload directly.
+    onBroadcast: (message) => {
+      // supabase delivers { event, type, payload }
+      const payload = message?.payload ?? message
+      notifications.receive(payload)
+    },
+    // Track realtime health so pushLocal knows whether to emit poll-diff status events.
+    onStatus: (connected) => notifications.setRealtimeConnected(connected),
   })
 
-  // Exposed for tests / manual control.
-  return { teardown }
+  return { teardown: stop }
 }

@@ -7,6 +7,7 @@ import { api } from '@/services/api.js'
 import { useSessionStore } from '@/stores/session.js'
 import { useCatalogStore } from '@/stores/catalog.js'
 import { HOME } from '@/router/nav.js'
+import { linkParams } from '@/utils/authLink.js'
 import { config as cfg } from '@/config/index.js'
 
 const router = useRouter()
@@ -27,6 +28,16 @@ onMounted(async () => {
     error.value = 'Sign-in is not set up yet.'
     return
   }
+  const params = linkParams(window.location.hash)
+  if (params.get('access_token') && params.get('refresh_token')) {
+    await supabase.auth.setSession({
+      access_token: params.get('access_token'),
+      refresh_token: params.get('refresh_token'),
+    })
+  }
+  // Don't leave the tokens (or an error) sitting in the address bar
+  if (params.toString()) router.replace('/reset-password')
+
   const { data } = await supabase.auth.getSession()
   ready.value = !!data.session
 

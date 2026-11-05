@@ -1,6 +1,8 @@
+const crypto = require('crypto');
 const repository = require('../models/deliveries.repository');
 const ordersRepository = require('../models/orders.repository');
 const profilesRepository = require('../models/profiles.repository');
+const { CHAT_OPEN_AFTER_DELIVERY_MIN } = require('../common/config');
 
 // A courier can carry several deliveries at once (pick up along the way).
 const MAX_ACTIVE_JOBS = 4;
@@ -88,4 +90,90 @@ exports.act = async (deliveryId, { action, courier_id: courierId } = {}) => {
   }
 
   return jobView(await repository.findById(deliveryId));
+};
+
+// The student stops waiting for a courier and collects the order themselves. Only while the job
+// is still open (nobody accepted yet). Same result as the 10-minute rule: the delivery ends as
+// 'expired', the order becomes a pickup and the delivery fee is waived.
+exports.switchToPickup = async (deliveryId, studentId) => {
+  if (!studentId) throw httpError(400, 'student_id is required');
+
+  const d = await repository.findById(deliveryId);
+  if (!d) throw httpError(404, 'Delivery not found');
+  if (!d.orders || d.orders.student_id !== studentId) throw httpError(403, 'This is not your order');
+  if (d.status === 'expired') throw httpError(409, 'This order is already a pickup');
+  if (d.status !== 'open') throw httpError(409, 'A courier has already accepted this delivery');
+  if (['completed', 'cancelled'].includes(d.orders.status)) throw httpError(409, `This order is ${d.orders.status}`);
+
+  // expires_at = now, so the courier's "expired jobs" list shows when it really ended
+  const saved = await repository.update(deliveryId, 'open', { status: 'expired', expires_at: new Date().toISOString() });
+  if (!saved) throw httpError(409, 'A courier just accepted this delivery. Refresh to see who.');
+  await ordersRepository.update(d.order_id, { type: 'pickup', delivery_fee: null });
+
+  return jobView(await repository.findById(deliveryId));
+};
+
+// "Where is my rider": the courier's phone sends its GPS fix every few seconds while a job is
+// in progress, and the student's tracking page reads the latest one.
+// ponytail: kept in memory, so a restart forgets fixes (the page falls back to an estimate) and
+// several server instances wouldn't share them. Move to a deliveries column if the server scales out.
+const locations = new Map();
+const SHARING = ['accepted', 'picked_up'];
+
+exports.saveLocation = async (deliveryId, { courier_id: courierId, lat, lng, accuracy } = {}) => {
+  const la = Number(lat), ln = Number(lng);
+  if (lat == null || lng == null || !Number.isFinite(la) || !Number.isFinite(ln) || Math.abs(la) > 90 || Math.abs(ln) > 180) {
+    throw httpError(400, 'lat and lng must be valid coordinates');
+  }
+  if (!courierId) throw httpError(400, 'courier_id is required');
+
+  const d = await repository.findById(deliveryId);
+  if (!d) throw httpError(404, 'Delivery not found');
+  if (d.courier_id !== courierId) throw httpError(403, 'This is not your delivery');
+  if (!SHARING.includes(d.status)) throw httpError(409, `This delivery is ${d.status}`);
+
+  const acc = Number(accuracy);
+  const fix = { lat: la, lng: ln, accuracy: accuracy != null && Number.isFinite(acc) ? Math.round(acc) : null, at: new Date().toISOString() };
+  locations.set(deliveryId, fix);
+  return fix;
+};
+
+// The courier's last fix, only while the delivery is in progress (sharing stops once it's delivered)
+exports.getLocation = async (deliveryId) => {
+  const d = await repository.findById(deliveryId);
+  if (!d) throw httpError(404, 'Delivery not found');
+  if (!SHARING.includes(d.status)) {
+    locations.delete(deliveryId);
+    return { status: d.status, location: null };
+  }
+  return { status: d.status, location: locations.get(deliveryId) || null };
+};
+
+const CHAT_STATUSES = ['accepted', 'picked_up', 'delivered'];
+
+function chatSecret() {
+  const secret = process.env.CHAT_SECRET || process.env.SUPABASE_SECRET_KEY;
+  if (!secret) throw httpError(503, 'Chat is not configured');
+  return secret;
+}
+
+exports.getChat = async (deliveryId, profileId, now = Date.now()) => {
+  if (!profileId) throw httpError(401, 'Sign in to chat');
+
+  const d = await repository.findById(deliveryId);
+  if (!d) throw httpError(404, 'Delivery not found');
+  const isCourier = !!d.courier_id && d.courier_id === profileId;
+  const isCustomer = !!d.orders && d.orders.student_id === profileId;
+  if (!isCourier && !isCustomer) throw httpError(403, 'This is not your delivery');
+  if (!d.courier_id || !CHAT_STATUSES.includes(d.status)) throw httpError(409, 'Chat opens once a courier accepts the job');
+
+  const closesAt = d.delivered_at ? Date.parse(d.delivered_at) + CHAT_OPEN_AFTER_DELIVERY_MIN * 60e3 : null;
+  if (closesAt && now >= closesAt) throw httpError(410, 'This chat has closed');
+
+  const key = crypto.createHmac('sha256', chatSecret()).update(`chat:${deliveryId}`).digest('hex').slice(0, 32);
+  return {
+    channel: `chat:${key}`,
+    role: isCourier ? 'courier' : 'customer',
+    closes_at: closesAt ? new Date(closesAt).toISOString() : null,
+  };
 };

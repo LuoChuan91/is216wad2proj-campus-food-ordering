@@ -1,28 +1,14 @@
-// Keep the ui-store's tab/page fields in step with the URL.
-//
-// vue-router owns the URL. Portal components still read ui-store fields
-// (S.ui.student.tab/page/storeId/trackOrderId, S.ui.staff.merchantTab/adminTab),
-// so after every navigation we translate the active route's meta + params into
-// those fields. This covers navigation the router drives on its own: the browser
-// back/forward buttons, a pasted #/... link, and the guard's redirects.
-//
-// The nav ACTIONS (setTab/openStore/…) also push the URL; they set the same
-// fields, so this sync is idempotent for action-driven navigation (no loop).
-//
-// Called once from startRouting() after the router is ready.
+// After each navigation, translate the active route's meta + params into the
+// ui-store tab/page fields the portal components read.
 import { useUiStore } from "@/stores/ui.js";
 import { useCatalogStore } from "@/stores/catalog.js";
 import { ensureRoute } from "@/utils/routing.js";
 import { _getRouter } from "@/router/nav.js";
 
-// Routing hand-off point, called by useAppBootstrap.startApp() after the first
-// load. The hand-rolled hash/popstate routing that used to live in app/live.js is
-// gone — vue-router (createWebHashHistory) now owns navigation. This wires the
-// route -> ui-store sync (startRouteSync) so existing portal components that read
-// S.ui.student.tab/page keep working while the URL is the source of truth.
+
 export function startRouting() {
   const router = _getRouter();
-  if (!router) return; // no router attached (e.g. unit tests) — nothing to sync
+  if (!router) return; 
   startRouteSync(router);
 }
 
@@ -33,7 +19,6 @@ export function startRouteSync(router) {
     const u = ui.ui.student;
 
     if (m.role === "student") {
-      // Don't disturb a payment in flight (the prototype blocked URL-driven nav then).
       if (u.sheet === "pay" && u.pay.state === "processing") return;
 
       if (m.page === "store") {

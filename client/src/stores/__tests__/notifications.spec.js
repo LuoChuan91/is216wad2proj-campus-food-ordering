@@ -26,7 +26,7 @@ describe('notifications store', () => {
 
   it('ignores unmapped statuses (returns null, records nothing)', () => {
     const store = useNotificationsStore()
-    const n = store.receive({ kind: 'order', status: 'preparing' })
+    const n = store.receive({ kind: 'order', status: 'pending' })
     expect(n).toBeNull()
     expect(store.items).toHaveLength(0)
     expect(store.toasts).toHaveLength(0)

@@ -8,12 +8,10 @@ function client() {
   return supabase
 }
 
-// Only these SMU domains are allowed, matched exactly after the @
-const SMU_DOMAINS = ['smu.edu.sg', 'computing.smu.edu.sg', 'accountancy.smu.edu.sg', 'business.smu.edu.sg']
-
+// smu.edu.sg and any school subdomain (scis., business., law., economics., socsc. …)
 export const isSmuEmail = (email) => {
   const domain = email.trim().toLowerCase().split('@')[1] || ''
-  return SMU_DOMAINS.includes(domain)
+  return domain === 'smu.edu.sg' || domain.endsWith('.smu.edu.sg')
 }
 
 export async function signUp({ email, password, name }) {

@@ -1,9 +1,5 @@
-// Catalog store.
-//
-// The slow-changing reference data loaded once at start-up (and re-polled rarely):
-// profiles, venues, delivery destinations, stores and the full menu. Also the
-// display-only decoration the database doesn't store (monogram, colour, cuisine,
-// unit) and the catalog lookup getters (the "Q" catalog queries).
+// Catalog store: the slow-changing reference data (profiles, venues, destinations,
+// stores, menu), plus decorateStores() display fields and the lookup getters.
 import { defineStore } from 'pinia'
 import { reactive } from 'vue'
 import { api } from '@/services/api.js'
@@ -64,9 +60,7 @@ export const useCatalogStore = defineStore('catalog', () => {
   const storesOf = (merchantId) => db.stores.filter((s) => s.merchant_id === merchantId)
   const menuOf = (storeId) => db.menu.filter((m) => m.store_id === storeId)
 
-  // A store is "available" to order from only when its merchant account is active.
-  // A blocked/removed (or missing) merchant makes the store unorderable, so the
-  // student store cards grey it out and it can't be opened.
+  // "available" only when its merchant account is active.
   function storeAvailable(store) {
     if (!store) return false
     const m = by(db.profiles, store.merchant_id)

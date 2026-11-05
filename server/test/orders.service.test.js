@@ -402,3 +402,35 @@ test('getOrderAhead with an empty queue reports ahead = 0', async () => {
 test('getOrderAhead requires a store_id (400)', async () => {
   await assert.rejects(service.getOrderAhead(null), (err) => err.status === 400);
 });
+
+
+/* ---------- previously ordered ---------- */
+
+test('listPreviousOrders asks for the 3 most recent orders and shapes them for reordering', async () => {
+  let asked;
+  ordersRepository.findRecentByStudent = async (studentId, limit) => {
+    asked = { studentId, limit };
+    return [{
+      id: 'order-1', store_id: 'store-1', created_at: '2026-01-01T00:00:00Z', stores: { name: 'Sakura Bento House' },
+      order_items: [{ menu_item_id: 'item-bento', qty: 2, selected_options: ['rice-white'], menu_items: { name: 'Chicken Teriyaki Bento' } }],
+    }];
+  };
+  menuRepository.findOptionNames = async () => [{ id: 'rice-white', name: 'White rice' }];
+
+  const result = await service.listPreviousOrders('student-1');
+  assert.deepEqual(asked, { studentId: 'student-1', limit: 3 });
+  assert.deepEqual(result, [{
+    id: 'order-1', store_id: 'store-1', store_name: 'Sakura Bento House', created_at: '2026-01-01T00:00:00Z',
+    items: [{ menu_item_id: 'item-bento', name: 'Chicken Teriyaki Bento', qty: 2, selected_options: ['rice-white'], option_names: ['White rice'] }],
+  }]);
+});
+
+test('listPreviousOrders returns an empty list for a student with no orders', async () => {
+  ordersRepository.findRecentByStudent = async () => [];
+  menuRepository.findOptionNames = async () => [];
+  assert.deepEqual(await service.listPreviousOrders('student-1'), []);
+});
+
+test('listPreviousOrders requires a student_id (400)', async () => {
+  await assert.rejects(service.listPreviousOrders(undefined), (err) => err.status === 400);
+});

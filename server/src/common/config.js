@@ -5,4 +5,5 @@ module.exports = {
   KITCHEN_SLOTS: 2,           // default workstations for a store that hasn't set stores.workstations
   WAIT_STRATEGIES: ['serial', 'scheduled'], // what a merchant may pick for stores.wait_strategy
   DEFAULT_WAIT_STRATEGY: 'scheduled', // used when a store row is missing wait_strategy
+  CHAT_OPEN_AFTER_DELIVERY_MIN: 15,
 };

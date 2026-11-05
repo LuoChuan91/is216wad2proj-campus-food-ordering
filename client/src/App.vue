@@ -1,10 +1,5 @@
 <script setup>
-// The website shell. vue-router renders the page (sign-in at '/', or a portal
-// layout for /student, /merchant, /admin). This component keeps the chrome that
-// sits around every screen: the boot (loading / can't-reach-server) states, the
-// role class on the outer <div>, the top bar (only when signed in), the toaster,
-// and the realtime bridges (unchanged — they must still mount here so "Try again"
-// can re-run startApp() without re-subscribing).
+
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRoute } from 'vue-router'
@@ -12,7 +7,6 @@ import { useSessionStore } from '@/stores/session.js'
 import { useOrdersStore } from '@/stores/orders.js'
 import { useUiStore } from '@/stores/ui.js'
 import { startApp, refresh } from './composables/useAppBootstrap.js'
-import { startRealtimeAuthBridge } from '@/composables/realtimeAuthBridge.js'
 import { useRealtimeNotifications } from '@/composables/useRealtimeNotifications.js'
 import { useLiveSync } from '@/composables/useLiveSync.js'
 import { useOpenDeliveriesLive } from '@/composables/useOpenDeliveries.js'
@@ -30,20 +24,16 @@ const route = useRoute()
 // The top bar shows on portal screens, not on the sign-in page or before load.
 const showChrome = computed(() => !!me.value && route.name !== 'signin' && route.name !== 'reset-password')
 
-// realtime: feed auth store the signed-in id, then subscribe to user:<id>.
-startRealtimeAuthBridge()
 useRealtimeNotifications()
 
-// Liveness coordinator: Supabase realtime drives refreshes of the signed-in
-// user's data, with polling as a fallback (fast when realtime is down, a long
-// safety-net while it's connected)..
+// Liveness coordinator: Supabase realtime with polling as a fallback 
+// (fast when realtime is down, a long safety-net while it's connected).
 useLiveSync(() => session.session.userId, refresh)
 
 useOpenDeliveriesLive({
   enabled: courierOn,
   fetchDeliveries: async () => {
-    // When a broadcast is received, trigger the global refresh 
-    // to fetch the new jobs and populate orders.db.jobs
+    // trigger the global refresh to fetch the new jobs and populate orders.db.jobs
     await refresh() 
   }
 })

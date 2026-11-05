@@ -1,16 +1,26 @@
 <script setup>
+import { computed } from 'vue'
 import { useUiStore } from '@/stores/ui.js'
+import { useStoreWait } from '@/composables/storeWaitCache.js'
 import StatusTag from '@/components/StatusTag.vue'
 import WaitTimeEstimate from '@/components/WaitTimeEstimate.vue'
 import * as E from '@/utils/engine.js'
 
-defineProps({
+const props = defineProps({
   store: { type: Object, required: true },
   open: { type: Boolean, default: false },
   available: { type: Boolean, default: true },
 })
 
 const ui = useUiStore()
+const taking = computed(() => props.available && props.open)
+const wait = useStoreWait(() => (taking.value ? props.store.id : null))
+const aheadLabel = computed(() => {
+  if (!taking.value || wait.entry.loading) return ''
+  const n = wait.entry.ahead
+  if (!n) return 'No orders before you'
+  return `${n} ${n === 1 ? 'order' : 'orders'} before you`
+})
 </script>
 
 <template>
@@ -25,6 +35,7 @@ const ui = useUiStore()
         <StatusTag v-if="!available" tone="muted">Unavailable</StatusTag>
         <StatusTag v-else :tone="open ? 'ok' : 'muted'">{{ open ? 'Open' : 'Closed' }}</StatusTag>
         <StatusTag v-if="store.discount_type" tone="brand">{{ E.discountShort(store) }}</StatusTag>
+        <StatusTag v-if="aheadLabel" tone="info"><i class="bi bi-people" aria-hidden="true"></i>{{ aheadLabel }}</StatusTag>
       </span>
     </span>
     <span v-if="available && open" class="flex-shrink-0">

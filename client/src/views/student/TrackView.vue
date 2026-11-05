@@ -1,10 +1,7 @@
 <script setup>
-// Live tracking of one order: ready time from the kitchen queue, the courier, and every step.
-//
-// Migrated from portals/student/TrackPage.vue. The order id now comes from the
-// route param (:orderId) rather than S.ui.student.trackOrderId. The peer-delivery
-// walking leg still comes from the campus map's model (utils/mapApi.js), unchanged.
-import { computed } from 'vue'
+// Live tracking of one order (id from the :orderId route param): ready-time from
+// the kitchen queue, the courier map, and the status timeline.
+import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui.js'
@@ -12,10 +9,12 @@ import { useCatalogStore } from '@/stores/catalog.js'
 import { useOrdersStore } from '@/stores/orders.js'
 import * as E from '@/utils/engine.js'
 import { config as cfg } from '@/config/index.js'
-import { shortName } from '@/utils/landmarks.js'
 import { estimateWalkingSeconds } from '@/utils/mapApi.js'
 import { useStoreWait } from '@/composables/storeWaitCache.js'
 import ReceiptPanel from '@/components/ReceiptPanel.vue'
+import RiderTracker from '@/components/rider/RiderTracker.vue'
+import DeliveryChat from '@/components/DeliveryChat.vue'
+import { chatAvailable } from '@/utils/chat.js'
 
 const route = useRoute()
 const ui = useUiStore()
@@ -23,19 +22,20 @@ const catalog = useCatalogStore()
 const orders = useOrdersStore()
 const { now, busy } = storeToRefs(ui)
 
-const first = (name) => (name || '').split(' ')[0]
-const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`
 const orderId = computed(() => route.params.orderId)
 const order = computed(() => orders.order(orderId.value))
 const store = computed(() => (order.value ? catalog.store(order.value.store_id) : null))
 const venue = computed(() => (store.value ? catalog.venue(store.value.venue_id) : null))
-const venueName = computed(() => (venue.value ? shortName(venue.value.name) : ''))
+const venueName = computed(() => E.venueLabel(venue.value))
 const lines = computed(() => order.value.items)
 const d = computed(() => order.value.delivery)
+// "Collect it myself instead": a second tap confirms, since it can't be undone
+const confirmSwitch = ref(false)
+watch(orderId, () => { confirmSwitch.value = false })
 const drop = computed(() => d.value && catalog.dropoff(d.value.destination_id))
 
-// Live wait for THIS order from the single frontend engine (store:<id> realtime).
-// readyAt is derived on the frontend as now + seconds; `ahead` is the queue count.
+// Live wait for THIS order (store:<id> realtime).
+// readyAt is derived as now + seconds; `ahead` is the queue count.
 const wait = useStoreWait(
   computed(() => (order.value ? order.value.store_id : null)),
   orderId,
@@ -47,6 +47,10 @@ const q = computed(() => {
 const pay = computed(() => order.value.payment)
 const firstItem = computed(() => lines.value[0] && catalog.item(lines.value[0].menu_item_id))
 const delivering = computed(() => !!d.value && !order.value.fallback)
+// "Where is my rider" map, while a courier has the job (accepted or picked up)
+const riderFrom = computed(() => (venue.value && store.value ? { lat: venue.value.lat, lng: venue.value.lng, name: store.value.name } : null))
+const showRider = computed(() => delivering.value && !!riderFrom.value && !!drop.value && ['accepted', 'picked_up'].includes(d.value.status))
+const showChat = computed(() => delivering.value && chatAvailable(d.value, now.value))
 
 // The walking leg for peer delivery, from the campus map's model (utils/mapApi.js):
 // straight-line distance x 1.3, walking at 75 m/min.
@@ -60,7 +64,7 @@ const walkSeconds = computed(() => {
 
 const phase = computed(() => {
   const o = order.value, dl = d.value, s = store.value
-  const cn = dl ? first(dl.courier_name) : ''
+  const cn = dl ? E.firstName(dl.courier_name) : ''
   if (o.status === 'paid') return { tone: 'info', title: 'In the queue' }
   if (o.status === 'preparing') return { tone: 'brand', title: 'Being prepared' }
   if (o.status === 'ready' && o.type === 'pickup') return { tone: 'ok', title: 'Ready for pickup', big: 'Collect now', sub: `At ${s.name}, ${venueName.value}${o.ready_at ? ' · ready since ' + E.clock(o.ready_at) : ''}` }
@@ -115,8 +119,7 @@ const courierLine = computed(() => {
       <div class="row g-2">
       <div class="col-12 col-lg-7 d-flex flex-column gap-2">
       <div v-if="order.fallback" class="fallback-note d-flex align-items-start gap-2">
-        <Icon name="bag" :size="16" /><span><strong>Switched to pickup.</strong> No courier accepted within {{
-          cfg.deliveryWindowMin }} min, so the delivery fee was waived.</span>
+        <Icon name="bag" :size="16" /><span><strong>Switched to pickup.</strong> No courier accepted your order, so the delivery fee was waived.</span>
       </div>
       <div class="status-card" :class="'tone-' + phase.tone">
         <small class="eyebrow">{{ phase.title }}</small>
@@ -142,6 +145,8 @@ const courierLine = computed(() => {
         </template>
       </div>
 
+      <RiderTracker v-if="showRider" :delivery="d" :from="riderFrom" :to="drop" :now="now" />
+
       <div v-if="d && !order.fallback" class="panel courier" :class="'c-' + d.status">
         <template v-if="d.status === 'open'">
           <div class="c-head d-flex align-items-center gap-3"><span class="c-ic d-flex align-items-center justify-content-center flex-shrink-0 rounded-circle">
@@ -153,6 +158,18 @@ const courierLine = computed(() => {
           <div class="meter"
             :class="(d.expires_at - now) < 120e3 ? 'late' : (d.expires_at - now) < 300e3 ? 'warn' : 'ok'"><i
               :style="{ width: Math.max(0, (d.expires_at - now) / (cfg.deliveryWindowMin * 600)) + '%' }"></i></div>
+          <button v-if="!confirmSwitch" type="button" class="btn btn-outline-secondary btn-sm w-100 mt-2"
+            @click="confirmSwitch = true">Collect it myself instead</button>
+          <div v-else class="c-confirm mt-2">
+            <p class="m-0 mb-2">Switch to pickup? You'll collect it at {{ store.name }}<template v-if="venueName">,
+                {{ venueName }}</template>, and the {{ E.money(d.fee) }} delivery fee is waived. This can't be undone.</p>
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-primary btn-sm flex-grow-1" :disabled="busy['switch:' + order.id]"
+                @click="orders.switchToPickup(order.id)">{{ busy['switch:' + order.id] ? 'Switching…' : 'Yes, switch to pickup' }}</button>
+              <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="busy['switch:' + order.id]"
+                @click="confirmSwitch = false">Keep waiting</button>
+            </div>
+          </div>
         </template>
         <template v-else-if="d.courier_name">
           <div class="c-head d-flex align-items-center gap-3">
@@ -165,6 +182,9 @@ const courierLine = computed(() => {
           <Icon name="pin" :size="14" />{{ drop.name }}<template v-if="d.note"> · “{{ d.note }}”</template>
         </div>
       </div>
+
+      <DeliveryChat v-if="showChat" :delivery-id="d.id" :delivered-at="d.delivered_at" me="customer"
+        title="Chat with your courier" />
 
       <ol class="steps list-unstyled m-0">
         <li v-for="s in steps" :key="s.k" class="d-flex align-items-center gap-2" :class="s.state"><i></i><span>{{ s.label }}</span><time v-if="s.at">{{
@@ -191,9 +211,6 @@ const courierLine = computed(() => {
 </template>
 
 <style scoped>
-/* Order tracking page (moved from the global stylesheet). Kept global: .page/.bar
-   chrome, @keyframes live (shared with the top-bar offline dot), the .meter base
-   (shared with the deliver tab) and .panel. */
 
 .bar-title small {
   color: var(--muted);
@@ -313,6 +330,11 @@ const courierLine = computed(() => {
 
 .courier .meter {
   margin-top: 10px;
+}
+
+.c-confirm p {
+  font-size: var(--fs-desc);
+  color: var(--ink-2);
 }
 
 .c-drop {

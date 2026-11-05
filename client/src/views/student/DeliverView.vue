@@ -1,8 +1,5 @@
 <script setup>
 // Deliver & earn: student couriers see open jobs, accept one, pick it up and deliver it.
-//
-// Migrated from portals/student/DeliverTab.vue. Renders in StudentLayout's persistent
-// KeepAlive tab layer. Behaviour unchanged.
 import { computed, watch, onBeforeUnmount } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui.js'
@@ -10,9 +7,12 @@ import { useCatalogStore } from '@/stores/catalog.js'
 import { useOrdersStore } from '@/stores/orders.js'
 import * as E from '@/utils/engine.js'
 import { config as cfg } from '@/config/index.js'
-import { shortName } from '@/utils/landmarks.js'
 import { acquireStoreWait, releaseStoreWait, peekStoreWait } from '@/composables/storeWaitCache.js'
 import StatusTag from '@/components/StatusTag.vue'
+import { useSessionStore } from '@/stores/session.js'
+import { useCourierBeacon } from '@/composables/useRiderLocation.js'
+import DeliveryChat from '@/components/DeliveryChat.vue'
+import { chatAvailable } from '@/utils/chat.js'
 
 const ui = useUiStore()
 const catalog = useCatalogStore()
@@ -22,9 +22,7 @@ const { courierOn, now, busy } = storeToRefs(ui)
 const money = E.money
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`
 
-// Live per-order ready time from the single frontend engine (store:<id>). We
-// ref-count the jobs currently on screen so each order's queue estimate stays
-// live, and derive readyAt on the frontend as now + seconds.
+
 const waitKeys = new Set()
 const keyStr = (storeId, orderId) => `${storeId}|${orderId}`
 function jobReadyAt(storeId, orderId) {
@@ -39,7 +37,7 @@ function jobView(d) {
   const v = catalog.venue(s.venue_id)
   const drop = catalog.dropoff(d.destination_id) || { name: 'Drop-off point', lat: v ? v.lat : 0, lng: v ? v.lng : 0 }
   const est = jobReadyAt(d.pickup_store_id, d.order_id)
-  return { d, o: d.order, s, v, vName: v ? shortName(v.name) : '', drop, walk: v ? E.walkEstimate(v, drop) : { meters: 0 }, items: d.order.items, est, left: d.expires_at - now.value }
+  return { d, o: d.order, s, v, vName: E.venueLabel(v), drop, walk: v ? E.walkEstimate(v, drop) : { meters: 0 }, items: d.order.items, est, left: d.expires_at - now.value }
 }
 
 const on = computed(() => courierOn.value)
@@ -49,6 +47,19 @@ const atLimit = computed(() => activeList.value.length >= MAX_JOBS)
 const jobs = computed(() => (on.value ? orders.openJobs().map(jobView) : []))
 const expired = computed(() => (on.value ? orders.db.expiredJobs.map(jobView) : []))
 const earn = computed(() => orders.earnings())
+const justDelivered = computed(() =>
+  orders.db.myJobs.filter((d) => d.status === 'delivered' && chatAvailable(d, now.value)).map(jobView),
+)
+
+// Share this phone's GPS with the customers of the jobs in progress ("Where is my rider")
+const session = useSessionStore()
+const { state: gps } = useCourierBeacon(() => orders.activeJobs().map((d) => d.id), () => session.session.userId)
+const GPS_TEXT = {
+  waiting: 'Finding your location so your customers can follow you',
+  on: 'Sharing your live location with your customers',
+  denied: 'Location is blocked, so your customers see an estimate instead',
+  unsupported: "This browser can't share location, so your customers see an estimate instead",
+}
 
 // Keep one live engine per visible job's (store, order); release the rest.
 function syncJobWaits() {
@@ -91,6 +102,9 @@ onBeforeUnmount(() => {
     <template v-if="activeList.length">
       <h4 class="sec">Current {{ activeList.length === 1 ? 'delivery' : 'deliveries' }} <span class="count">{{
         activeList.length }}/{{ MAX_JOBS }}</span></h4>
+      <p v-if="GPS_TEXT[gps]" class="gps-line d-flex align-items-center gap-2" :class="'gps-' + gps">
+        <Icon name="locate" :size="14" />{{ GPS_TEXT[gps] }}
+      </p>
       <div class="row g-2">
       <div v-for="active in activeList" :key="active.d.id" class="col-12 col-md-6 col-lg-4">
       <div class="panel job active-job d-grid gap-2 h-100 align-content-start">
@@ -126,6 +140,25 @@ onBeforeUnmount(() => {
         <button v-else class="btn btn-success w-100" :disabled="busy[active.d.id]"
           @click="orders.deliver(active.d.id)">Mark as
           delivered</button>
+        <DeliveryChat :delivery-id="active.d.id" :delivered-at="active.d.delivered_at" me="courier"
+          title="Chat with customer" class="job-chat" />
+      </div>
+      </div>
+      </div>
+    </template>
+
+    <template v-if="justDelivered.length">
+      <h4 class="sec">Just delivered</h4>
+      <div class="row g-2">
+      <div v-for="j in justDelivered" :key="j.d.id" class="col-12 col-md-6 col-lg-4">
+      <div class="panel job d-grid gap-2 h-100 align-content-start">
+        <div class="d-flex align-items-center gap-2">
+          <Mono :store="j.s" :size="36" />
+          <div class="job-route flex-grow-1 overflow-hidden"><strong class="d-block">{{ j.s.name }}</strong><small>#{{ j.o.code }} · {{ j.drop.name }} · {{ E.clock(j.d.delivered_at) }}</small></div>
+          <StatusTag tone="ok">Delivered</StatusTag>
+        </div>
+        <DeliveryChat :delivery-id="j.d.id" :delivered-at="j.d.delivered_at" me="courier"
+          title="Chat with customer" class="job-chat" />
       </div>
       </div>
       </div>
@@ -172,7 +205,7 @@ onBeforeUnmount(() => {
         <div class="meter late flex-grow-1"><i style="width:0"></i></div><small>Expired at {{ E.clock(j.d.expires_at) }}</small>
       </div>
       <p class="aj-line warn d-flex align-items-center gap-2 m-0">
-        <Icon name="bag" :size="14" />Nobody accepted in {{ cfg.deliveryWindowMin }} min. Switched to pickup.
+        <Icon name="bag" :size="14" />Switched to pickup.
       </p>
     </div>
     </div>
@@ -182,9 +215,7 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-/* Deliver tab (moved from the global prototype stylesheet).
-   Shared bits kept global: .deliver padding, .meter*,
-   .panel, .sec, .count, .empty/.empty-note. */
+
 .dl-head p {
   color: var(--ink-2);
   font-size: var(--fs-desc);
@@ -273,7 +304,27 @@ onBeforeUnmount(() => {
   color: var(--ok);
 }
 
+.gps-line {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+  margin: -4px 0 10px;
+}
+
+.gps-line.gps-on {
+  color: var(--ok);
+}
+
+.gps-line.gps-denied,
+.gps-line.gps-unsupported {
+  color: var(--warn);
+}
+
 .aj-line.warn {
   color: var(--warn);
+}
+
+.job-chat {
+  padding: 10px;
 }
 </style>

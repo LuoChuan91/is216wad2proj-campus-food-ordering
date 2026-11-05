@@ -1,9 +1,5 @@
-// UI store.
-//
-// Everything that is purely about what THIS tab is showing and doing: the student's
-// tab/page/sheet, the cart, checkout, item draft, the staff tabs, the busy map (so a
-// button can't fire twice), the top-bar dropdown, and this tab's own toasts and
-// notification history. Also notify() and the run() busy wrapper, preserved exactly from the prototype.
+// UI store: this tab's view state — student tab/page/sheet, cart, checkout, item
+// draft, staff tabs, the busy map — plus notify() and the run() busy wrapper.
 import { defineStore } from "pinia";
 import { reactive, ref } from "vue";
 import * as E from "@/utils/engine.js";
@@ -94,8 +90,7 @@ export const useUiStore = defineStore("ui", () => {
     try {
       const store = useNotificationsStore();
       // One surface, one de-dup gate: the store collapses an event that the
-      // realtime channel also delivers (matched by kind/status/order via meta),
-      // so we no longer special-case realtimeConnected here.
+      // realtime channel also delivers (matched by kind/status/order via meta)
       store.pushLocal({
         title: view.title,
         body: view.body,
@@ -325,6 +320,46 @@ export const useUiStore = defineStore("ui", () => {
     });
     u.sheet = null;
   }
+  function reorder(order) {
+    const catalog = useCatalogStore();
+    const u = ui.student;
+    const store = catalog.store(order.store_id);
+    if (!catalog.storeAvailable(store) || !open(store).open) {
+      notify("Can't order again", `${order.store_name || "This store"} isn't taking orders right now`, "warn");
+      return;
+    }
+    const lines = [];
+    for (const line of order.items) {
+      const item = catalog.item(line.menu_item_id);
+      if (!item || item.available === false) continue;
+      const opts = catalog.options(item.id);
+      const selected = line.selected_options;
+      const optionsOk = selected.every((id) => opts.some((o) => o.id === id && o.available !== false));
+      if (!optionsOk || !E.validate(catalog.groups(item.id), opts, selected).ok) continue;
+      lines.push({
+        key: `line-${++lineSeq}`,
+        menu_item_id: item.id,
+        qty: line.qty,
+        selected: selected.slice(),
+        unit_price: E.unitPrice(item, opts, selected),
+      });
+    }
+    if (!lines.length) {
+      notify("Can't order again", "None of these items are available any more", "warn");
+      return;
+    }
+    u.cart = { storeId: order.store_id, lines };
+    u.storeId = order.store_id;
+    const skipped = order.items.length - lines.length;
+    if (skipped) {
+      notify(
+        "Some items left out",
+        `${skipped} item${skipped === 1 ? " is" : "s are"} no longer available and ${skipped === 1 ? "was" : "were"} left out`,
+        "warn",
+      );
+    }
+    openCheckout();
+  }
   function setLineQty(key, qty) {
     const u = ui.student;
     const line = u.cart.lines.find((l) => l.key === key);
@@ -441,7 +476,7 @@ export const useUiStore = defineStore("ui", () => {
     loaded, loadError, online, now, ui, courierOn, mapOffline, busy,
     notify, notifyView, run, tick, place, walk, open,
     setTab, setSearch, setListSearch, setListFilter, setListSort, openStoreItem, openVenue, locate,
-    closeSheet, openStore, back, openItem, toggleOption, setDraftQty, addToCart, setLineQty,
+    closeSheet, openStore, back, openItem, toggleOption, setDraftQty, addToCart, reorder, setLineQty,
     openCheckout, setFulfilment, setDropoff, setNote, openPay, confirmPay, openTracking,
     setMerchantTab, setMerchantStore, setAdminTab, setVenueDraft,
   }

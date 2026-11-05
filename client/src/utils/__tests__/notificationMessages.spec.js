@@ -1,19 +1,19 @@
 import { describe, it, expect } from 'vitest'
-import { buildNotification, shouldToast } from '../notificationMessages.js'
+import { buildNotification } from '../notificationMessages.js'
 
 // A pickup order and a delivery order to exercise the order-aware wording.
 const pickup = { code: 'E287', type: 'pickup' }
 const delivery = { code: 'D512', type: 'delivery', delivery: { courier_name: 'Mingli Tan', destination_id: 'd1' } }
 
 describe('buildNotification (shared, order-aware wording)', () => {
-  it('order paid -> the "cooking" line with store + ready time', () => {
+  it('order paid -> the order-submitted line with the reference code', () => {
     const v = buildNotification(
       { kind: 'order', status: 'paid', order_id: 'o1' },
-      { order: pickup, storeName: 'Hawker Corner', readyAtClock: '1:05pm' }
+      { order: pickup, storeName: 'Hawker Corner' }
     )
-    expect(v).toMatchObject({ title: 'Hawker Corner is cooking your order', variant: 'info', toast: false })
+    expect(v).toMatchObject({ title: 'Order submitted', variant: 'info', toast: false })
+    expect(v.body).toContain('Your order reference is')
     expect(v.body).toContain('#E287')
-    expect(v.body).toContain('1:05pm')
   })
 
   it('order ready (pickup) -> "Collect order #code at store"', () => {
@@ -81,8 +81,8 @@ describe('buildNotification (shared, order-aware wording)', () => {
 
   it('omits the "#" fragment entirely when there is no code and no order_id', () => {
     const v = buildNotification({ kind: 'order', status: 'paid' })
-    expect(v.title).toBe('The store is cooking your order')
-    expect(v.body).toBe('Order')
+    expect(v.title).toBe('Order submitted')
+    expect(v.body).toContain('Your order reference is')
     expect(v.body).not.toContain('#')
     const ready = buildNotification({ kind: 'order', status: 'ready' })
     expect(ready.body).toBe('Collect order at the store')
@@ -94,24 +94,26 @@ describe('buildNotification (shared, order-aware wording)', () => {
     expect(v).toMatchObject({ kind: 'order', status: 'ready', order_id: 'o1', at: 't' })
   })
 
+  it('order preparing -> "Kitchen is preparing" with code + store, list-only', () => {
+    const v = buildNotification(
+      { kind: 'order', status: 'preparing', order_id: 'o1' },
+      { order: pickup, storeName: 'Hawker Corner' }
+    )
+    expect(v).toMatchObject({ title: 'Kitchen is preparing your order', variant: 'info', toast: false })
+    expect(v.body).toBe('Order #E287 is being cooked at Hawker Corner')
+  })
+
+  it('order preparing falls back gracefully without a store name', () => {
+    const v = buildNotification({ kind: 'order', status: 'preparing', order_id: 'abcd1234' })
+    expect(v.title).toBe('Kitchen is preparing your order')
+    expect(v.body).toBe('Order #ABCD is being cooked at the store')
+  })
+
   it('returns null for unknown / unmapped statuses', () => {
-    expect(buildNotification({ kind: 'order', status: 'preparing' })).toBeNull()
+    expect(buildNotification({ kind: 'order', status: 'pending' })).toBeNull()
     expect(buildNotification({ kind: 'delivery', status: 'open' })).toBeNull()
     expect(buildNotification({ kind: 'nope', status: 'ready' })).toBeNull()
     expect(buildNotification(null)).toBeNull()
     expect(buildNotification({})).toBeNull()
-  })
-})
-
-describe('shouldToast', () => {
-  it('is true only for the toast statuses', () => {
-    expect(shouldToast({ kind: 'order', status: 'ready' })).toBe(true)
-    expect(shouldToast({ kind: 'order', status: 'completed' })).toBe(true)
-    expect(shouldToast({ kind: 'delivery', status: 'accepted' })).toBe(true)
-    expect(shouldToast({ kind: 'delivery', status: 'picked_up' })).toBe(true)
-    expect(shouldToast({ kind: 'delivery', status: 'expired' })).toBe(true)
-    expect(shouldToast({ kind: 'order', status: 'paid' })).toBe(false)
-    expect(shouldToast({ kind: 'delivery', status: 'delivered' })).toBe(false)
-    expect(shouldToast({ kind: 'order', status: 'preparing' })).toBe(false)
   })
 })

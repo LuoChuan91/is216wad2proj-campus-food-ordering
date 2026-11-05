@@ -19,6 +19,12 @@ vi.mock('@/utils/waitTimeApi.js', () => ({
   }),
 }))
 
+// The courier's GPS fix for the "Where is my rider" card (stubbed: offline test)
+vi.mock('@/services/api.js', async (importOriginal) => {
+  const real = await importOriginal()
+  return { ...real, api: { ...real.api, riderLocation: vi.fn(async () => ({ status: 'picked_up', location: { lat: 1.297, lng: 103.8495, accuracy: 7, at: new Date().toISOString() } })) } }
+})
+
 // Controllable route param.
 const route = { params: { orderId: 'o1' } }
 vi.mock('vue-router', () => ({ useRoute: () => route }))
@@ -39,7 +45,7 @@ function seed() {
   setActivePinia(pinia)
   const catalog = useCatalogStore()
   catalog.db.profiles = [{ id: 'mer', role: 'merchant', name: 'Mei Lin', status: 'active' }]
-  catalog.db.venues = [{ id: 'v1', name: 'SMU Labs', lat: 1.2966, lng: 103.85, address: 'Level 1' }]
+  catalog.db.venues = [{ id: 'v1', name: 'SMU Labs', lat: 1.2966, lng: 103.85, address: 'Level 1', type: 'school' }]
   catalog.db.stores = [{ id: 's1', venue_id: 'v1', merchant_id: 'mer', name: 'Bento Bar', is_open: true, description: '' }]
   catalog.db.menu = [{ id: 'm1', store_id: 's1', category: 'Bento', name: 'Chicken Teriyaki', price: 6, available: true, cook_time_sec: 60, max_at_once: 2, option_groups: [] }]
   catalog.decorateStores()
@@ -97,5 +103,21 @@ describe('TrackView', () => {
     await flushPromises()
     expect(wrapper.text()).toContain('Order #F999')
     route.params.orderId = 'o1' // reset
+  })
+
+  it('shows where the rider is while a courier walks a delivery over', async () => {
+    const { catalog, orders } = seed()
+    catalog.db.destinations = [{ id: 'dst1', name: 'SOE Lobby', lat: 1.2979, lng: 103.8489 }]
+    orders.db.orders[0] = {
+      ...orders.db.orders[0], status: 'ready', type: 'delivery',
+      delivery: { id: 'dl1', status: 'picked_up', courier_name: 'Ben Lim', destination_id: 'dst1', picked_up_at: Date.now() - 60e3 },
+    }
+    const wrapper = mount(TrackView, globalCfg)
+    await flushPromises()
+    expect(wrapper.text()).toContain('Where is my rider')
+    expect(wrapper.text()).toContain('On the way to you')
+    expect(wrapper.text()).toContain('Live GPS')
+    expect(wrapper.text()).toContain('m away')
+    wrapper.unmount()
   })
 })
