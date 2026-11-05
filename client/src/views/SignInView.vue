@@ -6,6 +6,7 @@ import { useUiStore } from '@/stores/ui.js'
 import * as E from '@/utils/engine.js'
 import { config as cfg } from '@/config/index.js'
 import AuthPanel from '@/components/AuthPanel.vue'
+import IntroSplash from '@/components/IntroSplash.vue'
 
 const ui = useUiStore()
 const { now } = storeToRefs(ui)
@@ -25,6 +26,7 @@ const steps = [
 
 <template>
   <div class="signin">
+    <IntroSplash />
     <div class="blob blob-a" aria-hidden="true"></div>
     <div class="blob blob-b" aria-hidden="true"></div>
     <div class="blob blob-c" aria-hidden="true"></div>
