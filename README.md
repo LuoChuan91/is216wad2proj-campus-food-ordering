@@ -202,7 +202,7 @@ AI assistance was used on this project for:
   (`useDeliveryChat`, `DeliveryChat.vue`, `GET /api/deliveries/:id/chat`).
 - **Comments & cleanup** — writing code comments and refactoring/cleaning up the
   codebase.
-- **Tests** — creating the unit, component and integration test suites.
+- **Tests** — creating the unit, component, integration and E2E test suites.
 
 All AI‑assisted code was reviewed and verified by running the test suites and clicking
 through every screen as a student, courier, merchant and admin.
