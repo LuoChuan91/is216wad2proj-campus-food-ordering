@@ -40,7 +40,12 @@ function fail(message) {
 
 async function login() {
   const user = await auth.signIn(email.value, password.value)
-  const profile = catalog.user(user.id)
+  let profile = catalog.user(user.id)
+  // A brand-new account isn't in the catalog until its next poll, so fetch it once
+  if (!profile) {
+    await catalog.loadCatalog()
+    profile = catalog.user(user.id)
+  }
   if (!profile) throw new Error('No account record found for this login.')
 
   if (profile.status === 'blocked' || profile.status === 'removed') {
@@ -63,11 +68,19 @@ async function signup() {
   if (password.value.length < 8) throw new Error('Password must be at least 8 characters.')
   if (password.value !== confirm.value) throw new Error('The two passwords do not match.')
 
-  await auth.signUp({ email: email.value, password: password.value, name: name.value.trim() })
+  const data = await auth.signUp({ email: email.value, password: password.value, name: name.value.trim() })
   password.value = ''
   confirm.value = ''
   mode.value = 'login'
-  notice.value = 'Account created. Check your email to confirm it. An admin must approve it before you can order.'
+  // No session back means Supabase's "Confirm email" setting is on
+  notice.value = data && data.session
+    ? 'Account created. You can sign in now. An admin must approve it before you can order.'
+    : 'Account created. Open the confirmation link we emailed you, then sign in. An admin must approve it before you can order.'
+}
+
+const FRIENDLY_ERRORS = {
+  'Invalid login credentials': 'Email or password is wrong.',
+  'Email not confirmed': 'Please confirm your email first, using the link we sent you.',
 }
 
 async function forgot() {
@@ -84,7 +97,7 @@ async function submit() {
   try {
     await handlers[mode.value]()
   } catch (e) {
-    fail(e.message === 'Invalid login credentials' ? 'Email or password is wrong.' : e.message)
+    fail(FRIENDLY_ERRORS[e.message] || e.message)
   } finally {
     busy.value = false
   }

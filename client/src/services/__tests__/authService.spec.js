@@ -17,6 +17,14 @@ describe('isSmuEmail', () => {
     expect(isSmuEmail('dev@computing.smu.edu.sg')).toBe(true)
     expect(isSmuEmail('acc@accountancy.smu.edu.sg')).toBe(true)
     expect(isSmuEmail('biz@business.smu.edu.sg')).toBe(true)
+    expect(isSmuEmail('it@scis.smu.edu.sg')).toBe(true)
+    expect(isSmuEmail('law@law.smu.edu.sg')).toBe(true)
+    expect(isSmuEmail('econ@economics.smu.edu.sg')).toBe(true)
+  })
+
+  it('rejects look-alike domains', () => {
+    expect(isSmuEmail('x@evilsmu.edu.sg')).toBe(false)
+    expect(isSmuEmail('x@smu.edu.sg.evil.com')).toBe(false)
   })
 
   it('is case- and whitespace-insensitive', () => {

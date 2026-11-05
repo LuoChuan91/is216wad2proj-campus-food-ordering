@@ -23,7 +23,7 @@ admin approves accounts and manages venues.
 ### Clone
 
 ```bash
-git clone https://github.com/LuoChuan91/is216wad2proj-campus-food-ordering.git        # placeholder — see section 3
+git clone https://github.com/LuoChuan91/is216wad2proj-campus-food-ordering.git
 cd is216wad2proj-campus-food-ordering
 ```
 
@@ -56,9 +56,9 @@ pnpm dev                    # starts on http://localhost:5173
 ```
 
 Open http://localhost:5173. Requests to `/api/...` are proxied to the server on
-port 3000, so the client uses relative URLs. Sign in by picking an account from the
-list (see dummy accounts in section 4). Open a second browser tab as a different
-account to watch an order move between roles in real time.
+port 3000, so the client uses relative URLs. Sign in with one of the dummy accounts
+in section 4. Open a second browser tab as a different account to watch an order
+move between roles in real time.
 
 See more detailed client documentation at [client/README.md](client/README.md)
 
@@ -72,6 +72,7 @@ are in `.gitignore`.
 | `server/.env` | `SUPABASE_URL` | Project Settings → Data API → Project URL |
 | `server/.env` | `SUPABASE_SECRET_KEY` | Project Settings → API Keys → **secret** key (`sb_secret_...`) — never ships to the browser |
 | `server/.env` | `PORT` | optional, defaults to `3000` |
+| `server/.env` | `CHAT_SECRET` | optional, used to name private delivery-chat channels (defaults to the secret key) |
 | `client/.env` | `VITE_SUPABASE_URL` | the same project URL |
 | `client/.env` | `VITE_SUPABASE_ANON_KEY` | Project Settings → API Keys → **publishable** key (`sb_publishable_...`) |
 
@@ -94,14 +95,14 @@ are in `.gitignore`.
 
 ## 4. Dummy accounts
 
-Sign‑in is simulated (no password enforcement yet) — pick an account from the sign‑in
-list. Credentials below are placeholders; replace with the real seeded accounts.
+Sign in on the landing page with an email and password below. These accounts are
+already approved.
 
 | Role | Purpose | Email (username) | Password |
 | ---- | ------- | ---------------- | -------- |
 | Student — buyer | Main flow: browse, order, pay, track | `aiden.tan.2021@scis.smu.edu.sg` | `123456` |
 | Student — courier | Accept, pick up and deliver peer‑delivery jobs | `beatrice.lim.2021@business.smu.edu.sg` | `123456` |
-| Merchant | Kitchen order board, menu & sold‑out switches | `hello@greenbowl.sg` | `123456` |
+| Merchant (Supergreen) | Kitchen order board, menu & sold‑out switches, analytics | `hello@greenbowl.sg` | `123456` |
 | Admin | Approve/block students, manage venues *(not part of the main flow)* | `priya.nair@smu.edu.sg` | `123456` |
 
 > The courier is just a student account with "available for jobs" switched on — any
@@ -119,7 +120,7 @@ pnpm exec vitest run        # one-off run (CI mode)
 pnpm test:unit              # watch mode
 ```
 
-~350 tests across ~48 files. What's covered:
+~390 tests across 55 files. What's covered:
 
 - **Pure logic (`src/utils`)** — pricing, discounts (percentage/dollar), option
   group min/max rules, server‑tamper resistance, time/clock formatting, the
@@ -145,7 +146,7 @@ cd server
 pnpm test
 ```
 
-~75 tests covering the order rules (pricing from the DB, discounts, closed stores,
+~90 tests covering the order rules (pricing from the DB, discounts, closed stores,
 sold‑out dishes/options, option group min/max, column safety), peer‑delivery rules
 and the 10‑minute expiry window, menu/store/profile services.
 

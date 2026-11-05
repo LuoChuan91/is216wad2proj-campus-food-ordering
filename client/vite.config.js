@@ -17,7 +17,7 @@ export default defineConfig({
     },
   },
   server: {
-    // TODO: route to correct server after deployment
+    // Local dev only. On Vercel, client/vercel.json forwards /api to the API project.
     proxy: {
       '/api': 'http://localhost:3000',
     },
