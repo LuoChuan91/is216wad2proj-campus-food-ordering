@@ -82,13 +82,13 @@ are in `.gitignore`.
 
 ## 2. Live application
 
-**Landing page:** `<DEPLOYED_URL>`  *(placeholder — replace with the live URL)*
+**Landing page:** `https://campus-delights.vercel.app/#/`  
 
 ---
 
 ## 3. Repository
 
-**Git repo:** `https://github.com/LuoChuan91/is216wad2proj-campus-food-ordering.git`  *(placeholder — replace with the repo URL)*
+**Git repo:** `https://github.com/LuoChuan91/is216wad2proj-campus-food-ordering.git`
 
 ---
 
